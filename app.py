@@ -72,21 +72,38 @@ def trello_buscar_card_por_telefone(telefone, lista_nome):
     listas = trello_get_lists()
     list_id = next((lid for nome, lid in listas.items() if lista_nome.lower() in nome), None)
     if not list_id: return None
-    url = f"https://api.trello.com/1/lists/{list_id}/cards?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    # Busca apenas cards abertos (filter=open), ignora arquivados/concluídos
+    url = f"https://api.trello.com/1/lists/{list_id}/cards?filter=open&key={TRELLO_KEY}&token={TRELLO_TOKEN}"
     with urllib.request.urlopen(url, timeout=10) as r:
         cards = json.loads(r.read())
-    return next((c for c in cards if telefone in c.get("desc", "")), None)
+    # Busca pelo telefone no TÍTULO do card
+    return next((c for c in cards if telefone in c.get("name", "")), None)
 
-def trello_atualizar_card(card_id, nova_mensagem):
-    url = f"https://api.trello.com/1/cards/{card_id}/actions/comments"
-    dados = urllib.parse.urlencode({"text": "Nova mensagem: " + nova_mensagem, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
-    with urllib.request.urlopen(urllib.request.Request(url, data=dados, method="POST"), timeout=10) as r:
+def trello_atualizar_card(card_id, nova_mensagem, horario):
+    # Adiciona atualização na descrição do card
+    url_get = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    with urllib.request.urlopen(url_get, timeout=10) as r:
+        card = json.loads(r.read())
+    desc_atual = card.get("desc", "")
+    nova_atualizacao = f"\n---\nMensagem: {nova_mensagem}\nHorário: {horario}"
+    nova_desc = desc_atual + nova_atualizacao
+    dados = urllib.parse.urlencode({"desc": nova_desc, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    req = urllib.request.Request(f"https://api.trello.com/1/cards/{card_id}", data=dados, method="PUT")
+    with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())
 
-def trello_criar_card(lista_nome, titulo, descricao):
+def trello_criar_card(lista_nome, titulo, nome, telefone, mensagem, horario):
     listas = trello_get_lists()
-    list_id = next((lid for nome, lid in listas.items() if lista_nome.lower() in nome), list(listas.values())[0])
-    dados = urllib.parse.urlencode({"name": titulo, "desc": descricao, "idList": list_id, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    list_id = next((lid for nome_l, lid in listas.items() if lista_nome.lower() in nome_l), list(listas.values())[0])
+    descricao = (
+        f"Nome: {nome}\n"
+        f"Telefone: {telefone}\n"
+        f"Mensagem: {mensagem}\n"
+        f"Horário Brasília: {horario}\n\n"
+        f"Atualizações:"
+    )
+    card_titulo = f"{nome} | {telefone}"
+    dados = urllib.parse.urlencode({"name": card_titulo, "desc": descricao, "idList": list_id, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
     with urllib.request.urlopen(urllib.request.Request("https://api.trello.com/1/cards", data=dados, method="POST"), timeout=10) as r:
         return json.loads(r.read())
 
@@ -126,12 +143,12 @@ def processar_mensagem(telefone, mensagem, nome):
         if acao == "ignorar" or categoria == "IGNORAR": return
         agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
         prazo = calcular_prazo(categoria, analise.get("complexidade","baixa"))
-        descricao = "Cliente: " + nome + "\nTelefone: " + telefone + "\nRecebido: " + agora + "\nPrazo SLA: " + prazo + "\nMensagem: " + mensagem
         lista = analise.get("lista_trello","Entrada")
-        titulo = analise.get("titulo_card", mensagem[:50])
         card = trello_buscar_card_por_telefone(telefone, lista)
-        if card: trello_atualizar_card(card["id"], mensagem)
-        else: trello_criar_card(lista, titulo, descricao)
+        if card:
+            trello_atualizar_card(card["id"], mensagem, agora)
+        else:
+            trello_criar_card(lista, None, nome, telefone, mensagem, agora)
         resposta = analise.get("resposta_cliente","")
         if resposta: zapi_enviar(telefone, resposta)
     except Exception as e:
