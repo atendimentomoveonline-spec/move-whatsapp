@@ -45,7 +45,14 @@ def e_spam(mensagem):
     return any(p in mensagem.lower() for p in SPAM_PALAVRAS)
 
 def get_delay_segundos():
-    return 10  # MODO TESTE — remover depois
+    agora = datetime.now(BR_TZ)
+    hora, dia = agora.hour, agora.weekday()
+    if dia < 5:
+        if 8 <= hora < 17: return 10 * 60
+        elif 17 <= hora < 22: return 60 * 60
+        else: return None
+    else:
+        return 2 * 60 * 60 if 8 <= hora < 16 else None
 
 def calcular_prazo(categoria, subcategoria=""):
     agora = datetime.now(BR_TZ)
