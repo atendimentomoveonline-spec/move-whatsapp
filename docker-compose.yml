@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  evolution-api:
+    image: atendai/evolution-api:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_URL=${SERVER_URL}
+      - AUTHENTICATION_API_KEY=${API_KEY}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+      - DEL_INSTANCE=false
+      - LANGUAGE=pt-BR
+    restart: always
