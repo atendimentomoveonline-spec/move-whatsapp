@@ -1,153 +1,148 @@
-import os, re, json, urllib.request, urllib.parse
+import os, re, json, urllib.request, urllib.parse, threading
+from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
+import pytz
 
 app = Flask(__name__)
 
-# ── Configuração ──────────────────────────────────────────────────────────────
 ZAPI_INSTANCE = os.environ.get("ZAPI_INSTANCE", "")
 ZAPI_TOKEN    = os.environ.get("ZAPI_TOKEN", "")
 ZAPI_URL      = f"https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}"
-
 TRELLO_KEY    = os.environ.get("TRELLO_KEY", "")
 TRELLO_TOKEN  = os.environ.get("TRELLO_TOKEN", "")
 TRELLO_BOARD  = os.environ.get("TRELLO_BOARD", "tGmj0Fik")
-
 CLAUDE_KEY    = os.environ.get("CLAUDE_API_KEY", "")
-
-# Cache de listas do Trello
+BR_TZ = pytz.timezone("America/Sao_Paulo")
 _trello_lists = {}
+_pendentes = {}
 
-# ── Trello ────────────────────────────────────────────────────────────────────
+SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
+
+def e_spam(mensagem):
+    return any(p in mensagem.lower() for p in SPAM_PALAVRAS)
+
+def get_delay_segundos():
+    agora = datetime.now(BR_TZ)
+    hora, dia = agora.hour, agora.weekday()
+    if dia < 5:
+        if 8 <= hora < 17: return 10 * 60
+        elif 17 <= hora < 22: return 60 * 60
+        else: return None
+    else:
+        return 2 * 60 * 60 if 8 <= hora < 16 else None
+
+def calcular_prazo(categoria, subcategoria=""):
+    agora = datetime.now(BR_TZ)
+    if categoria == "NOTA":
+        return agora.strftime("%d/%m/%Y") + (" (hoje)" if agora.hour < 17 else " (proximo dia util)")
+    elif categoria == "IMPOSTO": return "Ate o dia 10 do mes"
+    elif categoria == "FINANCEIRO": return "Ate 4 horas uteis"
+    elif categoria == "DUVIDAS":
+        if "alta" in subcategoria.lower(): return "Ate 5 dias uteis"
+        elif "media" in subcategoria.lower(): return "Ate 48 horas uteis"
+        else: return "Ate 4 horas"
+    return "Em breve"
+
 def trello_get_lists():
     global _trello_lists
-    if _trello_lists:
-        return _trello_lists
+    if _trello_lists: return _trello_lists
     url = f"https://api.trello.com/1/boards/{TRELLO_BOARD}/lists?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
     with urllib.request.urlopen(url, timeout=10) as r:
         lists = json.loads(r.read())
     _trello_lists = {l["name"].lower(): l["id"] for l in lists}
     return _trello_lists
 
+def trello_buscar_card_por_telefone(telefone, lista_nome):
+    listas = trello_get_lists()
+    list_id = next((lid for nome, lid in listas.items() if lista_nome.lower() in nome), None)
+    if not list_id: return None
+    url = f"https://api.trello.com/1/lists/{list_id}/cards?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    with urllib.request.urlopen(url, timeout=10) as r:
+        cards = json.loads(r.read())
+    return next((c for c in cards if telefone in c.get("desc", "")), None)
+
+def trello_atualizar_card(card_id, nova_mensagem):
+    url = f"https://api.trello.com/1/cards/{card_id}/actions/comments"
+    dados = urllib.parse.urlencode({"text": "Nova mensagem: " + nova_mensagem, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    with urllib.request.urlopen(urllib.request.Request(url, data=dados, method="POST"), timeout=10) as r:
+        return json.loads(r.read())
+
 def trello_criar_card(lista_nome, titulo, descricao):
     listas = trello_get_lists()
-    list_id = None
-    for nome, lid in listas.items():
-        if lista_nome.lower() in nome:
-            list_id = lid
-            break
-    if not list_id:
-        list_id = list(listas.values())[0]
-
-    dados = urllib.parse.urlencode({
-        "name": titulo,
-        "desc": descricao,
-        "idList": list_id,
-        "key": TRELLO_KEY,
-        "token": TRELLO_TOKEN
-    }).encode()
-    req = urllib.request.Request("https://api.trello.com/1/cards", data=dados, method="POST")
-    with urllib.request.urlopen(req, timeout=10) as r:
+    list_id = next((lid for nome, lid in listas.items() if lista_nome.lower() in nome), list(listas.values())[0])
+    dados = urllib.parse.urlencode({"name": titulo, "desc": descricao, "idList": list_id, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    with urllib.request.urlopen(urllib.request.Request("https://api.trello.com/1/cards", data=dados, method="POST"), timeout=10) as r:
         return json.loads(r.read())
 
-# ── Z-API ─────────────────────────────────────────────────────────────────────
 def zapi_enviar(telefone, mensagem):
     dados = json.dumps({"phone": telefone, "message": mensagem}).encode()
-    req = urllib.request.Request(
-        f"{ZAPI_URL}/send-text",
-        data=dados,
-        headers={"Content-Type": "application/json"},
-        method="POST"
-    )
+    req = urllib.request.Request(f"{ZAPI_URL}/send-text", data=dados, headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())
 
-# ── Claude AI ─────────────────────────────────────────────────────────────────
+PROMPT_SISTEMA = (
+    "Voce e Claudio-AI, atendente da Move Online Contabilidade Medica.\n\n"
+    "SLA: Notas 09-17h=mesmo dia, apos 17h=prox dia util, DAS/INSS=dia 10, baixa=4h, media=48h, alta=5du.\n\n"
+    "CATEGORIAS: NOTA(nota fiscal,NF,emitir,cancelar), IMPOSTO(DAS,INSS,DARF,guia,TFE), "
+    "FINANCEIRO(pix,boleto,paguei,comprovante), DUVIDAS(fator R,pro-labore,planejamento,simples), "
+    "ABERTURA_EMPRESA(abrir empresa,CNPJ), TROCA_CONTADOR(trocar contador), ENTRADA(oi,bom dia,ola).\n\n"
+    "REGRAS: DAS alto=DUVIDAS. ok/sim/entendi=continuidade. spam=ignorar.\n"
+    "FASE 1: apenas classificar e avisar recebimento. Nao responder tecnicamente.\n\n"
+    'JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
+)
+
 def claude_analisar(mensagem):
-    prompt = f"""Você é um assistente da Move Online Contabilidade. Analise a mensagem do cliente e responda em JSON:
-
-Mensagem: "{mensagem}"
-
-Classifique em uma das intenções:
-- "abertura_empresa": cliente quer abrir empresa
-- "troca_contador": cliente quer trocar de contador
-- "nota_fiscal": dúvida ou pedido sobre notas fiscais
-- "imposto": dúvida sobre impostos/tributos
-- "financeiro": assunto financeiro
-- "duvida_simples": dúvida que pode ser respondida rapidamente
-- "duvida_complexa": dúvida que precisa de análise
-- "outro": não identificado
-
-Responda APENAS com JSON neste formato:
-{{
-  "intencao": "abertura_empresa",
-  "lista_trello": "Abertura de Empresa",
-  "resposta_cliente": "mensagem de confirmação para enviar ao cliente",
-  "titulo_card": "título resumido para o card do Trello",
-  "precisa_analise": false
-}}"""
-
-    dados = json.dumps({
-        "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 500,
-        "messages": [{"role": "user", "content": prompt}]
-    }).encode()
-
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=dados,
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": CLAUDE_KEY,
-            "anthropic-version": "2023-06-01"
-        },
-        method="POST"
-    )
+    dados = json.dumps({"model": "claude-haiku-4-5-20251001", "max_tokens": 500,
+        "messages": [{"role": "user", "content": PROMPT_SISTEMA + "\nMensagem: " + mensagem}]}).encode()
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=dados,
+        headers={"Content-Type": "application/json", "x-api-key": CLAUDE_KEY, "anthropic-version": "2023-06-01"}, method="POST")
     with urllib.request.urlopen(req, timeout=30) as r:
         resp = json.loads(r.read())
-
     texto = resp["content"][0]["text"]
-    return json.loads(texto)
+    m = re.search(r'\{.*\}', texto, re.DOTALL)
+    return json.loads(m.group() if m else texto)
 
-# ── Webhook ───────────────────────────────────────────────────────────────────
+def processar_mensagem(telefone, mensagem, nome):
+    try:
+        analise = claude_analisar(mensagem)
+        acao, categoria = analise.get("acao","criar"), analise.get("categoria","ENTRADA")
+        if acao == "ignorar" or categoria == "IGNORAR": return
+        agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+        prazo = calcular_prazo(categoria, analise.get("complexidade","baixa"))
+        descricao = "Cliente: " + nome + "\nTelefone: " + telefone + "\nRecebido: " + agora + "\nPrazo SLA: " + prazo + "\nMensagem: " + mensagem
+        lista = analise.get("lista_trello","Entrada")
+        titulo = analise.get("titulo_card", mensagem[:50])
+        card = trello_buscar_card_por_telefone(telefone, lista)
+        if card: trello_atualizar_card(card["id"], mensagem)
+        else: trello_criar_card(lista, titulo, descricao)
+        resposta = analise.get("resposta_cliente","")
+        if resposta: zapi_enviar(telefone, resposta)
+    except Exception as e:
+        print("[ERRO] " + str(e))
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json(force=True)
-
-    # Ignora mensagens enviadas pelo próprio bot
-    if data.get("fromMe"):
+    if data.get("fromMe") or data.get("isGroup") or data.get("broadcast"):
         return jsonify({"ok": True})
-
-    # Ignora grupos
-    if data.get("isGroup"):
-        return jsonify({"ok": True})
-
-    telefone = data.get("phone", "")
-    mensagem = data.get("text", {}).get("message", "")
-    nome = data.get("senderName", "Cliente")
-
-    if not mensagem or not telefone:
-        return jsonify({"ok": True})
-
-    try:
-        analise = claude_analisar(mensagem)
-
-        # Envia confirmação ao cliente
-        zapi_enviar(telefone, analise["resposta_cliente"])
-
-        # Cria card no Trello
-        descricao = f"**Cliente:** {nome}\n**Telefone:** {telefone}\n**Mensagem:** {mensagem}"
-        trello_criar_card(analise["lista_trello"], analise["titulo_card"], descricao)
-
-    except Exception as e:
-        print(f"Erro: {e}")
-        zapi_enviar(telefone, "Olá! Recebemos sua mensagem e em breve entraremos em contato. 😊")
-
+    telefone = data.get("phone","")
+    mensagem = data.get("text",{}).get("message","")
+    nome = data.get("senderName","Cliente")
+    if not mensagem or not telefone: return jsonify({"ok": True})
+    if e_spam(mensagem): return jsonify({"ok": True})
+    delay = get_delay_segundos()
+    if delay is None: return jsonify({"ok": True})
+    if telefone in _pendentes: _pendentes[telefone].cancel()
+    timer = threading.Timer(delay, processar_mensagem, args=[telefone, mensagem, nome])
+    _pendentes[telefone] = timer
+    timer.start()
     return jsonify({"ok": True})
 
 @app.route("/")
 def index():
-    return "Move Online Bot - Ativo ✅"
+    agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+    delay = get_delay_segundos()
+    return "Claudio-AI Move Online OK | " + agora + " | Delay: " + str(delay or "SILENCIOSO")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)), debug=False)
