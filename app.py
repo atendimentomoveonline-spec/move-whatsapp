@@ -18,6 +18,29 @@ _pendentes = {}
 
 SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
 
+GDOC_URL = "https://docs.google.com/document/d/1wBVprhctTXtDmhdE-wVEApNvZDCMwvWBlhDLAsExcu4/export?format=txt"
+_prompt_cache = {"texto": "", "ts": 0}
+
+def buscar_prompt():
+    import time
+    agora = time.time()
+    if agora - _prompt_cache["ts"] < 300 and _prompt_cache["texto"]:
+        return _prompt_cache["texto"]
+    try:
+        with urllib.request.urlopen(GDOC_URL, timeout=10) as r:
+            texto = r.read().decode("utf-8")
+        _prompt_cache["texto"] = texto
+        _prompt_cache["ts"] = agora
+        return texto
+    except Exception as e:
+        print(f"[PROMPT] Erro ao buscar Google Doc: {e}")
+        return _prompt_cache["texto"] or PROMPT_FALLBACK
+
+PROMPT_FALLBACK = (
+    "Voce e Claudio-AI, atendente da Move Online Contabilidade Medica.\n"
+    "Classifique a mensagem e responda em JSON com: categoria, lista_trello, titulo_card, complexidade, acao, resposta_cliente, faltam_dados, dados_necessarios."
+)
+
 def e_spam(mensagem):
     return any(p in mensagem.lower() for p in SPAM_PALAVRAS)
 
@@ -92,8 +115,9 @@ PROMPT_SISTEMA = (
 )
 
 def claude_analisar(mensagem):
+    prompt = buscar_prompt() + "\n\nMensagem do cliente: " + mensagem + '\n\nResponda APENAS em JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
     dados = json.dumps({"model": "claude-haiku-4-5-20251001", "max_tokens": 500,
-        "messages": [{"role": "user", "content": PROMPT_SISTEMA + "\nMensagem: " + mensagem}]}).encode()
+        "messages": [{"role": "user", "content": prompt}]}).encode()
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=dados,
         headers={"Content-Type": "application/json", "x-api-key": CLAUDE_KEY, "anthropic-version": "2023-06-01"}, method="POST")
     with urllib.request.urlopen(req, timeout=30) as r:
