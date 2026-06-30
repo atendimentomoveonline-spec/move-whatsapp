@@ -147,7 +147,7 @@ def processar_mensagem(telefone, mensagem, nome):
     try:
         analise = claude_analisar(mensagem)
         acao, categoria = analise.get("acao","criar"), analise.get("categoria","ENTRADA")
-        if acao == "ignorar" or categoria == "IGNORAR": return
+        if acao == "ignorar" or categoria == "IGNORAR" or categoria == "ENTRADA": return
         agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
         prazo = calcular_prazo(categoria, analise.get("complexidade","baixa"))
         lista = analise.get("lista_trello","Entrada")
