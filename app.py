@@ -156,14 +156,12 @@ def processar_mensagem(telefone, mensagem, nome):
             trello_atualizar_card(card["id"], mensagem, agora)
         else:
             trello_criar_card(lista, None, nome, telefone, mensagem, agora)
-        zapi_enviar(telefone, (
-            "Olá! como vai?😊\n\n"
-            "Seu pedido foi colocado na fila de processamento e em breve você receberá por WhatsApp.\n\n"
-            "Lembre-se, se o seu pedido for NF, não esqueça de enviar o quadro de NF para facilitar o envio, ok?\n\n"
-            "Qualquer dúvida, estamos à disposição!\n\n"
-            "Atenciosamente,\n"
-            "Move Online Contabilidade Médica"
-        ))
+        texto_doc = buscar_prompt()
+        if "RESPOSTA_PADRAO:" in texto_doc:
+            resposta_padrao = texto_doc.split("RESPOSTA_PADRAO:", 1)[1].strip()
+        else:
+            resposta_padrao = "Olá! Recebemos sua mensagem e em breve retornaremos.\n\nAtenciosamente,\nMove Online Contabilidade Médica"
+        zapi_enviar(telefone, resposta_padrao)
     except Exception as e:
         print("[ERRO] " + str(e))
 
