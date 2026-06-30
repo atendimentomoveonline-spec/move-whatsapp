@@ -156,12 +156,9 @@ def processar_mensagem(telefone, mensagem, nome):
             trello_atualizar_card(card["id"], mensagem, agora)
         else:
             trello_criar_card(lista, None, nome, telefone, mensagem, agora)
-        texto_doc = buscar_prompt()
-        if "RESPOSTA_PADRAO:" in texto_doc:
-            resposta_padrao = texto_doc.split("RESPOSTA_PADRAO:", 1)[1].strip()
-        else:
-            resposta_padrao = "Olá! Recebemos sua mensagem e em breve retornaremos.\n\nAtenciosamente,\nMove Online Contabilidade Médica"
-        zapi_enviar(telefone, resposta_padrao)
+        resposta = analise.get("resposta_cliente", "")
+        if resposta:
+            zapi_enviar(telefone, resposta)
     except Exception as e:
         print("[ERRO] " + str(e))
 
