@@ -13,7 +13,7 @@ CLICKSIGN_URL     = "https://app.clicksign.com/api/v3"
 TRELLO_KEY        = os.environ.get("TRELLO_KEY", "")
 TRELLO_TOKEN      = os.environ.get("TRELLO_TOKEN", "")
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
-DRIVE_FOLDER_ID   = os.environ.get("CONTRATO_FOLDER_ID", "1fRj1KFrKM0CFsI3xOYb0fn84OwNprrET")
+DRIVE_FOLDER_ID   = os.environ.get("CONTRATO_FOLDER_ID", "1AhHM01rBVOD-Zmz-xjpuA23e0ajKbuSi")
 PASTA_CLICKSIGN   = os.environ.get("PASTA_CLICKSIGN", "/Contratos")
 
 def baixar_pdf_modelo():
