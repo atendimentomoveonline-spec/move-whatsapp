@@ -5,7 +5,7 @@ Automação de contratos via Trello + ClickSign
 - Faz upload na pasta ClickSign com nome CNPJ_NomeCliente.pdf
 - Adiciona signatário e envia para assinatura
 """
-import os, re, json, base64, urllib.request, urllib.parse
+import os, re, io, json, base64, urllib.request, urllib.parse
 from pypdf import PdfReader, PdfWriter
 
 CLICKSIGN_TOKEN   = os.environ.get("CLICKSIGN_TOKEN", "")
@@ -67,7 +67,6 @@ def parse_descricao(desc):
 def preencher_pdf(campos):
     """Preenche o PDF do contrato com os dados do cliente."""
     pdf_bytes = baixar_pdf_modelo()
-    import io
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
 
@@ -87,10 +86,12 @@ def preencher_pdf(campos):
     doc_numero = re.sub(r"\D", "", campos.get("cnpj", campos.get("cpf", "00000000000000")))
     nome_limpo = re.sub(r"[^\w\s]", "", campos.get("nome", "cliente")).strip().replace(" ", "_")
     nome_arquivo = f"{doc_numero}_{nome_limpo}.pdf"
-    caminho = os.path.join(os.path.dirname(CONTRATO_PDF), nome_arquivo)
+    caminho = os.path.join("/tmp", nome_arquivo)
 
+    output = io.BytesIO()
+    writer.write(output)
     with open(caminho, "wb") as f:
-        writer.write(f)
+        f.write(output.getvalue())
 
     return caminho, nome_arquivo
 
