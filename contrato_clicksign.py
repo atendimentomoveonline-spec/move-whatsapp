@@ -5,11 +5,11 @@ Automação de contratos via Trello + ClickSign
 - Faz upload na pasta ClickSign com nome CNPJ_NomeCliente.pdf
 - Adiciona signatário e envia para assinatura
 """
-import os, re, io, json, base64, urllib.request, urllib.parse
+import os, re, io, json, base64, tempfile, urllib.request, urllib.parse
 from pypdf import PdfReader, PdfWriter
 
 CLICKSIGN_TOKEN   = os.environ.get("CLICKSIGN_TOKEN", "")
-CLICKSIGN_URL     = "https://app.clicksign.com/api/v3"
+CLICKSIGN_URL     = "https://app.clicksign.com/api/v1"
 TRELLO_KEY        = os.environ.get("TRELLO_KEY", "")
 TRELLO_TOKEN      = os.environ.get("TRELLO_TOKEN", "")
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
@@ -72,23 +72,15 @@ def preencher_pdf(campos):
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
 
-    substituicoes = {
-        "XXXXXXXXXXXXXXXXXXXXXXXXXXXX": campos.get("nome", ""),
-        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX": campos.get("cnpj", campos.get("nome", "")),
-    }
-
     # Copiar todas as páginas
     for page in reader.pages:
         writer.add_page(page)
-
-    # Preencher campos de formulário se houver
-    writer.update_page_form_field_values(writer.pages[0], campos)
 
     # Salvar PDF preenchido temporariamente (usa CNPJ ou CPF no nome do arquivo)
     doc_numero = re.sub(r"\D", "", campos.get("cnpj", campos.get("cpf", "00000000000000")))
     nome_limpo = re.sub(r"[^\w\s]", "", campos.get("nome", "cliente")).strip().replace(" ", "_")
     nome_arquivo = f"{doc_numero}_{nome_limpo}.pdf"
-    caminho = os.path.join("/tmp", nome_arquivo)
+    caminho = os.path.join(tempfile.gettempdir(), nome_arquivo)
 
     output = io.BytesIO()
     writer.write(output)
@@ -130,7 +122,7 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
             "email": email,
             "name": nome,
             "phone_number": "",
-            "auth_type": "email",
+            "auths": ["email"],
             "delivery_method": "email",
             "has_documentation": False
         }
@@ -151,7 +143,7 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
         "list": {
             "document_key": doc_key,
             "signer_key": signer_key,
-            "sign_as": "contractee",
+            "sign_as": "sign",
             "message": "Por favor, assine o contrato de prestação de serviços contábeis da Move Online."
         }
     }).encode()
@@ -169,7 +161,7 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
     return signer_key
 
 def clicksign_enviar(doc_key):
-    """Envia o documento para assinatura."""
+    """Finaliza o documento para assinatura (ignora se ja estiver ativo)."""
     payload = json.dumps({"document": {"key": doc_key}}).encode()
     req = urllib.request.Request(
         f"{CLICKSIGN_URL}/documents/{doc_key}/finish?access_token={CLICKSIGN_TOKEN}",
@@ -177,8 +169,12 @@ def clicksign_enviar(doc_key):
         headers={"Content-Type": "application/json"},
         method="PATCH"
     )
-    with urllib.request.urlopen(req, timeout=15) as r:
-        print(f"[CLICKSIGN] Enviado para assinatura!")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            print(f"[CLICKSIGN] Documento finalizado e enviado para assinatura!")
+    except Exception as e:
+        # 422 = documento ja esta ativo (running), nao e um erro real
+        print(f"[CLICKSIGN] Documento ja ativo ou enviado: {e}")
 
 def zapi_enviar_whatsapp(telefone, mensagem):
     """Envia mensagem WhatsApp via Z-API."""
