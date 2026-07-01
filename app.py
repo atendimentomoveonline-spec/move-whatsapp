@@ -15,7 +15,7 @@ CLAUDE_KEY    = os.environ.get("CLAUDE_API_KEY", "")
 BR_TZ = pytz.timezone("America/Sao_Paulo")
 _trello_lists = {}
 _pendentes = {}
-_ultima_resposta = {}
+_ultima_resposta = {}  # telefone -> datetime ultima resposta enviada
 
 SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
 
@@ -77,6 +77,7 @@ def trello_get_lists():
     return _trello_lists
 
 def trello_buscar_card_por_telefone(telefone, lista_nome=None):
+    """Busca card em TODAS as listas do board pelo telefone no titulo."""
     listas = trello_get_lists()
     for nome_l, list_id in listas.items():
         url = f"https://api.trello.com/1/lists/{list_id}/cards?filter=open&key={TRELLO_KEY}&token={TRELLO_TOKEN}"
@@ -91,6 +92,7 @@ def trello_buscar_card_por_telefone(telefone, lista_nome=None):
     return None
 
 def trello_atualizar_card(card_id, nova_mensagem, horario):
+    # Adiciona atualização na descrição do card
     url_get = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
     with urllib.request.urlopen(url_get, timeout=10) as r:
         card = json.loads(r.read())
@@ -123,48 +125,16 @@ def zapi_enviar(telefone, mensagem):
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())
 
-def ja_respondeu_recentemente(telefone, minutos=30):
-    ultima = _ultima_resposta.get(telefone)
-    if not ultima: return False
-    return (datetime.now(BR_TZ) - ultima).total_seconds() < minutos * 60
-
-def e_mensagem_vazia(mensagem):
-    palavras_vazias = {"oi","ola","olá","tudo bem","tudo","bom dia","boa tarde","boa noite","obrigado","obrigada","ok","sim","nao","não","👍","😊"}
-    return mensagem.strip().lower() in palavras_vazias or len(mensagem.strip()) <= 5
-
-def processar_mensagem(telefone, mensagem, nome):
-    try:
-        if e_mensagem_vazia(mensagem):
-            print(f"[IGNORADO] Mensagem vazia de {telefone}: {mensagem}")
-            return
-
-        analise = claude_analisar(mensagem)
-        acao, categoria = analise.get("acao","criar"), analise.get("categoria","DUVIDAS")
-
-        if acao == "ignorar" or categoria == "IGNORAR":
-            return
-
-        agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
-        lista = analise.get("lista_trello", "Entrada")
-
-        card = trello_buscar_card_por_telefone(telefone)
-        if card:
-            trello_atualizar_card(card["id"], mensagem, agora)
-            print(f"[ATUALIZADO] Card de {nome} ({telefone})")
-        else:
-            trello_criar_card(lista, None, nome, telefone, mensagem, agora)
-            print(f"[CRIADO] Card de {nome} ({telefone}) em '{lista}'")
-
-        resposta = analise.get("resposta_cliente", "")
-        if resposta and not ja_respondeu_recentemente(telefone):
-            zapi_enviar(telefone, resposta)
-            _ultima_resposta[telefone] = datetime.now(BR_TZ)
-            print(f"[RESPOSTA] Enviada para {telefone}")
-        elif resposta:
-            print(f"[RESPOSTA] Suprimida (ja respondeu recentemente) para {telefone}")
-
-    except Exception as e:
-        print("[ERRO] " + str(e))
+PROMPT_SISTEMA = (
+    "Voce e Claudio-AI, atendente da Move Online Contabilidade Medica.\n\n"
+    "SLA: Notas 09-17h=mesmo dia, apos 17h=prox dia util, DAS/INSS=dia 10, baixa=4h, media=48h, alta=5du.\n\n"
+    "CATEGORIAS: NOTA(nota fiscal,NF,emitir,cancelar), IMPOSTO(DAS,INSS,DARF,guia,TFE), "
+    "FINANCEIRO(pix,boleto,paguei,comprovante), DUVIDAS(fator R,pro-labore,planejamento,simples), "
+    "ABERTURA_EMPRESA(abrir empresa,CNPJ), TROCA_CONTADOR(trocar contador), ENTRADA(oi,bom dia,ola).\n\n"
+    "REGRAS: DAS alto=DUVIDAS. ok/sim/entendi=continuidade. spam=ignorar.\n"
+    "FASE 1: apenas classificar e avisar recebimento. Nao responder tecnicamente.\n\n"
+    'JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
+)
 
 def claude_analisar(mensagem):
     prompt = buscar_prompt() + "\n\nMensagem do cliente: " + mensagem + '\n\nResponda APENAS em JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
@@ -177,6 +147,81 @@ def claude_analisar(mensagem):
     texto = resp["content"][0]["text"]
     m = re.search(r'\{.*\}', texto, re.DOTALL)
     return json.loads(m.group() if m else texto)
+
+def ja_respondeu_recentemente(telefone, minutos=30):
+    """Retorna True se ja enviou resposta para esse telefone nos ultimos X minutos."""
+    ultima = _ultima_resposta.get(telefone)
+    if not ultima: return False
+    return (datetime.now(BR_TZ) - ultima).total_seconds() < minutos * 60
+
+def e_mensagem_vazia(mensagem):
+    """Mensagens sem conteudo real: oi, tudo bem, bom dia, etc."""
+    palavras_vazias = {"oi","ola","olá","tudo bem","tudo","bom dia","boa tarde","boa noite","obrigado","obrigada","ok","sim","nao","não","👍","😊"}
+    return mensagem.strip().lower() in palavras_vazias or len(mensagem.strip()) <= 5
+
+def processar_mensagem(telefone, mensagem, nome):
+    try:
+        # Mensagem vazia (oi, tudo bem) — nao cria card, nao responde
+        if e_mensagem_vazia(mensagem):
+            print(f"[IGNORADO] Mensagem vazia de {telefone}: {mensagem}")
+            return
+
+        analise = claude_analisar(mensagem)
+        acao, categoria = analise.get("acao","criar"), analise.get("categoria","DUVIDAS")
+
+        # Ignorar apenas spam/broadcast explícito
+        if acao == "ignorar" or categoria == "IGNORAR":
+            return
+
+        agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+        lista = analise.get("lista_trello", "Entrada")
+
+        # Busca card em QUALQUER lista do board
+        card = trello_buscar_card_por_telefone(telefone)
+        if card:
+            trello_atualizar_card(card["id"], mensagem, agora)
+            print(f"[ATUALIZADO] Card de {nome} ({telefone})")
+        else:
+            trello_criar_card(lista, None, nome, telefone, mensagem, agora)
+            print(f"[CRIADO] Card de {nome} ({telefone}) em '{lista}'")
+
+        # Enviar resposta apenas se nao respondeu recentemente
+        resposta = analise.get("resposta_cliente", "")
+        if resposta and not ja_respondeu_recentemente(telefone):
+            zapi_enviar(telefone, resposta)
+            _ultima_resposta[telefone] = datetime.now(BR_TZ)
+            print(f"[RESPOSTA] Enviada para {telefone}")
+        elif resposta:
+            print(f"[RESPOSTA] Suprimida (ja respondeu recentemente) para {telefone}")
+
+    except Exception as e:
+        print("[ERRO] " + str(e))
+
+@app.route("/trello-webhook", methods=["POST", "HEAD"])
+def trello_webhook():
+    if request.method == "HEAD":
+        return "", 200
+    data = request.get_json(force=True)
+    action = data.get("action", {})
+    if action.get("type") == "createCard":
+        card = action.get("data", {}).get("card", {})
+        board = action.get("data", {}).get("board", {})
+        lista_info = action.get("data", {}).get("list", {})
+        if "contrato" in lista_info.get("name", "").lower() or "contrato" in board.get("name", "").lower():
+            card_id = card.get("id")
+            # Buscar descrição completa do card
+            try:
+                url = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+                with urllib.request.urlopen(url, timeout=10) as r:
+                    card_full = json.loads(r.read())
+                from contrato_clicksign import processar_contrato_trello
+                threading.Thread(
+                    target=processar_contrato_trello,
+                    args=[card_full.get("name",""), card_full.get("desc","")]
+                ).start()
+            except Exception as e:
+                print(f"[CONTRATO ERRO] {e}")
+    return jsonify({"ok": True})
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
