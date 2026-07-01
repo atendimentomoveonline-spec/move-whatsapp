@@ -15,6 +15,8 @@ TRELLO_TOKEN      = os.environ.get("TRELLO_TOKEN", "")
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
 DRIVE_FOLDER_ID   = os.environ.get("CONTRATO_FOLDER_ID", "1AhHM01rBVOD-Zmz-xjpuA23e0ajKbuSi")
 PASTA_CLICKSIGN   = os.environ.get("PASTA_CLICKSIGN", "/Contratos")
+ZAPI_INSTANCE     = os.environ.get("ZAPI_INSTANCE", "")
+ZAPI_TOKEN        = os.environ.get("ZAPI_TOKEN", "")
 
 def baixar_pdf_modelo():
     """Baixa o PDF modelo do Google Drive."""
@@ -178,6 +180,21 @@ def clicksign_enviar(doc_key):
     with urllib.request.urlopen(req, timeout=15) as r:
         print(f"[CLICKSIGN] Enviado para assinatura!")
 
+def zapi_enviar_whatsapp(telefone, mensagem):
+    """Envia mensagem WhatsApp via Z-API."""
+    telefone_limpo = re.sub(r"\D", "", telefone)
+    if not telefone_limpo or not ZAPI_INSTANCE or not ZAPI_TOKEN:
+        return
+    url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}/send-text"
+    payload = json.dumps({"phone": telefone_limpo, "message": mensagem}).encode()
+    req = urllib.request.Request(url, data=payload,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            print(f"[WHATSAPP] Aviso enviado para {telefone_limpo}")
+    except Exception as e:
+        print(f"[WHATSAPP] Erro ao enviar aviso: {e}")
+
 def processar_contrato_trello(card_nome, card_desc):
     """Processa um novo card do quadro Contratos."""
     print(f"[CONTRATO] Processando: {card_nome}")
@@ -200,7 +217,20 @@ def processar_contrato_trello(card_nome, card_desc):
     # 4. Enviar para assinatura
     clicksign_enviar(doc_key)
 
-    # 5. Limpar PDF temporário
+    # 5. Avisar cliente no WhatsApp
+    telefone = campos.get("telefone", "")
+    nome_curto = campos.get("nome", "").split()[0]
+    email = campos.get("email", "")
+    if telefone:
+        mensagem = (
+            f"Olá {nome_curto}! 😊\n\n"
+            f"Seu contrato foi enviado para o email *{email}*.\n"
+            f"Por favor, verifique sua caixa de entrada e assine o documento.\n\n"
+            f"Qualquer dúvida estamos à disposição! 🤝"
+        )
+        zapi_enviar_whatsapp(telefone, mensagem)
+
+    # 6. Limpar PDF temporário
     try:
         os.remove(caminho_pdf)
     except:
