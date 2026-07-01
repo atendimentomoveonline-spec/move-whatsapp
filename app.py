@@ -218,7 +218,7 @@ def trello_webhook():
                 from contrato_clicksign import processar_contrato_trello
                 threading.Thread(
                     target=processar_contrato_trello,
-                    args=[card_full.get("name",""), card_full.get("desc","")]
+                    args=[card_full.get("name",""), card_full.get("desc",""), card_id]
                 ).start()
             except Exception as e:
                 print(f"[CONTRATO ERRO] {e}")

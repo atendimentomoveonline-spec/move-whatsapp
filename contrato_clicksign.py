@@ -195,7 +195,22 @@ def zapi_enviar_whatsapp(telefone, mensagem):
     except Exception as e:
         print(f"[WHATSAPP] Erro ao enviar aviso: {e}")
 
-def processar_contrato_trello(card_nome, card_desc):
+def trello_comentar_card(card_id, texto):
+    """Adiciona comentário no card do Trello."""
+    if not card_id or not TRELLO_KEY or not TRELLO_TOKEN:
+        return
+    dados = urllib.parse.urlencode({"text": texto, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    req = urllib.request.Request(
+        f"https://api.trello.com/1/cards/{card_id}/actions/comments",
+        data=dados, method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            print(f"[TRELLO] Comentário adicionado no card")
+    except Exception as e:
+        print(f"[TRELLO] Erro ao comentar: {e}")
+
+def processar_contrato_trello(card_nome, card_desc, card_id=None):
     """Processa um novo card do quadro Contratos."""
     print(f"[CONTRATO] Processando: {card_nome}")
     campos = parse_descricao(card_desc)
@@ -230,7 +245,13 @@ def processar_contrato_trello(card_nome, card_desc):
         )
         zapi_enviar_whatsapp(telefone, mensagem)
 
-    # 6. Limpar PDF temporário
+    # 6. Comentar no card do Trello
+    from datetime import datetime
+    import pytz
+    agora = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M")
+    trello_comentar_card(card_id, f"✅ Contrato enviado para assinatura\n📧 {campos['email']}\n🕐 {agora}")
+
+    # 7. Limpar PDF temporário
     try:
         os.remove(caminho_pdf)
     except:
