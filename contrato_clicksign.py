@@ -49,6 +49,10 @@ def parse_descricao(desc):
     for linha in desc.splitlines():
         if ":" in linha:
             chave, _, valor = linha.partition(":")
+            # Remove markdown links do Trello: [texto](url) → texto
+            valor = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', valor)
+            # Remove caracteres de controle invisíveis
+            valor = re.sub(r'[​-‏‪-‮]', '', valor)
             campos[chave.strip().lower()] = valor.strip()
     # Normaliza: se vier "cpf" usa como documento, coloca também em "cnpj" para compatibilidade
     if "cpf" in campos and "cnpj" not in campos:
