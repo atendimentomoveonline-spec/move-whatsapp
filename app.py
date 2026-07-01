@@ -203,11 +203,12 @@ def trello_webhook():
         return "", 200
     data = request.get_json(force=True)
     action = data.get("action", {})
-    if action.get("type") == "createCard":
-        card = action.get("data", {}).get("card", {})
-        board = action.get("data", {}).get("board", {})
-        lista_info = action.get("data", {}).get("list", {})
-        if "contrato" in lista_info.get("name", "").lower() or "contrato" in board.get("name", "").lower():
+    tipo = action.get("type", "")
+    action_data = action.get("data", {})
+    card = action_data.get("card", {})
+    # createCard usa "list", updateCard (mover card) usa "listAfter"
+    lista_info = action_data.get("listAfter") or action_data.get("list") or {}
+    if tipo in ("createCard", "updateCard") and "contrato" in lista_info.get("name", "").lower():
             card_id = card.get("id")
             # Buscar descrição completa do card
             try:
