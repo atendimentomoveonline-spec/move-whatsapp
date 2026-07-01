@@ -222,8 +222,9 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     # 2. Upload no ClickSign
     doc_key = clicksign_upload(caminho_pdf, nome_arquivo)
 
-    # 3. Adicionar signatário
+    # 3. Adicionar signatários: cliente + Move
     clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
+    clicksign_adicionar_signatario(doc_key, "suportemoveonline@gmail.com", "Move Online Contabilidade")
 
     # 4. Enviar para assinatura
     clicksign_enviar(doc_key)
