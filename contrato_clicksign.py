@@ -36,7 +36,7 @@ def parse_descricao(desc):
     Extrai campos da descrição do card Trello.
     Formato esperado:
         Nome: Dr. João Silva
-        CNPJ: 12.345.678/0001-90
+        CNPJ: 12.345.678/0001-90   (ou CPF: 123.456.789-00 para pessoa física)
         Email: joao@email.com
         Telefone: 11 99999-9999
         Endereço: Rua X, 123 - SP
@@ -50,6 +50,14 @@ def parse_descricao(desc):
         if ":" in linha:
             chave, _, valor = linha.partition(":")
             campos[chave.strip().lower()] = valor.strip()
+    # Normaliza: se vier "cpf" usa como documento, coloca também em "cnpj" para compatibilidade
+    if "cpf" in campos and "cnpj" not in campos:
+        campos["cnpj"] = campos["cpf"]
+        campos["documento"] = campos["cpf"]
+        campos["tipo_documento"] = "CPF"
+    elif "cnpj" in campos:
+        campos["documento"] = campos["cnpj"]
+        campos["tipo_documento"] = "CNPJ"
     return campos
 
 def preencher_pdf(campos):
@@ -71,10 +79,10 @@ def preencher_pdf(campos):
     # Preencher campos de formulário se houver
     writer.update_page_form_field_values(writer.pages[0], campos)
 
-    # Salvar PDF preenchido temporariamente
-    cnpj_limpo = re.sub(r"\D", "", campos.get("cnpj", "00000000000000"))
+    # Salvar PDF preenchido temporariamente (usa CNPJ ou CPF no nome do arquivo)
+    doc_numero = re.sub(r"\D", "", campos.get("cnpj", campos.get("cpf", "00000000000000")))
     nome_limpo = re.sub(r"[^\w\s]", "", campos.get("nome", "cliente")).strip().replace(" ", "_")
-    nome_arquivo = f"{cnpj_limpo}_{nome_limpo}.pdf"
+    nome_arquivo = f"{doc_numero}_{nome_limpo}.pdf"
     caminho = os.path.join(os.path.dirname(CONTRATO_PDF), nome_arquivo)
 
     with open(caminho, "wb") as f:
