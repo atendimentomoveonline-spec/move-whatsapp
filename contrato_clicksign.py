@@ -172,14 +172,25 @@ def preencher_pdf(campos):
 
             FONT_SIZE = 9.0  # fonte fixa compatível com o PDF
 
+            # Detecta x da coluna DESCRIÇÃO pelo cabeçalho na página
+            x_descricao = None
+            for w in words:
+                if w["text"].upper() in ("DESCRIÇÃO", "DESCRICAO", "DESCRIÃ‡Ã‚O"):
+                    x_descricao = float(w["x0"])
+                    break
+            # Fallback: 52% da largura da página
+            if x_descricao is None:
+                x_descricao = w_pt * 0.52
+            print(f"[PDF] Pág {pg_idx+1} coluna DESCRIÇÃO em x={x_descricao:.1f}", flush=True)
+
             def _overlay(label_str, texto):
                 label_tokens = [t.upper() for t in label_str.split()]
                 resultado = _encontrar_label(words, label_tokens)
                 if not resultado:
                     return
-                y_top, y_bot, x_label_fim = resultado
-                # Inicia o retângulo branco logo após o label (cobre qualquer XX residual)
-                val_x = x_label_fim + 4
+                y_top, y_bot, _ = resultado
+                # Cobre toda a coluna DESCRIÇÃO a partir do x detectado
+                val_x = x_descricao + 2
                 val_w = w_pt - val_x - 15
                 val_h = (y_bot - y_top) + 4
                 val_y_rl = h_pt - y_bot - 1
