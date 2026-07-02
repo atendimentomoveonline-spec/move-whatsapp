@@ -1,47 +1,55 @@
 """
 Automação de contratos via Trello + ClickSign
-- Webhook do Trello detecta novo card no quadro "Contratos"
-- Preenche PDF do contrato com dados do card
-- Faz upload na pasta ClickSign com nome CNPJ_NomeCliente.pdf
-- Adiciona signatário e envia para assinatura
+- Webhook do Trello detecta card no quadro "Contratos"
+- Preenche template DOCX com dados do card via docxtpl
+- Converte para PDF com LibreOffice
+- Faz upload no ClickSign, adiciona signatários e envia para assinatura
 """
-import os, re, io, json, base64, tempfile, urllib.request, urllib.parse
-from pypdf import PdfReader, PdfWriter
-import pdfplumber
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+import os, re, io, json, base64, tempfile, subprocess, urllib.request, urllib.parse
+from datetime import date
 
-CLICKSIGN_TOKEN   = os.environ.get("CLICKSIGN_TOKEN", "")
-CLICKSIGN_URL     = "https://app.clicksign.com/api/v1"
-TRELLO_KEY        = os.environ.get("TRELLO_KEY", "")
-TRELLO_TOKEN      = os.environ.get("TRELLO_TOKEN", "")
-GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
-DRIVE_FOLDER_ID   = os.environ.get("CONTRATO_FOLDER_ID", "1AhHM01rBVOD-Zmz-xjpuA23e0ajKbuSi")
-PASTA_CLICKSIGN   = os.environ.get("PASTA_CLICKSIGN", "/Contratos")
-ZAPI_INSTANCE     = os.environ.get("ZAPI_INSTANCE", "")
-ZAPI_TOKEN        = os.environ.get("ZAPI_TOKEN", "")
+CLICKSIGN_TOKEN = os.environ.get("CLICKSIGN_TOKEN", "")
+CLICKSIGN_URL   = "https://app.clicksign.com/api/v1"
+TRELLO_KEY      = os.environ.get("TRELLO_KEY", "")
+TRELLO_TOKEN    = os.environ.get("TRELLO_TOKEN", "")
+GOOGLE_API_KEY  = os.environ.get("GOOGLE_API_KEY", "")
+DRIVE_FOLDER_ID = os.environ.get("CONTRATO_FOLDER_ID", "1AhHM01rBVOD-Zmz-xjpuA23e0ajKbuSi")
+PASTA_CLICKSIGN = os.environ.get("PASTA_CLICKSIGN", "/Contratos")
+ZAPI_INSTANCE   = os.environ.get("ZAPI_INSTANCE", "")
+ZAPI_TOKEN      = os.environ.get("ZAPI_TOKEN", "")
 
-def baixar_pdf_modelo():
-    """Baixa o PDF modelo do Google Drive."""
+MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
+         "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"]
+
+
+def baixar_docx_modelo():
+    """Baixa o template DOCX do Google Drive (procura arquivo .docx na pasta)."""
     url = (f"https://www.googleapis.com/drive/v3/files"
            f"?q=%27{DRIVE_FOLDER_ID}%27+in+parents+and+trashed%3Dfalse"
            f"&fields=files(id,name)&key={GOOGLE_API_KEY}")
     with urllib.request.urlopen(url, timeout=10) as r:
         arquivos = json.loads(r.read())["files"]
-    pdf = next((f for f in arquivos if f["name"].lower().endswith(".pdf")), None)
-    if not pdf:
-        raise Exception("PDF modelo não encontrado na pasta do Drive")
-    url_download = f"https://www.googleapis.com/drive/v3/files/{pdf['id']}?alt=media&key={GOOGLE_API_KEY}"
-    with urllib.request.urlopen(url_download, timeout=30) as r:
-        return r.read()
-    print(f"[DRIVE] PDF modelo baixado: {pdf['name']}")
+
+    # Prefere template DOCX; fallback para qualquer DOCX
+    docx = next((f for f in arquivos if "template" in f["name"].lower() and f["name"].lower().endswith(".docx")), None)
+    if not docx:
+        docx = next((f for f in arquivos if f["name"].lower().endswith(".docx")), None)
+    if not docx:
+        raise Exception("Template DOCX não encontrado na pasta do Drive")
+
+    url_dl = f"https://www.googleapis.com/drive/v3/files/{docx['id']}?alt=media&key={GOOGLE_API_KEY}"
+    with urllib.request.urlopen(url_dl, timeout=30) as r:
+        conteudo = r.read()
+    print(f"[DRIVE] Template baixado: {docx['name']} ({len(conteudo)//1024} KB)")
+    return conteudo
+
 
 def parse_descricao(desc):
     """
     Extrai campos da descrição do card Trello.
-    Formato esperado:
+    Formato esperado (uma chave por linha):
         Nome: Dr. João Silva
-        CNPJ: 12.345.678/0001-90   (ou CPF: 123.456.789-00 para pessoa física)
+        CNPJ: 12.345.678/0001-90   (ou CPF: 123.456.789-00)
         Email: joao@email.com
         Telefone: 11 99999-9999
         Endereço: Rua X, 123 - SP
@@ -49,254 +57,119 @@ def parse_descricao(desc):
         Vencimento: 10
         Pagamento: PIX
         Municipio: São Paulo
+        Razao Social: Clínica XYZ Ltda
     """
     campos = {}
     for linha in desc.splitlines():
         if ":" in linha:
             chave, _, valor = linha.partition(":")
-            # Remove markdown links do Trello: [texto](url) → texto
-            valor = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', valor)
-            # Remove caracteres de controle invisíveis
-            valor = re.sub(r'[​-‏‪-‮]', '', valor)
+            valor = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', valor)  # remove markdown links
+            valor = re.sub(r'[​-‏‪-‮]', '', valor)                   # remove chars invisíveis
             campos[chave.strip().lower()] = valor.strip()
-    # Normaliza chaves com variações
-    for alias, chave in [("razão social", "razao_social"), ("razao social", "razao_social"),
-                         ("município", "municipio"), ("endereço", "endereco")]:
+
+    # Normaliza aliases
+    for alias, chave in [
+        ("razão social", "razao_social"), ("razao social", "razao_social"),
+        ("município", "municipio"), ("municipio", "municipio"),
+        ("endereço", "endereco"), ("endereco", "endereco"),
+    ]:
         if alias in campos and chave not in campos:
             campos[chave] = campos[alias]
 
-    # Normaliza: se vier "cpf" usa como documento, coloca também em "cnpj" para compatibilidade
     if "cpf" in campos and "cnpj" not in campos:
         campos["cnpj"] = campos["cpf"]
-        campos["documento"] = campos["cpf"]
         campos["tipo_documento"] = "CPF"
     elif "cnpj" in campos:
-        campos["documento"] = campos["cnpj"]
         campos["tipo_documento"] = "CNPJ"
-    return campos
-
-def _criar_overlay(page_width, page_height, substituicoes):
-    """Cria PDF de overlay com textos posicionados sobre os campos."""
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=(page_width, page_height))
-    for (x, y, w, h, texto, font_size) in substituicoes:
-        c.setFont("Helvetica", font_size)
-        c.setFillColorRGB(1, 1, 1)
-        c.rect(x, y, w, h, fill=1, stroke=0)
-        c.setFillColorRGB(0, 0, 0)
-        c.drawString(x + 2, y + 2, str(texto))
-    c.save()
-    buf.seek(0)
-    return buf.read()
-
-# Labels buscados no PDF → chave nos campos do card (ordem importa: mais específico primeiro)
-_LABELS_PDF = [
-    ("CONTRATANTE",                "nome"),
-    ("RAZÃO SOCIAL",               "razao_social"),
-    ("RAZAO SOCIAL",               "razao_social"),
-    ("INSCRITO NO CNPJ",           "cnpj"),
-    ("E-MAIL CADASTRADO",          "email"),
-    ("TELEFONE CADASTRADO",        "telefone"),
-    ("MUNICÍPIO DE EMISSÃO NFS-E", "municipio"),
-    ("MUNICIPIO DE EMISSAO NFS-E", "municipio"),
-    ("MUNICÍPIO DE EMISSÃO",       "municipio"),
-    ("MUNICIPIO DE EMISSAO",       "municipio"),
-    ("NOME",                       "nome"),
-    ("E-MAIL",                     "email"),
-    ("TELEFONE",                   "telefone"),
-    ("ENDEREÇO",                   "endereco"),
-    ("ENDERECO",                   "endereco"),
-]
-
-# Labels com múltiplas opções (X) — apaga toda a célula e reescreve só o escolhido
-# chave_campo → {valor_card: texto_a_escrever}
-_LABELS_OPCOES = {
-    "PLANO CONTRATADO": {
-        "campo": "plano",
-        "opcoes": ["START", "PRO", "GROWTH", "SCALE"],
-    },
-    "VENCIMENTO MENSAL": {
-        "campo": "vencimento",
-        "opcoes": ["10", "15", "20"],
-    },
-    "FORMA DE PAGAMENTO": {
-        "campo": "pagamento",
-        "opcoes": ["BOLETO", "PIX", "CRÉDITO", "DÉBITO", "CREDITO", "DEBITO"],
-    },
-}
-
-def _encontrar_label(words, label_tokens, margem_y=6):
-    """Retorna (y_top, y_bot, x_label_fim) do label se encontrado na página."""
-    for i, word in enumerate(words):
-        if word["text"].upper().rstrip(":") != label_tokens[0]:
-            continue
-        match = True
-        for j, tok in enumerate(label_tokens[1:], 1):
-            if i + j >= len(words) or words[i + j]["text"].upper().rstrip(":") != tok:
-                match = False
-                break
-        if match:
-            last = words[i + len(label_tokens) - 1]
-            return float(word["top"]), float(last["bottom"]), float(last["x1"])
-    return None
-
-def _detectar_font_size(words, y_top, y_bot, fallback=9.0):
-    """Detecta o tamanho médio da fonte nas palavras da linha."""
-    linha_y = (y_top + y_bot) / 2
-    sizes = []
-    for w in words:
-        wy = (float(w.get("top", 0)) + float(w.get("bottom", 0))) / 2
-        if abs(wy - linha_y) < 6 and w.get("size"):
-            sizes.append(float(w["size"]))
-    return round(sum(sizes) / len(sizes), 1) if sizes else fallback
-
-def preencher_pdf(campos):
-    """Preenche o PDF buscando os labels e sobrepondo os valores na coluna DESCRIÇÃO."""
-    pdf_bytes = baixar_pdf_modelo()
 
     if not campos.get("razao_social"):
         campos["razao_social"] = campos.get("nome", "")
 
-    with pdfplumber.open(io.BytesIO(pdf_bytes)) as plumber_pdf:
-        paginas_subs = {}
+    return campos
 
-        for pg_idx, pg in enumerate(plumber_pdf.pages):
-            w_pt = float(pg.width)
-            h_pt = float(pg.height)
-            words = pg.extract_words(extra_attrs=["size"])
-            if not words:
-                continue
 
-            # Só processa páginas com tabela de dados (header "ELEMENTO")
-            tem_tabela = any(w["text"].upper() == "ELEMENTO" for w in words)
-            if not tem_tabela:
-                continue
+def _checkbox(valor_campo, opcao):
+    """Retorna '(X)' se o valor do campo corresponde à opção, senão '( )'."""
+    return "(X)" if opcao.upper() in str(valor_campo).upper() else "( )"
 
-            # Pula a página da CONTRATADA (dados da Move — WANDERSON é marcador único)
-            textos_pg = " ".join(w["text"].upper() for w in words)
-            if "WANDERSON" in textos_pg or "SOCIO" in textos_pg:
-                print(f"[PDF] Pág {pg_idx+1} — página CONTRATADA, pulando", flush=True)
-                continue
 
-            print(f"[PDF] Pág {pg_idx+1} — processando", flush=True)
+def preencher_docx(campos):
+    """
+    Preenche o template DOCX com os dados do cliente e converte para PDF.
+    Retorna (caminho_pdf, nome_arquivo).
+    """
+    from docxtpl import DocxTemplate
 
-            subs = []
-            ja_preenchidos = set()
+    docx_bytes = baixar_docx_modelo()
 
-            FONT_SIZE = 9.0
+    hoje = date.today()
+    plano = campos.get("plano", "").upper()
+    venc  = campos.get("vencimento", "").strip()
+    pag   = campos.get("pagamento", "").upper()
 
-            # Detecta separador de colunas via linhas verticais da tabela
-            x_descricao = None
-            try:
-                v_edges = [e for e in pg.edges
-                           if e.get("orientation") == "v"
-                           and float(e.get("height", 0)) > 15
-                           and w_pt * 0.3 < float(e["x0"]) < w_pt * 0.7]
-                if v_edges:
-                    x_descricao = min(float(e["x0"]) for e in v_edges) + 1
-            except Exception:
-                pass
+    contexto = {
+        # Página 1 – QUADRO-RESUMO
+        "nome":         campos.get("nome", ""),
+        "email":        campos.get("email", ""),
+        "telefone":     campos.get("telefone", ""),
+        "municipio":    campos.get("municipio", ""),
+        # Data de início
+        "dia":          f"{hoje.day:02d}",
+        "mes":          MESES[hoje.month - 1],
+        # Plano (checkboxes)
+        "plano_start":  _checkbox(plano, "START"),
+        "plano_pro":    _checkbox(plano, "PRO"),
+        "plano_growth": _checkbox(plano, "GROWTH"),
+        "plano_scale":  _checkbox(plano, "SCALE"),
+        # Vencimento (checkboxes)
+        "venc_10":  _checkbox(venc, "10"),
+        "venc_15":  _checkbox(venc, "15"),
+        "venc_20":  _checkbox(venc, "20"),
+        # Pagamento (checkboxes)
+        "pag_boleto":  _checkbox(pag, "BOLETO"),
+        "pag_pix":     _checkbox(pag, "PIX"),
+        "pag_credito": _checkbox(pag, "CRÉD") or _checkbox(pag, "CRED"),
+        "pag_debito":  _checkbox(pag, "DÉB") or _checkbox(pag, "DEB"),
+        # Página 3 – dados CONTRATANTE
+        "razao_social": campos.get("razao_social", campos.get("nome", "")),
+        "cnpj":         campos.get("cnpj", campos.get("cpf", "")),
+        "endereco":     campos.get("endereco", ""),
+    }
 
-            # Fallback: âncoras conhecidas da coluna DESCRIÇÃO
-            if x_descricao is None:
-                ANCORAS = {"MOVE", "CONFORME", "PRAZO", "ELETRONICA", "INDETERMINADO"}
-                cands = [float(w["x0"]) for w in words
-                         if w["text"].upper().rstrip(":") in ANCORAS
-                         and float(w["x0"]) > w_pt * 0.3]
-                x_descricao = (min(cands) if cands else w_pt * 0.42)
+    # Corrige pag_credito/pag_debito (resultado de or pode ser string vazia)
+    for k in ("pag_credito", "pag_debito"):
+        if not contexto[k]:
+            contexto[k] = "( )"
 
-            print(f"[PDF] Pág {pg_idx+1} col x={x_descricao:.1f} (w={w_pt:.0f})", flush=True)
-
-            # Debug: dump palavras extraídas da página para diagnóstico
-            palavras_debug = [(w["text"], round(float(w["x0"]))) for w in words[:60]]
-            print(f"[PDF-DEBUG] Pág {pg_idx+1}: {palavras_debug}", flush=True)
-
-            def _overlay(label_str, texto):
-                label_tokens = [t.upper() for t in label_str.split()]
-                resultado = _encontrar_label(words, label_tokens)
-                if not resultado:
-                    print(f"[PDF] Pág {pg_idx+1} '{label_str}' — NÃO encontrado", flush=True)
-                    return
-                y_top, y_bot, x_fim_label = resultado
-                # Usa o menor x entre coluna detectada e fim do label (cobre mais XXXX)
-                val_x = min(x_descricao + 2, x_fim_label + 4)
-                val_w = w_pt - val_x - 15
-                val_h = (y_bot - y_top) + 4
-                val_y_rl = h_pt - y_bot - 1
-                if val_w <= 0:
-                    print(f"[PDF] Pág {pg_idx+1} '{label_str}' — val_w={val_w:.0f} INVÁLIDO", flush=True)
-                    return
-                subs.append((val_x, val_y_rl, val_w, val_h, texto, FONT_SIZE))
-                print(f"[PDF] Pág {pg_idx+1} '{label_str}'→'{texto}' x={val_x:.0f} w={val_w:.0f}", flush=True)
-
-            # --- Campos texto simples ---
-            for label_str, campo_key in _LABELS_PDF:
-                if campo_key in ja_preenchidos:
-                    continue
-                valor = campos.get(campo_key, "").strip()
-                if not valor:
-                    continue
-                _overlay(label_str, valor)
-                ja_preenchidos.add(campo_key)
-
-            # --- Data de início ---
-            from datetime import date
-            import locale
-            try:
-                locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-            except Exception:
-                try:
-                    locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
-                except Exception:
-                    pass
-            hoje = date.today()
-            MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
-                     "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"]
-            data_str = f"SÃO PAULO, {hoje.day:02d} DE {MESES[hoje.month-1]} DE {hoje.year}"
-            _overlay("DATA DE INÍCIO DA PRESTAÇÃO DE SERVIÇO", data_str)
-            _overlay("DATA DE INÍCIO", data_str)
-
-            # --- Campos com opções (Plano, Vencimento, Pagamento) ---
-            for label_str, cfg in _LABELS_OPCOES.items():
-                campo_key = cfg["campo"]
-                valor_escolhido = campos.get(campo_key, "").strip().upper()
-                if not valor_escolhido:
-                    continue
-                opcao_texto = next(
-                    (op for op in cfg["opcoes"] if op.upper() in valor_escolhido),
-                    valor_escolhido
-                )
-                opcao_texto = opcao_texto.replace("CREDITO", "CRÉDITO").replace("DEBITO", "DÉBITO")
-                _overlay(label_str, opcao_texto)
-
-            if subs:
-                paginas_subs[pg_idx] = (w_pt, h_pt, subs)
-
-    if not paginas_subs:
-        print("[PDF] AVISO: nenhum campo preenchido", flush=True)
-
-    reader = PdfReader(io.BytesIO(pdf_bytes))
-    writer = PdfWriter()
-
-    for pg_idx, page in enumerate(reader.pages):
-        if pg_idx in paginas_subs:
-            w_pt, h_pt, subs = paginas_subs[pg_idx]
-            overlay_bytes = _criar_overlay(w_pt, h_pt, subs)
-            overlay_reader = PdfReader(io.BytesIO(overlay_bytes))
-            page.merge_page(overlay_reader.pages[0])
-        writer.add_page(page)
-
+    # Salva DOCX temporário
+    tmp_dir = tempfile.gettempdir()
     doc_numero = re.sub(r"\D", "", campos.get("cnpj", campos.get("cpf", "00000000000000")))
     nome_limpo = re.sub(r"[^\w\s]", "", campos.get("nome", "cliente")).strip().replace(" ", "_")
-    nome_arquivo = f"{doc_numero}_{nome_limpo}.pdf"
-    caminho = os.path.join(tempfile.gettempdir(), nome_arquivo)
+    nome_base  = f"{doc_numero}_{nome_limpo}"
+    docx_path  = os.path.join(tmp_dir, f"{nome_base}.docx")
+    pdf_path   = os.path.join(tmp_dir, f"{nome_base}.pdf")
 
-    output = io.BytesIO()
-    writer.write(output)
-    with open(caminho, "wb") as f:
-        f.write(output.getvalue())
+    tpl = DocxTemplate(io.BytesIO(docx_bytes))
+    tpl.render(contexto)
+    tpl.save(docx_path)
+    print(f"[DOCX] Template preenchido: {docx_path}")
 
-    return caminho, nome_arquivo
+    # Converte para PDF via LibreOffice
+    result = subprocess.run(
+        ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", tmp_dir, docx_path],
+        capture_output=True, text=True, timeout=60
+    )
+    if result.returncode != 0:
+        raise Exception(f"LibreOffice falhou: {result.stderr}")
+    print(f"[DOCX] Convertido para PDF: {pdf_path}")
+
+    try:
+        os.remove(docx_path)
+    except Exception:
+        pass
+
+    return pdf_path, f"{nome_base}.pdf"
+
 
 def clicksign_upload(caminho_pdf, nome_arquivo):
     """Faz upload do PDF para a pasta no ClickSign."""
@@ -323,9 +196,9 @@ def clicksign_upload(caminho_pdf, nome_arquivo):
     print(f"[CLICKSIGN] Upload OK — key: {doc_key}")
     return doc_key
 
+
 def clicksign_adicionar_signatario(doc_key, email, nome):
-    """Adiciona signatário ao documento."""
-    # Criar signatário
+    """Adiciona signatário e envia notificação por email."""
     payload = json.dumps({
         "signer": {
             "email": email,
@@ -347,7 +220,6 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
         resp = json.loads(r.read())
     signer_key = resp["signer"]["key"]
 
-    # Vincular signatário ao documento
     payload2 = json.dumps({
         "list": {
             "document_key": doc_key,
@@ -356,7 +228,6 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
             "message": "Por favor, assine o contrato de prestação de serviços contábeis da Move Online."
         }
     }).encode()
-
     req2 = urllib.request.Request(
         f"{CLICKSIGN_URL}/lists?access_token={CLICKSIGN_TOKEN}",
         data=payload2,
@@ -366,7 +237,6 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
     with urllib.request.urlopen(req2, timeout=15) as r2:
         resp2 = json.loads(r2.read())
 
-    # Notificar signatário por email
     request_signature_key = resp2.get("list", {}).get("request_signature_key", "")
     if request_signature_key:
         payload3 = json.dumps({
@@ -382,15 +252,16 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
         try:
             with urllib.request.urlopen(req3, timeout=15) as r3:
                 r3.read()
-            print(f"[CLICKSIGN] Notificação enviada para: {email}")
+            print(f"[CLICKSIGN] Notificacao enviada para: {email}")
         except Exception as e:
             print(f"[CLICKSIGN] Erro ao notificar {email}: {e}")
 
-    print(f"[CLICKSIGN] Signatário adicionado: {email}")
+    print(f"[CLICKSIGN] Signatario adicionado: {email}")
     return signer_key
 
+
 def clicksign_enviar(doc_key):
-    """Finaliza o documento para assinatura (ignora se ja estiver ativo)."""
+    """Finaliza o documento para assinatura."""
     payload = json.dumps({"document": {"key": doc_key}}).encode()
     req = urllib.request.Request(
         f"{CLICKSIGN_URL}/documents/{doc_key}/finish?access_token={CLICKSIGN_TOKEN}",
@@ -400,10 +271,10 @@ def clicksign_enviar(doc_key):
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
-            print(f"[CLICKSIGN] Documento finalizado e enviado para assinatura!")
+            print("[CLICKSIGN] Documento finalizado e enviado para assinatura!")
     except Exception as e:
-        # 422 = documento ja esta ativo (running), nao e um erro real
-        print(f"[CLICKSIGN] Documento ja ativo ou enviado: {e}")
+        print(f"[CLICKSIGN] Documento ja ativo ou erro: {e}")
+
 
 def zapi_enviar_whatsapp(telefone, mensagem):
     """Envia mensagem WhatsApp via Z-API."""
@@ -420,6 +291,7 @@ def zapi_enviar_whatsapp(telefone, mensagem):
     except Exception as e:
         print(f"[WHATSAPP] Erro ao enviar aviso: {e}")
 
+
 def trello_comentar_card(card_id, texto):
     """Adiciona comentário no card do Trello."""
     if not card_id or not TRELLO_KEY or not TRELLO_TOKEN:
@@ -431,9 +303,10 @@ def trello_comentar_card(card_id, texto):
     )
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
-            print(f"[TRELLO] Comentário adicionado no card")
+            print("[TRELLO] Comentario adicionado no card")
     except Exception as e:
         print(f"[TRELLO] Erro ao comentar: {e}")
+
 
 def processar_contrato_trello(card_nome, card_desc, card_id=None):
     """Processa um novo card do quadro Contratos."""
@@ -441,17 +314,17 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     campos = parse_descricao(card_desc)
 
     if not campos.get("email"):
-        print(f"[CONTRATO] Email não encontrado na descrição — abortando")
+        print("[CONTRATO] Email nao encontrado na descricao — abortando")
         return False
 
-    # 1. Preencher PDF
-    caminho_pdf, nome_arquivo = preencher_pdf(campos)
+    # 1. Preencher DOCX e converter para PDF
+    caminho_pdf, nome_arquivo = preencher_docx(campos)
     print(f"[CONTRATO] PDF gerado: {nome_arquivo}")
 
     # 2. Upload no ClickSign
     doc_key = clicksign_upload(caminho_pdf, nome_arquivo)
 
-    # 3. Adicionar signatários: cliente + Move (evita duplicar se email for igual)
+    # 3. Adicionar signatários
     MOVE_EMAIL = "suportemoveonline@gmail.com"
     clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
     if campos["email"].lower() != MOVE_EMAIL.lower():
@@ -466,10 +339,10 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     email = campos.get("email", "")
     if telefone:
         mensagem = (
-            f"Olá {nome_curto}! 😊\n\n"
+            f"Ola {nome_curto}!\n\n"
             f"Seu contrato foi enviado para o email *{email}*.\n"
             f"Por favor, verifique sua caixa de entrada e assine o documento.\n\n"
-            f"Qualquer dúvida estamos à disposição! 🤝"
+            f"Qualquer duvida estamos a disposicao!"
         )
         zapi_enviar_whatsapp(telefone, mensagem)
 
@@ -477,13 +350,13 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     from datetime import datetime
     import pytz
     agora = datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M")
-    trello_comentar_card(card_id, f"✅ Contrato enviado para assinatura\n📧 {campos['email']}\n🕐 {agora}")
+    trello_comentar_card(card_id, f"Contrato enviado para assinatura\nEmail: {campos['email']}\nHora: {agora}")
 
     # 7. Limpar PDF temporário
     try:
         os.remove(caminho_pdf)
-    except:
+    except Exception:
         pass
 
-    print(f"[CONTRATO] Concluído! Contrato enviado para {campos['email']}")
+    print(f"[CONTRATO] Concluido! Contrato enviado para {campos['email']}")
     return True
