@@ -208,12 +208,14 @@ def preencher_docx(campos):
     venc  = campos.get("vencimento", "").strip()
     pag   = campos.get("pagamento", "").upper()
 
+    def up(v): return v.upper() if v else ""
+
     contexto = {
         # Página 1 – QUADRO-RESUMO
-        "nome":         campos.get("nome", ""),
-        "email":        campos.get("email", ""),
+        "nome":         up(campos.get("nome", "")),
+        "email":        campos.get("email", "").lower(),
         "telefone":     campos.get("telefone", ""),
-        "municipio":    campos.get("municipio", ""),
+        "municipio":    up(campos.get("municipio", "")),
         # Data de início
         "dia":          f"{hoje.day:02d}",
         "mes":          MESES[hoje.month - 1],
@@ -232,9 +234,9 @@ def preencher_docx(campos):
         "pag_credito": _checkbox(pag, "CRÉD") or _checkbox(pag, "CRED"),
         "pag_debito":  _checkbox(pag, "DÉB") or _checkbox(pag, "DEB"),
         # Página 3 – dados CONTRATANTE
-        "razao_social": campos.get("razao_social", campos.get("nome", "")),
+        "razao_social": up(campos.get("razao_social", campos.get("nome", ""))),
         "cnpj":         campos.get("cnpj", campos.get("cpf", "")),
-        "endereco":     campos.get("endereco", ""),
+        "endereco":     up(campos.get("endereco", "")),
     }
 
     # Corrige pag_credito/pag_debito (resultado de or pode ser string vazia)
