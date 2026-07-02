@@ -167,11 +167,18 @@ def preencher_pdf(campos):
             if not words:
                 continue
 
-            # Pula páginas da Move/CONTRATADA (já têm dados reais, não devem ser modificadas)
+            # Só processa páginas com tabela de dados (header "ELEMENTO")
+            tem_tabela = any(w["text"].upper() == "ELEMENTO" for w in words)
+            if not tem_tabela:
+                continue
+
+            # Pula a página da CONTRATADA (dados da Move — WANDERSON é marcador único)
             textos_pg = " ".join(w["text"].upper() for w in words)
-            if any(m in textos_pg for m in ["WANDERSON", "27.124.625", "SOCIO"]):
+            if "WANDERSON" in textos_pg or "SOCIO" in textos_pg:
                 print(f"[PDF] Pág {pg_idx+1} — página CONTRATADA, pulando", flush=True)
                 continue
+
+            print(f"[PDF] Pág {pg_idx+1} — processando", flush=True)
 
             subs = []
             ja_preenchidos = set()
