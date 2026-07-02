@@ -170,6 +170,22 @@ def preencher_pdf(campos):
             subs = []
             ja_preenchidos = set()
 
+            FONT_SIZE = 9.0  # fonte fixa compatível com o PDF
+
+            def _overlay(label_str, texto):
+                label_tokens = [t.upper() for t in label_str.split()]
+                resultado = _encontrar_label(words, label_tokens)
+                if not resultado:
+                    return
+                y_top, y_bot, x_label_fim = resultado
+                # Inicia o retângulo branco logo após o label (cobre qualquer XX residual)
+                val_x = x_label_fim + 4
+                val_w = w_pt - val_x - 15
+                val_h = (y_bot - y_top) + 4
+                val_y_rl = h_pt - y_bot - 1
+                subs.append((val_x, val_y_rl, val_w, val_h, texto, FONT_SIZE))
+                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{texto}'", flush=True)
+
             # --- Campos texto simples ---
             for label_str, campo_key in _LABELS_PDF:
                 if campo_key in ja_preenchidos:
@@ -177,24 +193,25 @@ def preencher_pdf(campos):
                 valor = campos.get(campo_key, "").strip()
                 if not valor:
                     continue
-
-                label_tokens = [t.upper() for t in label_str.split()]
-                resultado = _encontrar_label(words, label_tokens)
-                if not resultado:
-                    continue
-
-                y_top, y_bot, x_label_fim = resultado
-                font_size = _detectar_font_size(words, y_top, y_bot)
-
-                # Coluna DESCRIÇÃO: mínimo 45% da largura da página
-                val_x = max(x_label_fim + 6, w_pt * 0.45)
-                val_w = w_pt - val_x - 20
-                val_h = (y_bot - y_top) + 4
-                val_y_rl = h_pt - y_bot - 1
-
-                subs.append((val_x, val_y_rl, val_w, val_h, valor, font_size))
+                _overlay(label_str, valor)
                 ja_preenchidos.add(campo_key)
-                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{valor}' (font={font_size})", flush=True)
+
+            # --- Data de início ---
+            from datetime import date
+            import locale
+            try:
+                locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+            except Exception:
+                try:
+                    locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
+                except Exception:
+                    pass
+            hoje = date.today()
+            MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
+                     "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"]
+            data_str = f"SÃO PAULO, {hoje.day:02d} DE {MESES[hoje.month-1]} DE {hoje.year}"
+            _overlay("DATA DE INÍCIO DA PRESTAÇÃO DE SERVIÇO", data_str)
+            _overlay("DATA DE INÍCIO", data_str)
 
             # --- Campos com opções (Plano, Vencimento, Pagamento) ---
             for label_str, cfg in _LABELS_OPCOES.items():
@@ -202,30 +219,12 @@ def preencher_pdf(campos):
                 valor_escolhido = campos.get(campo_key, "").strip().upper()
                 if not valor_escolhido:
                     continue
-
-                label_tokens = label_str.upper().split()
-                resultado = _encontrar_label(words, label_tokens)
-                if not resultado:
-                    continue
-
-                y_top, y_bot, x_label_fim = resultado
-                font_size = _detectar_font_size(words, y_top, y_bot)
-
-                # Determina qual opção foi escolhida
                 opcao_texto = next(
                     (op for op in cfg["opcoes"] if op.upper() in valor_escolhido),
                     valor_escolhido
                 )
-                # Normaliza acentos para exibição
                 opcao_texto = opcao_texto.replace("CREDITO", "CRÉDITO").replace("DEBITO", "DÉBITO")
-
-                val_x = max(x_label_fim + 6, w_pt * 0.45)
-                val_w = w_pt - val_x - 20
-                val_h = (y_bot - y_top) + 4
-                val_y_rl = h_pt - y_bot - 1
-
-                subs.append((val_x, val_y_rl, val_w, val_h, opcao_texto, font_size))
-                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{opcao_texto}'", flush=True)
+                _overlay(label_str, opcao_texto)
 
             if subs:
                 paginas_subs[pg_idx] = (w_pt, h_pt, subs)
