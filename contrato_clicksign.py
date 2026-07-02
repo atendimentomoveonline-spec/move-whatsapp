@@ -376,6 +376,9 @@ def zapi_enviar_whatsapp(telefone, mensagem):
     telefone_limpo = re.sub(r"\D", "", telefone)
     if not telefone_limpo or not ZAPI_INSTANCE or not ZAPI_TOKEN:
         return
+    # Z-API exige DDI: adiciona 55 se não tiver
+    if not telefone_limpo.startswith("55"):
+        telefone_limpo = "55" + telefone_limpo
     url = f"https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}/send-text"
     payload = json.dumps({"phone": telefone_limpo, "message": mensagem}).encode()
     req = urllib.request.Request(url, data=payload,
