@@ -17,6 +17,7 @@ BR_TZ = pytz.timezone("America/Sao_Paulo")
 _trello_lists = {}
 _pendentes = {}
 _ultima_resposta = {}  # telefone -> datetime ultima resposta enviada
+_contratos_processados = {}  # card_id -> datetime ultimo processamento
 
 SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
 
@@ -213,6 +214,12 @@ def trello_webhook():
     print(f"[WEBHOOK] tipo={tipo} lista={lista_nome!r}", flush=True)
     if tipo in ("createCard", "updateCard") and "contrato" in lista_nome.lower():
             card_id = card.get("id")
+            agora = datetime.now(BR_TZ)
+            ultimo = _contratos_processados.get(card_id)
+            if ultimo and (agora - ultimo).total_seconds() < 30:
+                print(f"[CONTRATO] Ignorando duplicata para card {card_id}", flush=True)
+                return jsonify({"ok": True})
+            _contratos_processados[card_id] = agora
             print(f"[CONTRATO] Iniciando para card {card_id}", flush=True)
             try:
                 url = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
