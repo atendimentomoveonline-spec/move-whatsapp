@@ -233,6 +233,8 @@ def preencher_docx(campos):
         "pag_pix":     _checkbox(pag, "PIX"),
         "pag_credito": _checkbox(pag, "CRÉD") or _checkbox(pag, "CRED"),
         "pag_debito":  _checkbox(pag, "DÉB") or _checkbox(pag, "DEB"),
+        # Inline no corpo do contrato
+        "plano":        up(campos.get("plano", "")),
         # Página 3 – dados CONTRATANTE
         "razao_social": up(campos.get("razao_social", campos.get("nome", ""))),
         "cnpj":         campos.get("cnpj", campos.get("cpf", "")),
