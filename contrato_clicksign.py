@@ -7,6 +7,9 @@ Automação de contratos via Trello + ClickSign
 """
 import os, re, io, json, base64, tempfile, urllib.request, urllib.parse
 from pypdf import PdfReader, PdfWriter
+import pdfplumber
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 CLICKSIGN_TOKEN   = os.environ.get("CLICKSIGN_TOKEN", "")
 CLICKSIGN_URL     = "https://app.clicksign.com/api/v1"
@@ -56,6 +59,12 @@ def parse_descricao(desc):
             # Remove caracteres de controle invisíveis
             valor = re.sub(r'[​-‏‪-‮]', '', valor)
             campos[chave.strip().lower()] = valor.strip()
+    # Normaliza chaves com variações
+    for alias, chave in [("razão social", "razao_social"), ("razao social", "razao_social"),
+                         ("município", "municipio"), ("endereço", "endereco")]:
+        if alias in campos and chave not in campos:
+            campos[chave] = campos[alias]
+
     # Normaliza: se vier "cpf" usa como documento, coloca também em "cnpj" para compatibilidade
     if "cpf" in campos and "cnpj" not in campos:
         campos["cnpj"] = campos["cpf"]
@@ -66,17 +75,123 @@ def parse_descricao(desc):
         campos["tipo_documento"] = "CNPJ"
     return campos
 
+def _criar_overlay(page_width, page_height, substituicoes):
+    """
+    Cria um PDF de overlay em memória com os textos a substituir.
+    substituicoes: lista de (x, y, largura, altura, texto_novo)
+    """
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=(page_width, page_height))
+    c.setFont("Helvetica", 10)
+    for (x, y, w, h, texto) in substituicoes:
+        # Cobre o XXXX com retângulo branco
+        c.setFillColorRGB(1, 1, 1)
+        c.rect(x, y, w, h, fill=1, stroke=0)
+        # Desenha o texto em preto
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(x + 2, y + 2, texto)
+    c.save()
+    buf.seek(0)
+    return buf.read()
+
+# Mapeamento: label no PDF → chave em campos
+_LABEL_MAP = {
+    "razão social":  "razao_social",
+    "razao social":  "razao_social",
+    "inscrito no cnpj": "cnpj",
+    "cnpj":          "cnpj",
+    "cpf":           "cpf",
+    "nome":          "nome",
+    "e-mail":        "email",
+    "email":         "email",
+    "telefone":      "telefone",
+    "endereço":      "endereco",
+    "endereco":      "endereco",
+    "município":     "municipio",
+    "municipio":     "municipio",
+}
+
+def _valor_para_label(label_lower, campos):
+    chave = _LABEL_MAP.get(label_lower)
+    if not chave:
+        return None
+    v = campos.get(chave, "")
+    # fallback: razão social → nome se não tiver
+    if not v and chave == "razao_social":
+        v = campos.get("nome", "")
+    return v or None
+
 def preencher_pdf(campos):
-    """Preenche o PDF do contrato com os dados do cliente."""
+    """Preenche o PDF do contrato com os dados do cliente usando overlay."""
     pdf_bytes = baixar_pdf_modelo()
+
+    # Identifica blocos XXX por página usando pdfplumber
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as plumber_pdf:
+        paginas_subs = {}  # page_index -> lista de substituicoes
+
+        for pg_idx, pg in enumerate(plumber_pdf.pages):
+            w_pt = float(pg.width)
+            h_pt = float(pg.height)
+            words = pg.extract_words(extra_attrs=["fontname", "size"])
+            subs = []
+
+            for word in words:
+                text = word.get("text", "")
+                if not re.search(r'X{3,}', text):
+                    continue
+
+                # Acha o label desta linha (palavras à esquerda com y próximo)
+                wx0 = float(word["x0"])
+                wy0 = float(word["top"])
+                wy1 = float(word["bottom"])
+                linha_y = (wy0 + wy1) / 2
+
+                # Busca label: palavras na mesma linha, à esquerda do XXXX
+                candidatos = [
+                    w2 for w2 in words
+                    if abs((float(w2["top"]) + float(w2["bottom"])) / 2 - linha_y) < 8
+                    and float(w2["x0"]) < wx0
+                    and not re.search(r'X{3,}', w2.get("text", ""))
+                ]
+                label_raw = " ".join(w2["text"] for w2 in sorted(candidatos, key=lambda ww: float(ww["x0"])))
+                label_lower = label_raw.strip().rstrip(":").lower()
+
+                valor = _valor_para_label(label_lower, campos)
+                if not valor:
+                    # tenta label parcial
+                    for key in _LABEL_MAP:
+                        if key in label_lower:
+                            valor = _valor_para_label(key, campos)
+                            if valor:
+                                break
+
+                if not valor:
+                    print(f"[PDF] Label não mapeado na pág {pg_idx+1}: '{label_raw}'")
+                    continue
+
+                # Coordenadas em pontos (pdfplumber usa top-down, reportlab usa bottom-up)
+                x0 = float(word["x0"]) - 1
+                y0_rl = h_pt - float(word["bottom"]) - 1
+                bw = float(word["x1"]) - float(word["x0"]) + 10
+                bh = float(word["bottom"]) - float(word["top"]) + 4
+                subs.append((x0, y0_rl, bw, bh, valor))
+                print(f"[PDF] Pág {pg_idx+1} '{label_raw}' → '{valor}'")
+
+            if subs:
+                paginas_subs[pg_idx] = (w_pt, h_pt, subs)
+
+    # Monta PDF final com overlays
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
 
-    # Copiar todas as páginas
-    for page in reader.pages:
+    for pg_idx, page in enumerate(reader.pages):
+        if pg_idx in paginas_subs:
+            w_pt, h_pt, subs = paginas_subs[pg_idx]
+            overlay_bytes = _criar_overlay(w_pt, h_pt, subs)
+            overlay_reader = PdfReader(io.BytesIO(overlay_bytes))
+            page.merge_page(overlay_reader.pages[0])
         writer.add_page(page)
 
-    # Salvar PDF preenchido temporariamente (usa CNPJ ou CPF no nome do arquivo)
     doc_numero = re.sub(r"\D", "", campos.get("cnpj", campos.get("cpf", "00000000000000")))
     nome_limpo = re.sub(r"[^\w\s]", "", campos.get("nome", "cliente")).strip().replace(" ", "_")
     nome_arquivo = f"{doc_numero}_{nome_limpo}.pdf"
