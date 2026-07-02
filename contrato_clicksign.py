@@ -5,7 +5,7 @@ Automação de contratos via Trello + ClickSign
 - Converte para PDF com LibreOffice
 - Faz upload no ClickSign, adiciona signatários e envia para assinatura
 """
-import os, re, io, json, base64, tempfile, subprocess, urllib.request, urllib.parse
+import os, re, io, json, base64, tempfile, urllib.request, urllib.parse
 from datetime import date
 
 CLICKSIGN_TOKEN = os.environ.get("CLICKSIGN_TOKEN", "")
@@ -93,9 +93,61 @@ def _checkbox(valor_campo, opcao):
     return "(X)" if opcao.upper() in str(valor_campo).upper() else "( )"
 
 
+def docx_para_pdf_via_drive(docx_bytes, nome_arquivo):
+    """
+    Faz upload do DOCX no Google Drive com OAuth (service não disponível),
+    usando a API Drive v3 com a chave de API do usuário autenticado via
+    multipart upload + exportação como PDF.
+    Alternativa sem LibreOffice: usa a API Drive para converter.
+    """
+    import urllib.parse, json, base64
+
+    # Upload do DOCX como Google Doc (converte automaticamente)
+    boundary = "boundary_move_online_12345"
+    metadata = json.dumps({
+        "name": nome_arquivo.replace(".pdf", ""),
+        "mimeType": "application/vnd.google-apps.document"
+    }).encode()
+
+    body = (
+        f"--{boundary}\r\n"
+        f"Content-Type: application/json; charset=UTF-8\r\n\r\n"
+    ).encode() + metadata + (
+        f"\r\n--{boundary}\r\n"
+        f"Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\r\n\r\n"
+    ).encode() + docx_bytes + f"\r\n--{boundary}--".encode()
+
+    url = f"https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&key={GOOGLE_API_KEY}"
+    req = urllib.request.Request(url, data=body,
+        headers={"Content-Type": f"multipart/related; boundary={boundary}"},
+        method="POST")
+    with urllib.request.urlopen(req, timeout=60) as r:
+        file_info = json.loads(r.read())
+
+    file_id = file_info["id"]
+    print(f"[DRIVE] DOCX convertido para Google Doc: {file_id}")
+
+    # Exporta como PDF
+    url_export = f"https://www.googleapis.com/drive/v3/files/{file_id}/export?mimeType=application/pdf&key={GOOGLE_API_KEY}"
+    with urllib.request.urlopen(url_export, timeout=60) as r:
+        pdf_bytes = r.read()
+
+    # Remove o arquivo temporário do Drive
+    try:
+        req_del = urllib.request.Request(
+            f"https://www.googleapis.com/drive/v3/files/{file_id}?key={GOOGLE_API_KEY}",
+            method="DELETE")
+        urllib.request.urlopen(req_del, timeout=10)
+    except Exception:
+        pass
+
+    print(f"[DRIVE] PDF exportado: {len(pdf_bytes)//1024} KB")
+    return pdf_bytes
+
+
 def preencher_docx(campos):
     """
-    Preenche o template DOCX com os dados do cliente e converte para PDF.
+    Preenche o template DOCX com os dados do cliente e converte para PDF via Google Drive.
     Retorna (caminho_pdf, nome_arquivo).
     """
     from docxtpl import DocxTemplate
@@ -151,22 +203,16 @@ def preencher_docx(campos):
 
     tpl = DocxTemplate(io.BytesIO(docx_bytes))
     tpl.render(contexto)
-    tpl.save(docx_path)
-    print(f"[DOCX] Template preenchido: {docx_path}")
+    docx_buf = io.BytesIO()
+    tpl.save(docx_buf)
+    docx_preenchido = docx_buf.getvalue()
+    print(f"[DOCX] Template preenchido ({len(docx_preenchido)//1024} KB)")
 
-    # Converte para PDF via LibreOffice
-    result = subprocess.run(
-        ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", tmp_dir, docx_path],
-        capture_output=True, text=True, timeout=60
-    )
-    if result.returncode != 0:
-        raise Exception(f"LibreOffice falhou: {result.stderr}")
-    print(f"[DOCX] Convertido para PDF: {pdf_path}")
+    # Converte para PDF via Google Drive (sem LibreOffice)
+    pdf_bytes = docx_para_pdf_via_drive(docx_preenchido, f"{nome_base}.pdf")
 
-    try:
-        os.remove(docx_path)
-    except Exception:
-        pass
+    with open(pdf_path, "wb") as f:
+        f.write(pdf_bytes)
 
     return pdf_path, f"{nome_base}.pdf"
 
