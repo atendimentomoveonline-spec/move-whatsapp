@@ -172,16 +172,29 @@ def preencher_pdf(campos):
 
             FONT_SIZE = 9.0  # fonte fixa compatível com o PDF
 
-            # Detecta x da coluna DESCRIÇÃO pelo cabeçalho na página
-            x_descricao = None
+            # Detecta x da coluna DESCRIÇÃO pelo texto mais à esquerda na metade direita da página
+            # Âncoras: palavras que SÃO da coluna DESCRIÇÃO (não labels)
+            ANCORAS = {"MOVE", "CONFORME", "PRAZO", "ELETRÔNICA", "ELETRONICA",
+                       "INDETERMINADO", "PLANOS", "FUNCIONALIDADE", "PAULO"}
+            x_candidatos = []
             for w in words:
-                if w["text"].upper() in ("DESCRIÇÃO", "DESCRICAO", "DESCRIÃ‡Ã‚O"):
-                    x_descricao = float(w["x0"])
-                    break
-            # Fallback: 52% da largura da página
-            if x_descricao is None:
-                x_descricao = w_pt * 0.52
-            print(f"[PDF] Pág {pg_idx+1} coluna DESCRIÇÃO em x={x_descricao:.1f}", flush=True)
+                txt = w["text"].upper().rstrip(":")
+                wx0 = float(w["x0"])
+                # Palavras na metade direita que são âncoras conhecidas da coluna DESCRIÇÃO
+                if wx0 > w_pt * 0.3 and txt in ANCORAS:
+                    x_candidatos.append(wx0)
+                # Qualquer palavra cujo x0 seja > 35% mas < 65% (borda da coluna)
+                elif w_pt * 0.35 < wx0 < w_pt * 0.65:
+                    # Só considera se não for um label (labels terminam com ':')
+                    if not w["text"].endswith(":") and len(w["text"]) > 2:
+                        x_candidatos.append(wx0)
+
+            if x_candidatos:
+                x_descricao = min(x_candidatos) - 2
+            else:
+                x_descricao = w_pt * 0.38  # fallback conservador
+
+            print(f"[PDF] Pág {pg_idx+1} coluna DESCRIÇÃO em x={x_descricao:.1f} (w={w_pt:.0f})", flush=True)
 
             def _overlay(label_str, texto):
                 label_tokens = [t.upper() for t in label_str.split()]
