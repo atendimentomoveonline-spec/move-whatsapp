@@ -79,8 +79,8 @@ def _criar_overlay(page_width, page_height, substituicoes):
     """Cria PDF de overlay com textos posicionados sobre os campos."""
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=(page_width, page_height))
-    c.setFont("Helvetica", 10)
-    for (x, y, w, h, texto) in substituicoes:
+    for (x, y, w, h, texto, font_size) in substituicoes:
+        c.setFont("Helvetica", font_size)
         c.setFillColorRGB(1, 1, 1)
         c.rect(x, y, w, h, fill=1, stroke=0)
         c.setFillColorRGB(0, 0, 0)
@@ -91,20 +91,39 @@ def _criar_overlay(page_width, page_height, substituicoes):
 
 # Labels buscados no PDF → chave nos campos do card (ordem importa: mais específico primeiro)
 _LABELS_PDF = [
-    ("CONTRATANTE",             "nome"),
-    ("RAZÃO SOCIAL",            "razao_social"),
-    ("RAZAO SOCIAL",            "razao_social"),
-    ("INSCRITO NO CNPJ",        "cnpj"),
-    ("E-MAIL CADASTRADO",       "email"),
-    ("TELEFONE CADASTRADO",     "telefone"),
+    ("CONTRATANTE",                "nome"),
+    ("RAZÃO SOCIAL",               "razao_social"),
+    ("RAZAO SOCIAL",               "razao_social"),
+    ("INSCRITO NO CNPJ",           "cnpj"),
+    ("E-MAIL CADASTRADO",          "email"),
+    ("TELEFONE CADASTRADO",        "telefone"),
     ("MUNICÍPIO DE EMISSÃO NFS-E", "municipio"),
     ("MUNICIPIO DE EMISSAO NFS-E", "municipio"),
-    ("NOME",                    "nome"),
-    ("E-MAIL",                  "email"),
-    ("TELEFONE",                "telefone"),
-    ("ENDEREÇO",                "endereco"),
-    ("ENDERECO",                "endereco"),
+    ("MUNICÍPIO DE EMISSÃO",       "municipio"),
+    ("MUNICIPIO DE EMISSAO",       "municipio"),
+    ("NOME",                       "nome"),
+    ("E-MAIL",                     "email"),
+    ("TELEFONE",                   "telefone"),
+    ("ENDEREÇO",                   "endereco"),
+    ("ENDERECO",                   "endereco"),
 ]
+
+# Labels com múltiplas opções (X) — apaga toda a célula e reescreve só o escolhido
+# chave_campo → {valor_card: texto_a_escrever}
+_LABELS_OPCOES = {
+    "PLANO CONTRATADO": {
+        "campo": "plano",
+        "opcoes": ["START", "PRO", "GROWTH", "SCALE"],
+    },
+    "VENCIMENTO MENSAL": {
+        "campo": "vencimento",
+        "opcoes": ["10", "15", "20"],
+    },
+    "FORMA DE PAGAMENTO": {
+        "campo": "pagamento",
+        "opcoes": ["BOLETO", "PIX", "CRÉDITO", "DÉBITO", "CREDITO", "DEBITO"],
+    },
+}
 
 def _encontrar_label(words, label_tokens, margem_y=6):
     """Retorna (y_top, y_bot, x_label_fim) do label se encontrado na página."""
@@ -121,11 +140,20 @@ def _encontrar_label(words, label_tokens, margem_y=6):
             return float(word["top"]), float(last["bottom"]), float(last["x1"])
     return None
 
+def _detectar_font_size(words, y_top, y_bot, fallback=9.0):
+    """Detecta o tamanho médio da fonte nas palavras da linha."""
+    linha_y = (y_top + y_bot) / 2
+    sizes = []
+    for w in words:
+        wy = (float(w.get("top", 0)) + float(w.get("bottom", 0))) / 2
+        if abs(wy - linha_y) < 6 and w.get("size"):
+            sizes.append(float(w["size"]))
+    return round(sum(sizes) / len(sizes), 1) if sizes else fallback
+
 def preencher_pdf(campos):
-    """Preenche o PDF buscando os labels (não os XXXX) e sobrepondo os valores."""
+    """Preenche o PDF buscando os labels e sobrepondo os valores na coluna DESCRIÇÃO."""
     pdf_bytes = baixar_pdf_modelo()
 
-    # fallback razao_social → nome
     if not campos.get("razao_social"):
         campos["razao_social"] = campos.get("nome", "")
 
@@ -135,18 +163,14 @@ def preencher_pdf(campos):
         for pg_idx, pg in enumerate(plumber_pdf.pages):
             w_pt = float(pg.width)
             h_pt = float(pg.height)
-            words = pg.extract_words()
+            words = pg.extract_words(extra_attrs=["size"])
             if not words:
                 continue
-
-            # Debug: mostra texto extraído das primeiras páginas
-            if pg_idx < 5:
-                textos = [w["text"] for w in words[:40]]
-                print(f"[PDF-DEBUG] Pág {pg_idx+1}: {textos}", flush=True)
 
             subs = []
             ja_preenchidos = set()
 
+            # --- Campos texto simples ---
             for label_str, campo_key in _LABELS_PDF:
                 if campo_key in ja_preenchidos:
                     continue
@@ -160,22 +184,54 @@ def preencher_pdf(campos):
                     continue
 
                 y_top, y_bot, x_label_fim = resultado
-                # Coluna de valor começa após o label + padding
-                val_x = x_label_fim + 8
-                val_w = w_pt - val_x - 15
-                val_h = y_bot - y_top + 4
-                # Converte coordenadas: pdfplumber top-down → reportlab bottom-up
+                font_size = _detectar_font_size(words, y_top, y_bot)
+
+                # Coluna DESCRIÇÃO: mínimo 45% da largura da página
+                val_x = max(x_label_fim + 6, w_pt * 0.45)
+                val_w = w_pt - val_x - 20
+                val_h = (y_bot - y_top) + 4
                 val_y_rl = h_pt - y_bot - 1
 
-                subs.append((val_x, val_y_rl, val_w, val_h, valor))
+                subs.append((val_x, val_y_rl, val_w, val_h, valor, font_size))
                 ja_preenchidos.add(campo_key)
-                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{valor}'", flush=True)
+                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{valor}' (font={font_size})", flush=True)
+
+            # --- Campos com opções (Plano, Vencimento, Pagamento) ---
+            for label_str, cfg in _LABELS_OPCOES.items():
+                campo_key = cfg["campo"]
+                valor_escolhido = campos.get(campo_key, "").strip().upper()
+                if not valor_escolhido:
+                    continue
+
+                label_tokens = label_str.upper().split()
+                resultado = _encontrar_label(words, label_tokens)
+                if not resultado:
+                    continue
+
+                y_top, y_bot, x_label_fim = resultado
+                font_size = _detectar_font_size(words, y_top, y_bot)
+
+                # Determina qual opção foi escolhida
+                opcao_texto = next(
+                    (op for op in cfg["opcoes"] if op.upper() in valor_escolhido),
+                    valor_escolhido
+                )
+                # Normaliza acentos para exibição
+                opcao_texto = opcao_texto.replace("CREDITO", "CRÉDITO").replace("DEBITO", "DÉBITO")
+
+                val_x = max(x_label_fim + 6, w_pt * 0.45)
+                val_w = w_pt - val_x - 20
+                val_h = (y_bot - y_top) + 4
+                val_y_rl = h_pt - y_bot - 1
+
+                subs.append((val_x, val_y_rl, val_w, val_h, opcao_texto, font_size))
+                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{opcao_texto}'", flush=True)
 
             if subs:
                 paginas_subs[pg_idx] = (w_pt, h_pt, subs)
 
     if not paginas_subs:
-        print("[PDF] AVISO: nenhum label encontrado — verifique PDF-DEBUG acima", flush=True)
+        print("[PDF] AVISO: nenhum campo preenchido", flush=True)
 
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
