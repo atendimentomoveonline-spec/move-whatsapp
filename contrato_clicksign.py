@@ -23,24 +23,14 @@ MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
 
 
 def baixar_docx_modelo():
-    """Baixa o template DOCX do Google Drive (procura arquivo .docx na pasta)."""
-    url = (f"https://www.googleapis.com/drive/v3/files"
-           f"?q=%27{DRIVE_FOLDER_ID}%27+in+parents+and+trashed%3Dfalse"
-           f"&fields=files(id,name)&key={GOOGLE_API_KEY}")
-    with urllib.request.urlopen(url, timeout=10) as r:
-        arquivos = json.loads(r.read())["files"]
-
-    # Prefere template DOCX; fallback para qualquer DOCX
-    docx = next((f for f in arquivos if "template" in f["name"].lower() and f["name"].lower().endswith(".docx")), None)
-    if not docx:
-        docx = next((f for f in arquivos if f["name"].lower().endswith(".docx")), None)
-    if not docx:
-        raise Exception("Template DOCX não encontrado na pasta do Drive")
-
-    url_dl = f"https://www.googleapis.com/drive/v3/files/{docx['id']}?alt=media&key={GOOGLE_API_KEY}"
-    with urllib.request.urlopen(url_dl, timeout=30) as r:
-        conteudo = r.read()
-    print(f"[DRIVE] Template baixado: {docx['name']} ({len(conteudo)//1024} KB)")
+    """Carrega o template DOCX do repositório local."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    caminho = os.path.join(base, "contrato_template.docx")
+    if not os.path.exists(caminho):
+        raise Exception(f"Template DOCX não encontrado em: {caminho}")
+    with open(caminho, "rb") as f:
+        conteudo = f.read()
+    print(f"[TEMPLATE] Carregado: {len(conteudo)//1024} KB")
     return conteudo
 
 
