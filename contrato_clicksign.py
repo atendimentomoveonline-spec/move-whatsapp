@@ -167,34 +167,38 @@ def preencher_pdf(campos):
             if not words:
                 continue
 
+            # Pula páginas da Move/CONTRATADA (já têm dados reais, não devem ser modificadas)
+            textos_pg = " ".join(w["text"].upper() for w in words)
+            if any(m in textos_pg for m in ["WANDERSON", "27.124.625", "SOCIO"]):
+                print(f"[PDF] Pág {pg_idx+1} — página CONTRATADA, pulando", flush=True)
+                continue
+
             subs = []
             ja_preenchidos = set()
 
-            FONT_SIZE = 9.0  # fonte fixa compatível com o PDF
+            FONT_SIZE = 9.0
 
-            # Detecta x da coluna DESCRIÇÃO pelo texto mais à esquerda na metade direita da página
-            # Âncoras: palavras que SÃO da coluna DESCRIÇÃO (não labels)
-            ANCORAS = {"MOVE", "CONFORME", "PRAZO", "ELETRÔNICA", "ELETRONICA",
-                       "INDETERMINADO", "PLANOS", "FUNCIONALIDADE", "PAULO"}
-            x_candidatos = []
-            for w in words:
-                txt = w["text"].upper().rstrip(":")
-                wx0 = float(w["x0"])
-                # Palavras na metade direita que são âncoras conhecidas da coluna DESCRIÇÃO
-                if wx0 > w_pt * 0.3 and txt in ANCORAS:
-                    x_candidatos.append(wx0)
-                # Qualquer palavra cujo x0 seja > 35% mas < 65% (borda da coluna)
-                elif w_pt * 0.35 < wx0 < w_pt * 0.65:
-                    # Só considera se não for um label (labels terminam com ':')
-                    if not w["text"].endswith(":") and len(w["text"]) > 2:
-                        x_candidatos.append(wx0)
+            # Detecta separador de colunas via linhas verticais da tabela
+            x_descricao = None
+            try:
+                v_edges = [e for e in pg.edges
+                           if e.get("orientation") == "v"
+                           and float(e.get("height", 0)) > 15
+                           and w_pt * 0.3 < float(e["x0"]) < w_pt * 0.7]
+                if v_edges:
+                    x_descricao = min(float(e["x0"]) for e in v_edges) + 1
+            except Exception:
+                pass
 
-            if x_candidatos:
-                x_descricao = min(x_candidatos) - 2
-            else:
-                x_descricao = w_pt * 0.38  # fallback conservador
+            # Fallback: âncoras conhecidas da coluna DESCRIÇÃO
+            if x_descricao is None:
+                ANCORAS = {"MOVE", "CONFORME", "PRAZO", "ELETRONICA", "INDETERMINADO"}
+                cands = [float(w["x0"]) for w in words
+                         if w["text"].upper().rstrip(":") in ANCORAS
+                         and float(w["x0"]) > w_pt * 0.3]
+                x_descricao = (min(cands) if cands else w_pt * 0.42)
 
-            print(f"[PDF] Pág {pg_idx+1} coluna DESCRIÇÃO em x={x_descricao:.1f} (w={w_pt:.0f})", flush=True)
+            print(f"[PDF] Pág {pg_idx+1} col x={x_descricao:.1f} (w={w_pt:.0f})", flush=True)
 
             def _overlay(label_str, texto):
                 label_tokens = [t.upper() for t in label_str.split()]
