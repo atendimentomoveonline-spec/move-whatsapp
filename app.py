@@ -1,4 +1,5 @@
-import os, re, json, urllib.request, urllib.parse, threading
+import os, re, json, urllib.request, urllib.parse, threading, sys
+sys.stdout.reconfigure(line_buffering=True)
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
 import pytz
@@ -208,9 +209,11 @@ def trello_webhook():
     card = action_data.get("card", {})
     # createCard usa "list", updateCard (mover card) usa "listAfter"
     lista_info = action_data.get("listAfter") or action_data.get("list") or {}
-    if tipo in ("createCard", "updateCard") and "contrato" in lista_info.get("name", "").lower():
+    lista_nome = lista_info.get("name", "")
+    print(f"[WEBHOOK] tipo={tipo} lista={lista_nome!r}", flush=True)
+    if tipo in ("createCard", "updateCard") and "contrato" in lista_nome.lower():
             card_id = card.get("id")
-            # Buscar descrição completa do card
+            print(f"[CONTRATO] Iniciando para card {card_id}", flush=True)
             try:
                 url = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
                 with urllib.request.urlopen(url, timeout=10) as r:
@@ -218,10 +221,11 @@ def trello_webhook():
                 from contrato_clicksign import processar_contrato_trello
                 threading.Thread(
                     target=processar_contrato_trello,
-                    args=[card_full.get("name",""), card_full.get("desc",""), card_id]
+                    args=[card_full.get("name",""), card_full.get("desc",""), card_id],
+                    daemon=True
                 ).start()
             except Exception as e:
-                print(f"[CONTRATO ERRO] {e}")
+                print(f"[CONTRATO ERRO] {e}", flush=True)
     return jsonify({"ok": True})
 
 @app.route("/webhook", methods=["POST"])
