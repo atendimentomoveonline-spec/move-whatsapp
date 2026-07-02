@@ -155,7 +155,27 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
         method="POST"
     )
     with urllib.request.urlopen(req2, timeout=15) as r2:
-        json.loads(r2.read())
+        resp2 = json.loads(r2.read())
+
+    # Notificar signatário por email
+    request_signature_key = resp2.get("list", {}).get("request_signature_key", "")
+    if request_signature_key:
+        payload3 = json.dumps({
+            "request_signature_key": request_signature_key,
+            "message": "Por favor, assine o contrato de prestação de serviços contábeis da Move Online Contabilidade Médica."
+        }).encode()
+        req3 = urllib.request.Request(
+            f"{CLICKSIGN_URL}/notifications?access_token={CLICKSIGN_TOKEN}",
+            data=payload3,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req3, timeout=15) as r3:
+                r3.read()
+            print(f"[CLICKSIGN] Notificação enviada para: {email}")
+        except Exception as e:
+            print(f"[CLICKSIGN] Erro ao notificar {email}: {e}")
 
     print(f"[CLICKSIGN] Signatário adicionado: {email}")
     return signer_key
