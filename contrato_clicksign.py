@@ -200,19 +200,27 @@ def preencher_pdf(campos):
 
             print(f"[PDF] Pág {pg_idx+1} col x={x_descricao:.1f} (w={w_pt:.0f})", flush=True)
 
+            # Debug: dump palavras extraídas da página para diagnóstico
+            palavras_debug = [(w["text"], round(float(w["x0"]))) for w in words[:60]]
+            print(f"[PDF-DEBUG] Pág {pg_idx+1}: {palavras_debug}", flush=True)
+
             def _overlay(label_str, texto):
                 label_tokens = [t.upper() for t in label_str.split()]
                 resultado = _encontrar_label(words, label_tokens)
                 if not resultado:
+                    print(f"[PDF] Pág {pg_idx+1} '{label_str}' — NÃO encontrado", flush=True)
                     return
-                y_top, y_bot, _ = resultado
-                # Cobre toda a coluna DESCRIÇÃO a partir do x detectado
-                val_x = x_descricao + 2
+                y_top, y_bot, x_fim_label = resultado
+                # Usa o menor x entre coluna detectada e fim do label (cobre mais XXXX)
+                val_x = min(x_descricao + 2, x_fim_label + 4)
                 val_w = w_pt - val_x - 15
                 val_h = (y_bot - y_top) + 4
                 val_y_rl = h_pt - y_bot - 1
+                if val_w <= 0:
+                    print(f"[PDF] Pág {pg_idx+1} '{label_str}' — val_w={val_w:.0f} INVÁLIDO", flush=True)
+                    return
                 subs.append((val_x, val_y_rl, val_w, val_h, texto, FONT_SIZE))
-                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{texto}'", flush=True)
+                print(f"[PDF] Pág {pg_idx+1} '{label_str}'→'{texto}' x={val_x:.0f} w={val_w:.0f}", flush=True)
 
             # --- Campos texto simples ---
             for label_str, campo_key in _LABELS_PDF:
