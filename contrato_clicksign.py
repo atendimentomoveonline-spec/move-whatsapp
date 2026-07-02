@@ -76,111 +76,107 @@ def parse_descricao(desc):
     return campos
 
 def _criar_overlay(page_width, page_height, substituicoes):
-    """
-    Cria um PDF de overlay em memória com os textos a substituir.
-    substituicoes: lista de (x, y, largura, altura, texto_novo)
-    """
+    """Cria PDF de overlay com textos posicionados sobre os campos."""
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=(page_width, page_height))
     c.setFont("Helvetica", 10)
     for (x, y, w, h, texto) in substituicoes:
-        # Cobre o XXXX com retângulo branco
         c.setFillColorRGB(1, 1, 1)
         c.rect(x, y, w, h, fill=1, stroke=0)
-        # Desenha o texto em preto
         c.setFillColorRGB(0, 0, 0)
-        c.drawString(x + 2, y + 2, texto)
+        c.drawString(x + 2, y + 2, str(texto))
     c.save()
     buf.seek(0)
     return buf.read()
 
-# Mapeamento: label no PDF → chave em campos
-_LABEL_MAP = {
-    "razão social":  "razao_social",
-    "razao social":  "razao_social",
-    "inscrito no cnpj": "cnpj",
-    "cnpj":          "cnpj",
-    "cpf":           "cpf",
-    "nome":          "nome",
-    "e-mail":        "email",
-    "email":         "email",
-    "telefone":      "telefone",
-    "endereço":      "endereco",
-    "endereco":      "endereco",
-    "município":     "municipio",
-    "municipio":     "municipio",
-}
+# Labels buscados no PDF → chave nos campos do card (ordem importa: mais específico primeiro)
+_LABELS_PDF = [
+    ("CONTRATANTE",             "nome"),
+    ("RAZÃO SOCIAL",            "razao_social"),
+    ("RAZAO SOCIAL",            "razao_social"),
+    ("INSCRITO NO CNPJ",        "cnpj"),
+    ("E-MAIL CADASTRADO",       "email"),
+    ("TELEFONE CADASTRADO",     "telefone"),
+    ("MUNICÍPIO DE EMISSÃO NFS-E", "municipio"),
+    ("MUNICIPIO DE EMISSAO NFS-E", "municipio"),
+    ("NOME",                    "nome"),
+    ("E-MAIL",                  "email"),
+    ("TELEFONE",                "telefone"),
+    ("ENDEREÇO",                "endereco"),
+    ("ENDERECO",                "endereco"),
+]
 
-def _valor_para_label(label_lower, campos):
-    chave = _LABEL_MAP.get(label_lower)
-    if not chave:
-        return None
-    v = campos.get(chave, "")
-    # fallback: razão social → nome se não tiver
-    if not v and chave == "razao_social":
-        v = campos.get("nome", "")
-    return v or None
+def _encontrar_label(words, label_tokens, margem_y=6):
+    """Retorna (y_top, y_bot, x_label_fim) do label se encontrado na página."""
+    for i, word in enumerate(words):
+        if word["text"].upper().rstrip(":") != label_tokens[0]:
+            continue
+        match = True
+        for j, tok in enumerate(label_tokens[1:], 1):
+            if i + j >= len(words) or words[i + j]["text"].upper().rstrip(":") != tok:
+                match = False
+                break
+        if match:
+            last = words[i + len(label_tokens) - 1]
+            return float(word["top"]), float(last["bottom"]), float(last["x1"])
+    return None
 
 def preencher_pdf(campos):
-    """Preenche o PDF do contrato com os dados do cliente usando overlay."""
+    """Preenche o PDF buscando os labels (não os XXXX) e sobrepondo os valores."""
     pdf_bytes = baixar_pdf_modelo()
 
-    # Identifica blocos XXX por página usando pdfplumber
+    # fallback razao_social → nome
+    if not campos.get("razao_social"):
+        campos["razao_social"] = campos.get("nome", "")
+
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as plumber_pdf:
-        paginas_subs = {}  # page_index -> lista de substituicoes
+        paginas_subs = {}
 
         for pg_idx, pg in enumerate(plumber_pdf.pages):
             w_pt = float(pg.width)
             h_pt = float(pg.height)
-            words = pg.extract_words(extra_attrs=["fontname", "size"])
+            words = pg.extract_words()
+            if not words:
+                continue
+
+            # Debug: mostra texto extraído das primeiras páginas
+            if pg_idx < 5:
+                textos = [w["text"] for w in words[:40]]
+                print(f"[PDF-DEBUG] Pág {pg_idx+1}: {textos}", flush=True)
+
             subs = []
+            ja_preenchidos = set()
 
-            for word in words:
-                text = word.get("text", "")
-                if not re.search(r'X{3,}', text):
+            for label_str, campo_key in _LABELS_PDF:
+                if campo_key in ja_preenchidos:
+                    continue
+                valor = campos.get(campo_key, "").strip()
+                if not valor:
                     continue
 
-                # Acha o label desta linha (palavras à esquerda com y próximo)
-                wx0 = float(word["x0"])
-                wy0 = float(word["top"])
-                wy1 = float(word["bottom"])
-                linha_y = (wy0 + wy1) / 2
-
-                # Busca label: palavras na mesma linha, à esquerda do XXXX
-                candidatos = [
-                    w2 for w2 in words
-                    if abs((float(w2["top"]) + float(w2["bottom"])) / 2 - linha_y) < 8
-                    and float(w2["x0"]) < wx0
-                    and not re.search(r'X{3,}', w2.get("text", ""))
-                ]
-                label_raw = " ".join(w2["text"] for w2 in sorted(candidatos, key=lambda ww: float(ww["x0"])))
-                label_lower = label_raw.strip().rstrip(":").lower()
-
-                valor = _valor_para_label(label_lower, campos)
-                if not valor:
-                    # tenta label parcial
-                    for key in _LABEL_MAP:
-                        if key in label_lower:
-                            valor = _valor_para_label(key, campos)
-                            if valor:
-                                break
-
-                if not valor:
-                    print(f"[PDF] Label não mapeado na pág {pg_idx+1}: '{label_raw}'")
+                label_tokens = [t.upper() for t in label_str.split()]
+                resultado = _encontrar_label(words, label_tokens)
+                if not resultado:
                     continue
 
-                # Coordenadas em pontos (pdfplumber usa top-down, reportlab usa bottom-up)
-                x0 = float(word["x0"]) - 1
-                y0_rl = h_pt - float(word["bottom"]) - 1
-                bw = float(word["x1"]) - float(word["x0"]) + 10
-                bh = float(word["bottom"]) - float(word["top"]) + 4
-                subs.append((x0, y0_rl, bw, bh, valor))
-                print(f"[PDF] Pág {pg_idx+1} '{label_raw}' → '{valor}'")
+                y_top, y_bot, x_label_fim = resultado
+                # Coluna de valor começa após o label + padding
+                val_x = x_label_fim + 8
+                val_w = w_pt - val_x - 15
+                val_h = y_bot - y_top + 4
+                # Converte coordenadas: pdfplumber top-down → reportlab bottom-up
+                val_y_rl = h_pt - y_bot - 1
+
+                subs.append((val_x, val_y_rl, val_w, val_h, valor))
+                ja_preenchidos.add(campo_key)
+                print(f"[PDF] Pág {pg_idx+1} '{label_str}' → '{valor}'", flush=True)
 
             if subs:
                 paginas_subs[pg_idx] = (w_pt, h_pt, subs)
 
-    # Monta PDF final com overlays
+    if not paginas_subs:
+        print("[PDF] AVISO: nenhum label encontrado — verifique PDF-DEBUG acima", flush=True)
+
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
 
