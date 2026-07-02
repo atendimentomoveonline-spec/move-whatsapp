@@ -252,6 +252,7 @@ def preencher_docx(campos):
     docx_path  = os.path.join(tmp_dir, f"{nome_base}.docx")
     pdf_path   = os.path.join(tmp_dir, f"{nome_base}.pdf")
 
+    print(f"[CONTEXTO] nome={contexto['nome']!r} razao_social={contexto['razao_social']!r} cnpj={contexto['cnpj']!r}")
     tpl = DocxTemplate(io.BytesIO(docx_bytes))
     tpl.render(contexto)
     docx_buf = io.BytesIO()
