@@ -83,6 +83,65 @@ def _checkbox(valor_campo, opcao):
     return "(X)" if opcao.upper() in str(valor_campo).upper() else "( )"
 
 
+def docx_para_pdf_via_cloudconvert(docx_bytes, nome_arquivo):
+    """Converte DOCX para PDF usando CloudConvert API (token via env CLOUDCONVERT_TOKEN)."""
+    import json, base64
+    token = os.environ.get("CLOUDCONVERT_TOKEN", "")
+    if not token:
+        raise Exception("CLOUDCONVERT_TOKEN não configurado")
+
+    # 1. Criar job
+    job_payload = json.dumps({
+        "tasks": {
+            "upload": {"operation": "import/upload"},
+            "convert": {"operation": "convert", "input": "upload",
+                        "input_format": "docx", "output_format": "pdf"},
+            "export": {"operation": "export/url", "input": "convert"}
+        }
+    }).encode()
+    req = urllib.request.Request("https://api.cloudconvert.com/v2/jobs",
+        data=job_payload,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        method="POST")
+    with urllib.request.urlopen(req, timeout=30) as r:
+        job = json.loads(r.read())
+
+    upload_task = next(t for t in job["data"]["tasks"] if t["name"] == "upload")
+    upload_url = upload_task["result"]["form"]["url"]
+    upload_params = upload_task["result"]["form"]["parameters"]
+
+    # 2. Upload multipart
+    boundary = "b0undary_move_99"
+    body = b""
+    for k, v in upload_params.items():
+        body += f"--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode()
+    body += f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{nome_arquivo}\"\r\nContent-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\r\n\r\n".encode()
+    body += docx_bytes + f"\r\n--{boundary}--".encode()
+
+    req2 = urllib.request.Request(upload_url, data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}, method="POST")
+    with urllib.request.urlopen(req2, timeout=60) as r:
+        r.read()
+
+    # 3. Aguarda e baixa PDF
+    job_id = job["data"]["id"]
+    import time
+    for _ in range(30):
+        time.sleep(3)
+        req3 = urllib.request.Request(f"https://api.cloudconvert.com/v2/jobs/{job_id}",
+            headers={"Authorization": f"Bearer {token}"})
+        with urllib.request.urlopen(req3, timeout=15) as r:
+            status = json.loads(r.read())
+        if status["data"]["status"] == "finished":
+            export_task = next(t for t in status["data"]["tasks"] if t["name"] == "export")
+            pdf_url = export_task["result"]["files"][0]["url"]
+            with urllib.request.urlopen(pdf_url, timeout=60) as r:
+                return r.read()
+        if status["data"]["status"] == "error":
+            raise Exception(f"CloudConvert erro: {status}")
+    raise Exception("CloudConvert timeout")
+
+
 def docx_para_pdf_via_drive(docx_bytes, nome_arquivo):
     """
     Faz upload do DOCX no Google Drive com OAuth (service não disponível),
@@ -198,13 +257,11 @@ def preencher_docx(campos):
     docx_preenchido = docx_buf.getvalue()
     print(f"[DOCX] Template preenchido ({len(docx_preenchido)//1024} KB)")
 
-    # Converte para PDF via Google Drive (sem LibreOffice)
-    pdf_bytes = docx_para_pdf_via_drive(docx_preenchido, f"{nome_base}.pdf")
+    # Salva DOCX preenchido — ClickSign converte para PDF internamente
+    with open(docx_path, "wb") as f:
+        f.write(docx_preenchido)
 
-    with open(pdf_path, "wb") as f:
-        f.write(pdf_bytes)
-
-    return pdf_path, f"{nome_base}.pdf"
+    return docx_path, f"{nome_base}.docx"
 
 
 def clicksign_upload(caminho_pdf, nome_arquivo):
@@ -215,7 +272,7 @@ def clicksign_upload(caminho_pdf, nome_arquivo):
     payload = json.dumps({
         "document": {
             "path": f"{PASTA_CLICKSIGN}/{nome_arquivo}",
-            "content_base64": f"data:application/pdf;base64,{conteudo}"
+            "content_base64": f"data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{conteudo}"
         }
     }).encode()
 
