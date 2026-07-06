@@ -1,4 +1,13 @@
 import os, re, json, urllib.request, urllib.parse, threading, sys
+
+_env_path = os.path.join(os.path.dirname(__file__), ".env")
+if os.path.exists(_env_path):
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and "=" in _line and not _line.startswith("#"):
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
 sys.stdout.reconfigure(line_buffering=True)
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
@@ -51,11 +60,11 @@ def get_delay_segundos():
     agora = datetime.now(BR_TZ)
     hora, dia = agora.hour, agora.weekday()
     if dia < 5:
-        if 8 <= hora < 17: return 10 * 60
-        elif 17 <= hora < 22: return 60 * 60
-        else: return None
+        if 8 <= hora < 17: return 120        # comercial: 2 minutos
+        elif 17 <= hora < 22: return 300     # noite: 5 minutos
+        else: return None                    # madrugada: silencioso
     else:
-        return 2 * 60 * 60 if 8 <= hora < 16 else None
+        return 300 if 8 <= hora < 16 else None  # fds: 5 minutos
 
 def calcular_prazo(categoria, subcategoria=""):
     agora = datetime.now(BR_TZ)
@@ -150,16 +159,161 @@ def claude_analisar(mensagem):
     m = re.search(r'\{.*\}', texto, re.DOTALL)
     return json.loads(m.group() if m else texto)
 
-def ja_respondeu_recentemente(telefone, minutos=30):
+def ja_respondeu_recentemente(telefone, minutos=10):
     """Retorna True se ja enviou resposta para esse telefone nos ultimos X minutos."""
     ultima = _ultima_resposta.get(telefone)
     if not ultima: return False
     return (datetime.now(BR_TZ) - ultima).total_seconds() < minutos * 60
 
 def e_mensagem_vazia(mensagem):
-    """Mensagens sem conteudo real: oi, tudo bem, bom dia, etc."""
-    palavras_vazias = {"oi","ola","olá","tudo bem","tudo","bom dia","boa tarde","boa noite","obrigado","obrigada","ok","sim","nao","não","👍","😊"}
-    return mensagem.strip().lower() in palavras_vazias or len(mensagem.strip()) <= 5
+    """Apenas emojis isolados ou mensagens com 1-2 caracteres são ignoradas."""
+    return len(mensagem.strip()) <= 2
+
+# ─── FLUXO TROCA CONTADOR ────────────────────────────────────
+
+ETAPAS_COLETA = [
+    {
+        "campo": "gov_br",
+        "pergunta": (
+            "Boa tarde! Que ótimo ter você aqui! Para darmos início à transição, "
+            "preciso de algumas informações da sua empresa. 😊\n\n"
+            "Primeiro: você acessa o Gov.BR com login e senha, ou possui Certificado Digital (e-CNPJ)?\n"
+            "Se tiver login Gov.BR, me envia o CPF/email e a senha. Se tiver certificado, me avisa que orientamos o envio."
+        ),
+    },
+    {
+        "campo": "cnpj",
+        "pergunta": "Perfeito! Agora me envia o CNPJ da sua empresa. 🙏",
+    },
+    {
+        "campo": "prefeitura",
+        "pergunta": (
+            "Ótimo! Precisamos também do acesso à Prefeitura para emissão de notas fiscais. "
+            "Me envia o login e a senha do portal de notas fiscais do seu município."
+        ),
+    },
+    {
+        "campo": "contrato_social",
+        "pergunta": (
+            "Quase lá! Me envia o Contrato Social da empresa (pode ser o PDF mesmo). 👊"
+        ),
+    },
+    {
+        "campo": "dados_pessoais",
+        "pergunta": (
+            "Última etapa! Me envia os dados pessoais do sócio responsável:\n"
+            "- Nome completo\n"
+            "- CPF\n"
+            "- Email\n"
+            "- Data de nascimento"
+        ),
+    },
+]
+
+CAMPO_CONCLUIDO = "coleta_concluida"
+
+def coleta_proxima_etapa(desc_card):
+    """Analisa a descrição do card e retorna qual etapa ainda não foi coletada."""
+    for etapa in ETAPAS_COLETA:
+        marcador = f"[{etapa['campo'].upper()}]"
+        if marcador not in desc_card:
+            return etapa
+    return None  # tudo coletado
+
+def coleta_salvar_resposta(card_id, campo, mensagem, horario):
+    """Adiciona a resposta do cliente com marcador de campo na descrição do card."""
+    url_get = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    with urllib.request.urlopen(url_get, timeout=10) as r:
+        card = json.loads(r.read())
+    desc_atual = card.get("desc", "")
+    nova_desc = desc_atual + f"\n\n[{campo.upper()}] {horario}\n{mensagem}"
+    dados = urllib.parse.urlencode({"desc": nova_desc, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    req = urllib.request.Request(f"https://api.trello.com/1/cards/{card_id}", data=dados, method="PUT")
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+def coleta_mover_para_revisao(card_id):
+    """Move card para a lista Revisão Fiscal quando coleta estiver completa."""
+    url = f"https://api.trello.com/1/boards/{TRELLO_BOARD}/lists?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    with urllib.request.urlopen(url, timeout=10) as r:
+        lists = json.loads(r.read())
+    listas = {l["name"].lower(): l["id"] for l in lists}
+    list_id = next((lid for nome, lid in listas.items() if "revis" in nome and "fiscal" in nome), None)
+    if not list_id:
+        print("[COLETA] Lista 'Revisão Fiscal' não encontrada no Trello")
+        return
+    dados = urllib.parse.urlencode({"idList": list_id, "key": TRELLO_KEY, "token": TRELLO_TOKEN}).encode()
+    req = urllib.request.Request(f"https://api.trello.com/1/cards/{card_id}", data=dados, method="PUT")
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+def processar_troca_contador(telefone, mensagem, nome, card):
+    """Fluxo de coleta progressiva para leads de troca de contador."""
+    agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+    card_id = card["id"]
+    desc_card = card.get("desc", "")
+
+    # Salva a mensagem recebida vinculada à etapa atual
+    proxima = coleta_proxima_etapa(desc_card)
+
+    if proxima is None:
+        # Coleta completa — só confirma e aguarda revisão
+        if CAMPO_CONCLUIDO not in desc_card:
+            dados = urllib.parse.urlencode({
+                "desc": desc_card + f"\n\n[{CAMPO_CONCLUIDO.upper()}] {agora}",
+                "key": TRELLO_KEY, "token": TRELLO_TOKEN
+            }).encode()
+            urllib.request.urlopen(
+                urllib.request.Request(f"https://api.trello.com/1/cards/{card_id}", data=dados, method="PUT"),
+                timeout=10
+            )
+            coleta_mover_para_revisao(card_id)
+            resposta = (
+                "Recebemos tudo! 🙏 Já iniciamos a revisão fiscal da sua empresa. "
+                "Em breve nosso time entra em contato com o resumo completo e próximos passos."
+            )
+            zapi_enviar(telefone, resposta)
+            _ultima_resposta[telefone] = datetime.now(BR_TZ)
+        return
+
+    # Identifica qual campo esta mensagem responde (a etapa mais recente sem resposta)
+    campo_atual = proxima["campo"]
+
+    # Salva a resposta do cliente na descrição do card
+    coleta_salvar_resposta(card_id, campo_atual, mensagem, agora)
+    print(f"[COLETA] Campo '{campo_atual}' salvo para {nome} ({telefone})")
+
+    # Recarrega desc atualizada para verificar próxima etapa
+    url_get = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+    with urllib.request.urlopen(url_get, timeout=10) as r:
+        desc_atualizada = json.loads(r.read()).get("desc", "")
+
+    proxima_etapa = coleta_proxima_etapa(desc_atualizada)
+
+    if proxima_etapa:
+        # Pergunta a próxima etapa
+        zapi_enviar(telefone, proxima_etapa["pergunta"])
+        _ultima_resposta[telefone] = datetime.now(BR_TZ)
+        print(f"[COLETA] Pergunta enviada para etapa '{proxima_etapa['campo']}'")
+    else:
+        # Concluiu na última resposta
+        dados = urllib.parse.urlencode({
+            "desc": desc_atualizada + f"\n\n[{CAMPO_CONCLUIDO.upper()}] {agora}",
+            "key": TRELLO_KEY, "token": TRELLO_TOKEN
+        }).encode()
+        urllib.request.urlopen(
+            urllib.request.Request(f"https://api.trello.com/1/cards/{card_id}", data=dados, method="PUT"),
+            timeout=10
+        )
+        coleta_mover_para_revisao(card_id)
+        zapi_enviar(telefone, (
+            "Perfeito! Recebemos todas as informações. 🙏 "
+            "Já iniciamos a revisão fiscal da sua empresa e em breve nosso time entra em contato com o próximo passo."
+        ))
+        _ultima_resposta[telefone] = datetime.now(BR_TZ)
+        print(f"[COLETA] Coleta concluída para {nome} — card movido para Revisão Fiscal")
+
+# ─── PROCESSAR MENSAGEM ───────────────────────────────────────
 
 def processar_mensagem(telefone, mensagem, nome):
     try:
@@ -168,6 +322,23 @@ def processar_mensagem(telefone, mensagem, nome):
             print(f"[IGNORADO] Mensagem vazia de {telefone}: {mensagem}")
             return
 
+        agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+
+        # Verifica se ja existe card de troca de contador em andamento para esse telefone
+        card_existente = trello_buscar_card_por_telefone(telefone)
+        if card_existente:
+            desc = card_existente.get("desc", "")
+            # Se card e de troca de contador e coleta ainda nao concluida, continua fluxo
+            if "[GOV_BR]" in desc or "[CNPJ]" in desc or "[PREFEITURA]" in desc or \
+               "[CONTRATO_SOCIAL]" in desc or "[DADOS_PESSOAIS]" in desc or \
+               "troca de contador" in desc.lower() or "trocar contador" in desc.lower():
+                if CAMPO_CONCLUIDO.upper() not in desc:
+                    processar_troca_contador(telefone, mensagem, nome, card_existente)
+                    return
+                # Coleta ja concluida — atualiza card normalmente
+                trello_atualizar_card(card_existente["id"], mensagem, agora)
+                return
+
         analise = claude_analisar(mensagem)
         acao, categoria = analise.get("acao","criar"), analise.get("categoria","DUVIDAS")
 
@@ -175,19 +346,28 @@ def processar_mensagem(telefone, mensagem, nome):
         if acao == "ignorar" or categoria == "IGNORAR":
             return
 
-        agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
         lista = analise.get("lista_trello", "Entrada")
 
-        # Busca card em QUALQUER lista do board
-        card = trello_buscar_card_por_telefone(telefone)
-        if card:
-            trello_atualizar_card(card["id"], mensagem, agora)
+        if categoria == "TROCA_CONTADOR":
+            # Cria card e inicia coleta progressiva
+            if not card_existente:
+                trello_criar_card(lista, None, nome, telefone, mensagem, agora)
+                card_existente = trello_buscar_card_por_telefone(telefone)
+            if card_existente:
+                # Envia primeira pergunta da coleta
+                zapi_enviar(telefone, ETAPAS_COLETA[0]["pergunta"])
+                _ultima_resposta[telefone] = datetime.now(BR_TZ)
+                print(f"[COLETA] Iniciada para {nome} ({telefone})")
+            return
+
+        # Fluxo normal para outras categorias
+        if card_existente:
+            trello_atualizar_card(card_existente["id"], mensagem, agora)
             print(f"[ATUALIZADO] Card de {nome} ({telefone})")
         else:
             trello_criar_card(lista, None, nome, telefone, mensagem, agora)
             print(f"[CRIADO] Card de {nome} ({telefone}) em '{lista}'")
 
-        # Enviar resposta apenas se nao respondeu recentemente
         resposta = analise.get("resposta_cliente", "")
         if resposta and not ja_respondeu_recentemente(telefone):
             zapi_enviar(telefone, resposta)
@@ -212,6 +392,31 @@ def trello_webhook():
     lista_info = action_data.get("listAfter") or action_data.get("list") or {}
     lista_nome = lista_info.get("name", "")
     print(f"[WEBHOOK] tipo={tipo} lista={lista_nome!r}", flush=True)
+    if tipo in ("createCard", "updateCard") and "troca" in lista_nome.lower():
+        card_id = card.get("id")
+        agora = datetime.now(BR_TZ)
+        ultimo = _contratos_processados.get("troca_" + card_id)
+        if ultimo and (agora - ultimo).total_seconds() < 60:
+            return jsonify({"ok": True})
+        _contratos_processados["troca_" + card_id] = agora
+        try:
+            url = f"https://api.trello.com/1/cards/{card_id}?key={TRELLO_KEY}&token={TRELLO_TOKEN}"
+            with urllib.request.urlopen(url, timeout=10) as r:
+                card_full = json.loads(r.read())
+            nome_card = card_full.get("name", "")
+            # Extrai telefone do título: "Nome | 5519999999999"
+            m_tel = re.search(r'(\d{10,13})', nome_card.replace(" ", "").replace("-", ""))
+            telefone = m_tel.group(1) if m_tel else ""
+            if not telefone.startswith("55"):
+                telefone = "55" + telefone
+            if telefone and len(telefone) >= 12:
+                zapi_enviar(telefone, ETAPAS_COLETA[0]["pergunta"])
+                print(f"[TROCA] Primeira mensagem enviada para {telefone} — card {card_id}", flush=True)
+            else:
+                print(f"[TROCA] Telefone não encontrado no card '{nome_card}'", flush=True)
+        except Exception as e:
+            print(f"[TROCA ERRO] {e}", flush=True)
+
     if tipo in ("createCard", "updateCard") and "contrato" in lista_nome.lower():
             card_id = card.get("id")
             agora = datetime.now(BR_TZ)
