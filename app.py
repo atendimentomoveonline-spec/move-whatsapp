@@ -1,4 +1,5 @@
 import os, re, json, urllib.request, urllib.parse, threading, sys
+from memoria_claudio import salvar as mem_salvar, montar_contexto
 
 _env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(_env_path):
@@ -147,8 +148,9 @@ PROMPT_SISTEMA = (
     'JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
 )
 
-def claude_analisar(mensagem):
-    prompt = buscar_prompt() + "\n\nMensagem do cliente: " + mensagem + '\n\nResponda APENAS em JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
+def claude_analisar(mensagem, contexto: str = None):
+    conteudo = contexto if contexto else f"Mensagem do cliente: {mensagem}"
+    prompt = buscar_prompt() + "\n\n" + conteudo + '\n\nResponda APENAS em JSON: {"categoria":"NOTA","lista_trello":"Notas Fiscais","titulo_card":"titulo","complexidade":"baixa","acao":"criar","resposta_cliente":"msg","faltam_dados":false,"dados_necessarios":""}'
     dados = json.dumps({"model": "claude-haiku-4-5-20251001", "max_tokens": 500,
         "messages": [{"role": "user", "content": prompt}]}).encode()
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=dados,
@@ -317,10 +319,13 @@ def processar_troca_contador(telefone, mensagem, nome, card):
 
 def processar_mensagem(telefone, mensagem, nome):
     try:
-        # Mensagem vazia (oi, tudo bem) — nao cria card, nao responde
+        # Mensagem vazia (só 1-2 chars) — ignora
         if e_mensagem_vazia(mensagem):
-            print(f"[IGNORADO] Mensagem vazia de {telefone}: {mensagem}")
+            print(f"[IGNORADO] Mensagem muito curta de {telefone}: {mensagem}")
             return
+
+        # Salva mensagem recebida no histórico
+        mem_salvar(telefone, mensagem, "recebida", nome)
 
         agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
 
@@ -339,7 +344,9 @@ def processar_mensagem(telefone, mensagem, nome):
                 trello_atualizar_card(card_existente["id"], mensagem, agora)
                 return
 
-        analise = claude_analisar(mensagem)
+        # Monta contexto completo da conversa para o Claude
+        contexto = montar_contexto(telefone, mensagem, nome)
+        analise = claude_analisar(mensagem, contexto)
         acao, categoria = analise.get("acao","criar"), analise.get("categoria","DUVIDAS")
 
         # Ignorar apenas spam/broadcast explícito
@@ -371,6 +378,7 @@ def processar_mensagem(telefone, mensagem, nome):
         resposta = analise.get("resposta_cliente", "")
         if resposta and not ja_respondeu_recentemente(telefone):
             zapi_enviar(telefone, resposta)
+            mem_salvar(telefone, resposta, "enviada", "Claudio")
             _ultima_resposta[telefone] = datetime.now(BR_TZ)
             print(f"[RESPOSTA] Enviada para {telefone}")
         elif resposta:
