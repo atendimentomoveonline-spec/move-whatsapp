@@ -3,3 +3,5 @@ werkzeug>=3.0
 pytz>=2024.1
 pypdf>=4.0
 docxtpl>=0.16
+requests>=2.31
+python-dotenv>=1.0
