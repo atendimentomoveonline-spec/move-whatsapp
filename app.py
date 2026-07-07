@@ -516,5 +516,32 @@ def index():
     delay = get_delay_segundos()
     return "Claudio-AI Move Online OK | " + agora + " | Delay: " + str(delay or "SILENCIOSO")
 
+def reagendar_pendentes_ao_iniciar():
+    """
+    Ao iniciar o serviço, busca mensagens recebidas no Supabase nas últimas 12h
+    que ainda não tiveram resposta enviada e reagenda para as 8h.
+    """
+    try:
+        from memoria_claudio import buscar_sem_resposta
+        pendentes = buscar_sem_resposta(horas=12)
+        if not pendentes:
+            print("[STARTUP] Nenhuma mensagem pendente para reagendar.")
+            return
+        for p in pendentes:
+            telefone = p["telefone"]
+            mensagem = p["mensagem"]
+            nome = p.get("nome") or "Cliente"
+            if telefone in _pendentes_fora_horario:
+                continue
+            delay = segundos_ate_abertura()
+            timer = threading.Timer(delay, processar_mensagem, args=[telefone, mensagem, nome])
+            _pendentes_fora_horario[telefone] = timer
+            timer.start()
+            print(f"[STARTUP] Reagendado para {nome} ({telefone}) em {delay//3600}h")
+    except Exception as e:
+        print(f"[STARTUP] Erro ao reagendar pendentes: {e}")
+
+threading.Thread(target=reagendar_pendentes_ao_iniciar, daemon=True).start()
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)), debug=False)

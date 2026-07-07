@@ -76,6 +76,56 @@ def montar_contexto(telefone: str, mensagem_atual: str, nome: str) -> str:
     return "\n".join(linhas)
 
 
+def buscar_sem_resposta(horas: int = 12) -> list:
+    """
+    Busca telefones que receberam mensagem nas últimas N horas
+    mas não tiveram resposta enviada — para reagendar ao reiniciar.
+    """
+    try:
+        from datetime import datetime, timezone, timedelta
+        desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).isoformat()
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/mensagens",
+            headers=HEADERS,
+            params={
+                "direcao": "eq.recebida",
+                "criado_em": f"gte.{desde}",
+                "order": "criado_em.asc",
+                "limit": 50
+            },
+            timeout=5
+        )
+        if r.status_code != 200:
+            return []
+        recebidas = r.json()
+
+        # Busca respostas enviadas no mesmo período
+        r2 = requests.get(
+            f"{SUPABASE_URL}/rest/v1/mensagens",
+            headers=HEADERS,
+            params={
+                "direcao": "eq.enviada",
+                "criado_em": f"gte.{desde}",
+                "limit": 100
+            },
+            timeout=5
+        )
+        telefones_respondidos = {m["telefone"] for m in (r2.json() if r2.status_code == 200 else [])}
+
+        # Retorna mensagens de telefones que NÃO receberam resposta
+        vistos = set()
+        resultado = []
+        for m in recebidas:
+            tel = m["telefone"]
+            if tel not in telefones_respondidos and tel not in vistos:
+                vistos.add(tel)
+                resultado.append(m)
+        return resultado
+    except Exception as e:
+        print(f"[Supabase] Erro buscar_sem_resposta: {e}")
+        return []
+
+
 def salvar_card(card_id: str, titulo: str, lista: str, telefone: str = None, origem: str = None):
     """Registra card criado no Trello."""
     try:
