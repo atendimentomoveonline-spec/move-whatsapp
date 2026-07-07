@@ -16,9 +16,10 @@ import pytz
 
 app = Flask(__name__)
 
-ZAPI_INSTANCE = os.environ.get("ZAPI_INSTANCE", "")
-ZAPI_TOKEN    = os.environ.get("ZAPI_TOKEN", "")
-ZAPI_URL      = f"https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}"
+ZAPI_INSTANCE       = os.environ.get("ZAPI_INSTANCE", "")
+ZAPI_TOKEN          = os.environ.get("ZAPI_TOKEN", "")
+ZAPI_CLIENT_TOKEN   = os.environ.get("ZAPI_CLIENT_TOKEN", "")
+ZAPI_URL            = f"https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}"
 TRELLO_KEY    = os.environ.get("TRELLO_KEY", "")
 TRELLO_TOKEN  = os.environ.get("TRELLO_TOKEN", "")
 TRELLO_BOARD  = os.environ.get("TRELLO_BOARD", "tGmj0Fik")
@@ -174,7 +175,7 @@ def trello_criar_card(lista_nome, titulo, nome, telefone, mensagem, horario):
 
 def zapi_enviar(telefone, mensagem):
     dados = json.dumps({"phone": telefone, "message": mensagem}).encode()
-    req = urllib.request.Request(f"{ZAPI_URL}/send-text", data=dados, headers={"Content-Type": "application/json"}, method="POST")
+    req = urllib.request.Request(f"{ZAPI_URL}/send-text", data=dados, headers={"Content-Type": "application/json", "Client-Token": ZAPI_CLIENT_TOKEN}, method="POST")
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())
 
