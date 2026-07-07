@@ -28,6 +28,7 @@ _trello_lists = {}
 _pendentes = {}
 _ultima_resposta = {}  # telefone -> datetime ultima resposta enviada
 _contratos_processados = {}  # card_id -> datetime ultimo processamento
+_pendentes_fora_horario = {}  # telefone -> {mensagem, nome, timer}
 
 SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
 
@@ -63,9 +64,49 @@ def get_delay_segundos():
     if dia < 5:
         if 8 <= hora < 17: return 120        # comercial: 2 minutos
         elif 17 <= hora < 22: return 300     # noite: 5 minutos
-        else: return None                    # madrugada: silencioso
+        else: return None                    # madrugada: fora do horário
     else:
-        return 300 if 8 <= hora < 16 else None  # fds: 5 minutos
+        return 300 if 8 <= hora < 16 else None  # fds: 5 minutos ou fora do horário
+
+def segundos_ate_abertura():
+    """Calcula segundos até as 8h do próximo dia útil."""
+    agora = datetime.now(BR_TZ)
+    abertura = agora.replace(hour=8, minute=0, second=0, microsecond=0)
+    # Se já passou das 8h hoje, vai para amanhã
+    if agora >= abertura:
+        abertura += timedelta(days=1)
+    # Pula fim de semana
+    while abertura.weekday() >= 5:
+        abertura += timedelta(days=1)
+    return max(int((abertura - agora).total_seconds()), 60)
+
+def registrar_mensagem_fora_horario(telefone, mensagem, nome):
+    """Cria card imediatamente e agenda resposta para as 8h."""
+    agora = datetime.now(BR_TZ).strftime("%d/%m/%Y %H:%M")
+    try:
+        # Cria ou atualiza card no Trello imediatamente
+        card_existente = trello_buscar_card_por_telefone(telefone)
+        if card_existente:
+            trello_atualizar_card(card_existente["id"], mensagem, agora)
+            print(f"[FORA HORÁRIO] Card atualizado para {nome} ({telefone})")
+        else:
+            trello_criar_card("Entrada", None, nome, telefone, mensagem, agora)
+            print(f"[FORA HORÁRIO] Card criado para {nome} ({telefone})")
+        # Salva no histórico
+        mem_salvar(telefone, mensagem, "recebida", nome)
+    except Exception as e:
+        print(f"[FORA HORÁRIO] Erro ao criar card: {e}")
+
+    # Cancela agendamento anterior do mesmo telefone se houver
+    if telefone in _pendentes_fora_horario:
+        _pendentes_fora_horario[telefone].cancel()
+
+    delay = segundos_ate_abertura()
+    horas = delay // 3600
+    print(f"[FORA HORÁRIO] Resposta agendada para {nome} em {horas}h")
+    timer = threading.Timer(delay, processar_mensagem, args=[telefone, mensagem, nome])
+    _pendentes_fora_horario[telefone] = timer
+    timer.start()
 
 def calcular_prazo(categoria, subcategoria=""):
     agora = datetime.now(BR_TZ)
@@ -459,7 +500,10 @@ def webhook():
     if not mensagem or not telefone: return jsonify({"ok": True})
     if e_spam(mensagem): return jsonify({"ok": True})
     delay = get_delay_segundos()
-    if delay is None: return jsonify({"ok": True})
+    if delay is None:
+        # Fora do horário: cria card agora e agenda resposta para as 8h
+        threading.Thread(target=registrar_mensagem_fora_horario, args=[telefone, mensagem, nome], daemon=True).start()
+        return jsonify({"ok": True})
     if telefone in _pendentes: _pendentes[telefone].cancel()
     timer = threading.Timer(delay, processar_mensagem, args=[telefone, mensagem, nome])
     _pendentes[telefone] = timer
