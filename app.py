@@ -50,7 +50,7 @@ def buscar_prompt():
         return _prompt_cache["texto"] or PROMPT_FALLBACK
 
 PROMPT_FALLBACK = (
-    "Voce e Claudio-AI, atendente da Move Online Contabilidade Medica.\n"
+    "Voce e um atendente da Move Online Contabilidade Medica. Nunca se apresente pelo nome.\n"
     "Classifique a mensagem e responda em JSON com: categoria, lista_trello, titulo_card, complexidade, acao, resposta_cliente, faltam_dados, dados_necessarios."
 )
 
@@ -138,7 +138,7 @@ def zapi_enviar(telefone, mensagem):
         return json.loads(r.read())
 
 PROMPT_SISTEMA = (
-    "Voce e Claudio-AI, atendente da Move Online Contabilidade Medica.\n\n"
+    "Voce e um atendente da Move Online Contabilidade Medica. Nunca se apresente pelo nome.\n\n"
     "SLA: Notas 09-17h=mesmo dia, apos 17h=prox dia util, DAS/INSS=dia 10, baixa=4h, media=48h, alta=5du.\n\n"
     "CATEGORIAS: NOTA(nota fiscal,NF,emitir,cancelar), IMPOSTO(DAS,INSS,DARF,guia,TFE), "
     "FINANCEIRO(pix,boleto,paguei,comprovante), DUVIDAS(fator R,pro-labore,planejamento,simples), "
