@@ -31,6 +31,9 @@ _ultima_resposta = {}  # telefone -> datetime ultima resposta enviada
 _contratos_processados = {}  # card_id -> datetime ultimo processamento
 _pendentes_fora_horario = {}  # telefone -> {mensagem, nome, timer}
 
+# Modo teste: só responde esses números. Deixar vazio [] para abrir para todos.
+NUMEROS_TESTE = ["5511951653937"]
+
 SPAM_PALAVRAS = ["promoção","oferta","ganhe","grátis","gratis","clique aqui","acesse agora","sorteio","prêmio","premio","newsletter","broadcast","divulgação","spam"]
 
 GDOC_URL = "https://docs.google.com/document/d/1wBVprhctTXtDmhdE-wVEApNvZDCMwvWBlhDLAsExcu4/export?format=txt"
@@ -60,6 +63,9 @@ def e_spam(mensagem):
     return any(p in mensagem.lower() for p in SPAM_PALAVRAS)
 
 def get_delay_segundos():
+    # Modo teste: sem trava de horário
+    if NUMEROS_TESTE:
+        return 10
     agora = datetime.now(BR_TZ)
     hora, dia = agora.hour, agora.weekday()
     if dia < 5:
@@ -500,6 +506,9 @@ def webhook():
     nome = data.get("senderName","Cliente")
     if not mensagem or not telefone: return jsonify({"ok": True})
     if e_spam(mensagem): return jsonify({"ok": True})
+    if NUMEROS_TESTE and telefone not in NUMEROS_TESTE:
+        print(f"[TESTE] Ignorado — número não autorizado: {telefone}")
+        return jsonify({"ok": True})
     delay = get_delay_segundos()
     if delay is None:
         # Fora do horário: cria card agora e agenda resposta para as 8h
