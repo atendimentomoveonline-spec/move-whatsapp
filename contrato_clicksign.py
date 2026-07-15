@@ -21,6 +21,13 @@ ZAPI_TOKEN      = os.environ.get("ZAPI_TOKEN", "")
 MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
          "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"]
 
+# Testemunha adicionada automaticamente em todo contrato gerado
+TESTEMUNHA_PERMANENTE = {
+    "nome": "Renata dos Reis Araujo das Neves",
+    "cpf": "45601108838",
+    "email": "renata.reis172@gmail.com",
+}
+
 
 def baixar_docx_modelo():
     """Carrega o template DOCX do repositório local."""
@@ -295,16 +302,21 @@ def clicksign_upload(caminho_pdf, nome_arquivo):
     return doc_key
 
 
-def clicksign_adicionar_signatario(doc_key, email, nome):
-    """Adiciona signatário e envia notificação por email."""
+def clicksign_adicionar_signatario(doc_key, email, nome, papel="sign", cpf=""):
+    """
+    Adiciona signatário (ou testemunha) e envia notificação por email.
+    papel: "sign" (assinante padrão) ou "witness" (testemunha).
+    cpf: opcional, usado como documentation quando fornecido.
+    """
     payload = json.dumps({
         "signer": {
             "email": email,
             "name": nome,
+            "documentation": cpf or None,
             "phone_number": "",
             "auths": ["email"],
             "delivery_method": "email",
-            "has_documentation": False
+            "has_documentation": bool(cpf)
         }
     }).encode()
 
@@ -318,12 +330,17 @@ def clicksign_adicionar_signatario(doc_key, email, nome):
         resp = json.loads(r.read())
     signer_key = resp["signer"]["key"]
 
+    mensagem = (
+        "Por favor, assine como testemunha o contrato de prestação de serviços contábeis da Move Online."
+        if papel == "witness" else
+        "Por favor, assine o contrato de prestação de serviços contábeis da Move Online."
+    )
     payload2 = json.dumps({
         "list": {
             "document_key": doc_key,
             "signer_key": signer_key,
-            "sign_as": "sign",
-            "message": "Por favor, assine o contrato de prestação de serviços contábeis da Move Online."
+            "sign_as": papel,
+            "message": mensagem
         }
     }).encode()
     req2 = urllib.request.Request(
@@ -430,6 +447,12 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
     if campos["email"].lower() != MOVE_EMAIL.lower():
         clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Move Online Contabilidade")
+
+    # Testemunha permanente em todo contrato
+    clicksign_adicionar_signatario(
+        doc_key, TESTEMUNHA_PERMANENTE["email"], TESTEMUNHA_PERMANENTE["nome"],
+        papel="witness", cpf=TESTEMUNHA_PERMANENTE["cpf"]
+    )
 
     # 4. Enviar para assinatura
     clicksign_enviar(doc_key)
