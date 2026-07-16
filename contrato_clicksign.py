@@ -21,12 +21,19 @@ ZAPI_TOKEN      = os.environ.get("ZAPI_TOKEN", "")
 MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
          "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"]
 
-# Testemunha adicionada automaticamente em todo contrato gerado
-TESTEMUNHA_PERMANENTE = {
-    "nome": "Renata dos Reis Araujo das Neves",
-    "cpf": "45601108838",
-    "email": "renata.reis172@gmail.com",
-}
+# Testemunhas adicionadas automaticamente em todo contrato gerado
+TESTEMUNHAS_PERMANENTES = [
+    {
+        "nome": "Renata dos Reis Araujo das Neves",
+        "cpf": "45601108838",
+        "email": "renata.reis172@gmail.com",
+    },
+    {
+        "nome": "Anair Araujo Pires",
+        "cpf": "03361954517",
+        "email": "anair@moveonline.com.br",
+    },
+]
 
 
 def baixar_docx_modelo():
@@ -443,16 +450,17 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
     doc_key = clicksign_upload(caminho_pdf, nome_arquivo)
 
     # 3. Adicionar signatários
-    MOVE_EMAIL = "suportemoveonline@gmail.com"
+    MOVE_EMAIL = "wanderson@moveonline.com.br"
     clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
     if campos["email"].lower() != MOVE_EMAIL.lower():
-        clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Move Online Contabilidade")
+        clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Wanderson - Move Online Contabilidade")
 
-    # Testemunha permanente em todo contrato
-    clicksign_adicionar_signatario(
-        doc_key, TESTEMUNHA_PERMANENTE["email"], TESTEMUNHA_PERMANENTE["nome"],
-        papel="witness", cpf=TESTEMUNHA_PERMANENTE["cpf"]
-    )
+    # Testemunhas permanentes em todo contrato
+    for testemunha in TESTEMUNHAS_PERMANENTES:
+        clicksign_adicionar_signatario(
+            doc_key, testemunha["email"], testemunha["nome"],
+            papel="witness", cpf=testemunha["cpf"]
+        )
 
     # 4. Enviar para assinatura
     clicksign_enviar(doc_key)
