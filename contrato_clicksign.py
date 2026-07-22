@@ -90,6 +90,22 @@ def parse_descricao(desc):
     if not campos.get("razao_social"):
         campos["razao_social"] = campos.get("nome", "")
 
+    # EMAIL: o Trello escapa underscores como \_ (ex: cris\_22\_lopes@x.com). O strip de
+    # markdown/underscore la em cima apaga os underscores e quebra o email -> ClickSign
+    # recusa ("E-mail nao pode ficar em branco") e o contrato trava sem signatario.
+    # Solucao: parseia a linha CRUA do email, desescapando \_ -> _ (nao apagando).
+    for linha in desc.splitlines():
+        if '@' in linha and re.match(r'\s*e-?mail\s*:', linha, re.IGNORECASE):
+            mt = re.search(r'mailto:\s*([\w.+-]+@[\w.-]+\.\w+)', linha, re.IGNORECASE)
+            if mt:
+                campos["email"] = mt.group(1).lower()
+            else:
+                bruto = re.sub(r'\\(.)', r'\1', linha.split(':', 1)[1])  # desescapa \_ -> _
+                val = re.search(r'[\w.+-]+@[\w.-]+\.\w+', bruto)
+                if val:
+                    campos["email"] = val.group(0).lower()
+            break
+
     return campos
 
 
