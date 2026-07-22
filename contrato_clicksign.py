@@ -69,6 +69,7 @@ def parse_descricao(desc):
             chave, _, valor = linha.partition(":")
             valor = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', valor)  # remove markdown links
             valor = re.sub(r'[​-‏‪-‮]', '', valor)                   # remove chars invisíveis
+            valor = re.sub(r'\*{1,3}|_{1,3}', '', valor)             # remove negrito/italico markdown
             campos[chave.strip().lower()] = valor.strip()
 
     # Normaliza aliases
