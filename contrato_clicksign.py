@@ -5,7 +5,7 @@ Automação de contratos via Trello + ClickSign
 - Converte para PDF com LibreOffice
 - Faz upload no ClickSign, adiciona signatários e envia para assinatura
 """
-import os, re, io, json, base64, tempfile, urllib.request, urllib.parse
+import os, re, io, json, base64, tempfile, urllib.request, urllib.parse, urllib.error
 from datetime import date
 
 CLICKSIGN_TOKEN = os.environ.get("CLICKSIGN_TOKEN", "")
@@ -283,6 +283,17 @@ def preencher_docx(campos):
     return docx_path, f"{nome_base}.docx"
 
 
+def _clicksign_request(req, timeout):
+    """Executa a requisição e, em caso de erro HTTP, propaga o corpo da resposta
+    (mensagem de erro real do ClickSign) em vez de um HTTPError genérico."""
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        corpo = e.read().decode(errors="replace")
+        raise Exception(f"ClickSign respondeu {e.code} em {req.full_url.split('?')[0]}: {corpo}") from e
+
+
 def clicksign_upload(caminho_pdf, nome_arquivo):
     """Faz upload do PDF para a pasta no ClickSign."""
     with open(caminho_pdf, "rb") as f:
@@ -301,8 +312,7 @@ def clicksign_upload(caminho_pdf, nome_arquivo):
         headers={"Content-Type": "application/json"},
         method="POST"
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
-        resp = json.loads(r.read())
+    resp = _clicksign_request(req, timeout=30)
 
     doc_key = resp["document"]["key"]
     print(f"[CLICKSIGN] Upload OK — key: {doc_key}")
@@ -333,8 +343,7 @@ def clicksign_adicionar_signatario(doc_key, email, nome, papel="sign", cpf=""):
         headers={"Content-Type": "application/json"},
         method="POST"
     )
-    with urllib.request.urlopen(req, timeout=15) as r:
-        resp = json.loads(r.read())
+    resp = _clicksign_request(req, timeout=15)
     signer_key = resp["signer"]["key"]
 
     mensagem = (
@@ -356,8 +365,7 @@ def clicksign_adicionar_signatario(doc_key, email, nome, papel="sign", cpf=""):
         headers={"Content-Type": "application/json"},
         method="POST"
     )
-    with urllib.request.urlopen(req2, timeout=15) as r2:
-        resp2 = json.loads(r2.read())
+    resp2 = _clicksign_request(req2, timeout=15)
 
     request_signature_key = resp2.get("list", {}).get("request_signature_key", "")
     if request_signature_key:
@@ -440,30 +448,46 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
 
     if not campos.get("email"):
         print("[CONTRATO] Email nao encontrado na descricao — abortando")
+        trello_comentar_card(card_id, "Contrato NAO enviado — nao encontrei o campo \"Email:\" na descricao do card.")
         return False
 
-    # 1. Preencher DOCX e converter para PDF
-    caminho_pdf, nome_arquivo = preencher_docx(campos)
-    print(f"[CONTRATO] PDF gerado: {nome_arquivo}")
+    doc_key = None
+    etapa = "gerar PDF do contrato"
+    try:
+        # 1. Preencher DOCX e converter para PDF
+        caminho_pdf, nome_arquivo = preencher_docx(campos)
+        print(f"[CONTRATO] PDF gerado: {nome_arquivo}")
 
-    # 2. Upload no ClickSign
-    doc_key = clicksign_upload(caminho_pdf, nome_arquivo)
+        # 2. Upload no ClickSign
+        etapa = "upload no ClickSign"
+        doc_key = clicksign_upload(caminho_pdf, nome_arquivo)
 
-    # 3. Adicionar signatários
-    MOVE_EMAIL = "wanderson@moveonline.com.br"
-    clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
-    if campos["email"].lower() != MOVE_EMAIL.lower():
-        clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Wanderson - Move Online Contabilidade")
+        # 3. Adicionar signatários
+        MOVE_EMAIL = "wanderson@moveonline.com.br"
+        etapa = f"adicionar signatario cliente ({campos['email']})"
+        clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
+        if campos["email"].lower() != MOVE_EMAIL.lower():
+            etapa = "adicionar signatario Wanderson"
+            clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Wanderson - Move Online Contabilidade")
 
-    # Testemunhas permanentes em todo contrato
-    for testemunha in TESTEMUNHAS_PERMANENTES:
-        clicksign_adicionar_signatario(
-            doc_key, testemunha["email"], testemunha["nome"],
-            papel="witness", cpf=testemunha["cpf"]
-        )
+        # Testemunhas permanentes em todo contrato
+        for testemunha in TESTEMUNHAS_PERMANENTES:
+            etapa = f"adicionar testemunha ({testemunha['email']})"
+            clicksign_adicionar_signatario(
+                doc_key, testemunha["email"], testemunha["nome"],
+                papel="witness", cpf=testemunha["cpf"]
+            )
 
-    # 4. Enviar para assinatura
-    clicksign_enviar(doc_key)
+        # 4. Enviar para assinatura
+        etapa = "finalizar documento no ClickSign"
+        clicksign_enviar(doc_key)
+    except Exception as e:
+        print(f"[CONTRATO ERRO] Falhou na etapa '{etapa}': {e}", flush=True)
+        detalhe = f"Contrato NAO enviado corretamente.\nFalhou na etapa: {etapa}\nErro: {e}"
+        if doc_key:
+            detalhe += f"\nDocumento ja foi criado no ClickSign (key: {doc_key}) mas ficou incompleto — verificar/reenviar manualmente."
+        trello_comentar_card(card_id, detalhe)
+        return False
 
     # 5. Avisar cliente no WhatsApp
     telefone = campos.get("telefone", "")
