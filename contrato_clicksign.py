@@ -87,6 +87,20 @@ def parse_descricao(desc):
     elif "cnpj" in campos:
         campos["tipo_documento"] = "CNPJ"
 
+    # NOME em linha separada: alguns cards tem "Nome:" vazio e o nome na linha de baixo
+    # (ex: "Nome:\n\n**GISILENE RODRIGUES GOMES**"). Sem isso o signatario fica sem nome
+    # e o ClickSign recusa ("Nome Completo: utilize nome e sobrenome").
+    if not campos.get("nome"):
+        linhas = desc.splitlines()
+        for i, ln in enumerate(linhas):
+            if re.match(r'\s*nome\s*:', ln, re.IGNORECASE):
+                for prox in linhas[i+1:]:
+                    limpo = re.sub(r'\*{1,3}|_{1,3}', '', prox).strip()
+                    if limpo and ':' not in limpo and '@' not in limpo:
+                        campos["nome"] = limpo
+                        break
+                break
+
     if not campos.get("razao_social"):
         campos["razao_social"] = campos.get("nome", "")
 
