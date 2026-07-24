@@ -485,7 +485,7 @@ def processar_contrato_trello(card_nome, card_desc, card_id=None):
         clicksign_adicionar_signatario(doc_key, campos["email"], campos.get("nome", "Cliente"))
         if campos["email"].lower() != MOVE_EMAIL.lower():
             etapa = "adicionar signatario Wanderson"
-            clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Wanderson - Move Online Contabilidade")
+            clicksign_adicionar_signatario(doc_key, MOVE_EMAIL, "Wanderson Pires Almeida")
 
         # Testemunhas permanentes em todo contrato
         for testemunha in TESTEMUNHAS_PERMANENTES:
