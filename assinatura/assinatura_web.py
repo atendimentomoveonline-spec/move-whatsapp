@@ -7,6 +7,8 @@ dados preenchidos no corpo + a assinatura do cliente + pagina de comprovacao.
 Sem dependencia de terceiros.
 """
 import os, re, io, json, base64, hashlib, datetime, unicodedata, subprocess, tempfile
+import smtplib, ssl
+from email.message import EmailMessage
 from flask import Flask, request, send_file, abort
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -15,6 +17,87 @@ BASE_PDF = os.path.join(BASE, "base_contrato.pdf")            # modelo em PDF (a
 LEITURA_PDF = os.path.join(BASE, "static_leitura", "contrato_leitura.pdf")  # p/ leitura na tela (com assinaturas)
 OUT_DIR = os.path.join(BASE, "assinados")
 os.makedirs(OUT_DIR, exist_ok=True)
+
+# ─────────────────────── PERSISTENCIA DURAVEL ───────────────────────
+# O disco do Render e efemero: some a cada deploy/restart. Por isso a
+# lista vai pro Supabase (sobrevive a tudo) e uma copia do PDF vai por
+# e-mail. O salvamento local continua so como backup imediato.
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPA_TABLE   = os.environ.get("SUPA_TABLE", "contratos_assinados")
+
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")            # e-mail que dispara
+SMTP_PASS = os.environ.get("SMTP_PASS", "")            # senha de app (Gmail)
+MAIL_TO   = os.environ.get("MAIL_TO", "atendimentomoveonline@gmail.com")
+MAIL_FROM = os.environ.get("MAIL_FROM", SMTP_USER)
+
+def _supa_headers():
+    return {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/json"}
+
+def supa_inserir(reg):
+    """Grava a linha do contrato no Supabase. Nao levanta erro (nao pode
+    quebrar a assinatura). Retorna (ok, detalhe)."""
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return False, "supabase nao configurado"
+    try:
+        import requests
+        r = requests.post(f"{SUPABASE_URL}/rest/v1/{SUPA_TABLE}",
+                          headers={**_supa_headers(), "Prefer": "return=minimal"},
+                          json=reg, timeout=15)
+        return (r.status_code in (200, 201, 204)), f"{r.status_code} {r.text[:200]}"
+    except Exception as e:
+        return False, str(e)
+
+def supa_listar():
+    """Le a lista de contratos do Supabase (mais novos primeiro).
+    Retorna lista de dicts, ou None se indisponivel."""
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return None
+    try:
+        import requests
+        r = requests.get(f"{SUPABASE_URL}/rest/v1/{SUPA_TABLE}"
+                         "?select=*&order=created_at.desc",
+                         headers=_supa_headers(), timeout=15)
+        if r.status_code == 200:
+            return r.json()
+    except Exception as e:
+        print("[painel] supabase indisponivel:", e)
+    return None
+
+def enviar_email(dados, pdf_path, agora, h):
+    """Envia o PDF assinado por e-mail pra Move. Nao levanta erro."""
+    if not (SMTP_USER and SMTP_PASS):
+        return False, "smtp nao configurado"
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = f"Contrato assinado — {dados['nome']} ({dados['plano']})"
+        msg["From"] = MAIL_FROM
+        msg["To"] = MAIL_TO
+        msg.set_content(
+            "Novo contrato assinado na página da Move.\n\n"
+            f"Nome: {dados['nome']}\n"
+            f"CPF: {dados['cpf_fmt']}\n"
+            f"E-mail: {dados['email']}\n"
+            f"Telefone: {dados['telefone']}\n"
+            f"Plano: {dados['plano_desc']}\n"
+            f"Vencimento: dia {dados['vencimento']} · Pagamento: {dados['pagamento']}\n"
+            f"Assinado em: {agora}\n"
+            f"Verificação (SHA-256): {h}\n\n"
+            "O contrato assinado está anexado a este e-mail."
+        )
+        with open(pdf_path, "rb") as f:
+            msg.add_attachment(f.read(), maintype="application", subtype="pdf",
+                               filename=os.path.basename(pdf_path))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as s:
+            s.starttls(context=ssl.create_default_context())
+            s.login(SMTP_USER, SMTP_PASS)
+            s.send_message(msg)
+        return True, "ok"
+    except Exception as e:
+        return False, str(e)
 
 _PAG_CACHE = {}
 def leitura_num_paginas():
@@ -365,12 +448,31 @@ def gerar_contrato(dados, ip):
         writer.add_page(p)
     writer.add_page(PdfReader(comp).pages[0])
     fname = base_name + "_assinado.pdf"
-    with open(os.path.join(OUT_DIR, fname), "wb") as f:
+    pdf_path = os.path.join(OUT_DIR, fname)
+    with open(pdf_path, "wb") as f:
         writer.write(f)
-    with open(os.path.join(OUT_DIR, "_registro.jsonl"), "a", encoding="utf-8") as f:
-        f.write(json.dumps({**{k: dados[k] for k in ("nome","cpf_fmt","email","telefone",
-                "endereco","municipio","plano","vencimento","pagamento")},
-                "arquivo": fname, "data": agora, "ip": ip, "hash": h}, ensure_ascii=False)+"\n")
+
+    reg = {**{k: dados[k] for k in ("nome","cpf_fmt","email","telefone",
+              "endereco","municipio","plano","vencimento","pagamento")},
+           "arquivo": fname, "data": agora, "ip": ip, "hash": h}
+
+    # 1) backup local imediato (efemero no Render, mas util enquanto o processo vive)
+    try:
+        with open(os.path.join(OUT_DIR, "_registro.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps(reg, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print("[registro] falha ao gravar jsonl local:", e)
+
+    # 2) lista duravel no Supabase (sobrevive a restart/deploy)
+    ok_supa, det_supa = supa_inserir(reg)
+    if not ok_supa:
+        print("[registro] supabase NAO gravou:", det_supa)
+
+    # 3) copia assinada por e-mail (fonte de verdade do PDF)
+    ok_mail, det_mail = enviar_email(dados, pdf_path, agora, h)
+    if not ok_mail:
+        print("[registro] e-mail NAO enviado:", det_mail)
+
     return fname
 
 # ─────────────────────────── ROTAS ───────────────────────────
@@ -431,20 +533,32 @@ def baixar(fname):
 
 @app.route("/painel")
 def painel():
-    reg = os.path.join(OUT_DIR, "_registro.jsonl"); linhas = []
-    if os.path.isfile(reg):
-        for l in open(reg, encoding="utf-8"):
-            try: linhas.append(json.loads(l))
-            except Exception: pass
-    linhas.reverse()
+    # Fonte principal: Supabase (duravel). Fallback: arquivo local (efemero).
+    linhas = supa_listar()
+    fonte = "Supabase"
+    if linhas is None:
+        fonte = "arquivo local (temporário)"
+        reg = os.path.join(OUT_DIR, "_registro.jsonl"); linhas = []
+        if os.path.isfile(reg):
+            for l in open(reg, encoding="utf-8"):
+                try: linhas.append(json.loads(l))
+                except Exception: pass
+        linhas.reverse()
+    def pdf_cell(x):
+        arq = x.get("arquivo", "")
+        if arq and os.path.isfile(os.path.join(OUT_DIR, arq)):
+            return f"<a href='/baixar/{arq}'>abrir</a>"
+        return "<span style='color:#94a3b8'>no e-mail</span>"
     rows = "".join(
-        f"<tr><td>{x['nome']}</td><td>{x.get('cpf_fmt','')}</td><td>{x.get('plano','')}</td>"
-        f"<td>{x['data']}</td><td><a href='/baixar/{x['arquivo']}'>abrir</a></td></tr>" for x in linhas)
+        f"<tr><td>{x.get('nome','')}</td><td>{x.get('cpf_fmt','')}</td><td>{x.get('plano','')}</td>"
+        f"<td>{x.get('data','')}</td><td>{pdf_cell(x)}</td></tr>" for x in linhas)
     return ("<html><head><meta charset=utf-8><title>Contratos assinados</title>"
             "<style>body{font-family:Segoe UI,Arial;margin:30px;color:#0f172a}h1{font-size:20px}"
+            ".fonte{color:#64748b;font-size:12px;margin:-6px 0 16px}"
             "table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left}"
             "a{color:#0B7F6E}</style></head><body>"
             f"<h1>Contratos assinados ({len(linhas)})</h1>"
+            f"<div class='fonte'>Fonte: {fonte} · o PDF de cada contrato também é enviado por e-mail.</div>"
             "<table><tr><th>Nome</th><th>CPF</th><th>Plano</th><th>Assinado em</th><th>PDF</th></tr>"
             f"{rows}</table></body></html>")
 
