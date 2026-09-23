@@ -7,8 +7,6 @@ dados preenchidos no corpo + a assinatura do cliente + pagina de comprovacao.
 Sem dependencia de terceiros.
 """
 import os, re, io, json, base64, hashlib, datetime, unicodedata, subprocess, tempfile
-import smtplib, ssl
-from email.message import EmailMessage
 from flask import Flask, request, send_file, abort
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -20,18 +18,14 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 # ─────────────────────── PERSISTENCIA DURAVEL ───────────────────────
 # O disco do Render e efemero: some a cada deploy/restart. Por isso a
-# lista vai pro Supabase (sobrevive a tudo) e uma copia do PDF vai por
-# e-mail. O salvamento local continua so como backup imediato.
+# LISTA vai pro Supabase (tabela) e o PDF de cada contrato vai pro
+# Supabase Storage (bucket privado). Assim o painel de controle e os
+# PDFs sobrevivem a qualquer restart. O salvamento local fica so como
+# cache imediato.
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 SUPA_TABLE   = os.environ.get("SUPA_TABLE", "contratos_assinados")
-
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")            # e-mail que dispara
-SMTP_PASS = os.environ.get("SMTP_PASS", "")            # senha de app (Gmail)
-MAIL_TO   = os.environ.get("MAIL_TO", "atendimentomoveonline@gmail.com")
-MAIL_FROM = os.environ.get("MAIL_FROM", SMTP_USER)
+SUPA_BUCKET  = os.environ.get("SUPA_BUCKET", "contratos")
 
 def _supa_headers():
     return {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -67,37 +61,35 @@ def supa_listar():
         print("[painel] supabase indisponivel:", e)
     return None
 
-def enviar_email(dados, pdf_path, agora, h):
-    """Envia o PDF assinado por e-mail pra Move. Nao levanta erro."""
-    if not (SMTP_USER and SMTP_PASS):
-        return False, "smtp nao configurado"
+def supa_upload_pdf(fname, pdf_bytes):
+    """Sobe o PDF assinado pro bucket privado no Supabase Storage.
+    Nao levanta erro. Retorna (ok, detalhe)."""
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return False, "supabase nao configurado"
     try:
-        msg = EmailMessage()
-        msg["Subject"] = f"Contrato assinado — {dados['nome']} ({dados['plano']})"
-        msg["From"] = MAIL_FROM
-        msg["To"] = MAIL_TO
-        msg.set_content(
-            "Novo contrato assinado na página da Move.\n\n"
-            f"Nome: {dados['nome']}\n"
-            f"CPF: {dados['cpf_fmt']}\n"
-            f"E-mail: {dados['email']}\n"
-            f"Telefone: {dados['telefone']}\n"
-            f"Plano: {dados['plano_desc']}\n"
-            f"Vencimento: dia {dados['vencimento']} · Pagamento: {dados['pagamento']}\n"
-            f"Assinado em: {agora}\n"
-            f"Verificação (SHA-256): {h}\n\n"
-            "O contrato assinado está anexado a este e-mail."
-        )
-        with open(pdf_path, "rb") as f:
-            msg.add_attachment(f.read(), maintype="application", subtype="pdf",
-                               filename=os.path.basename(pdf_path))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as s:
-            s.starttls(context=ssl.create_default_context())
-            s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
-        return True, "ok"
+        import requests
+        url = f"{SUPABASE_URL}/storage/v1/object/{SUPA_BUCKET}/{fname}"
+        r = requests.post(url, data=pdf_bytes, timeout=30, headers={
+            "apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+            "Content-Type": "application/pdf", "x-upsert": "true"})
+        return (r.status_code in (200, 201)), f"{r.status_code} {r.text[:200]}"
     except Exception as e:
         return False, str(e)
+
+def supa_baixar_pdf(fname):
+    """Baixa o PDF do bucket privado. Retorna bytes, ou None se nao achar."""
+    if not (SUPABASE_URL and SUPABASE_KEY):
+        return None
+    try:
+        import requests
+        url = f"{SUPABASE_URL}/storage/v1/object/{SUPA_BUCKET}/{fname}"
+        r = requests.get(url, timeout=30, headers={
+            "apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"})
+        if r.status_code == 200:
+            return r.content
+    except Exception as e:
+        print("[baixar] supabase storage indisponivel:", e)
+    return None
 
 _PAG_CACHE = {}
 def leitura_num_paginas():
@@ -448,30 +440,32 @@ def gerar_contrato(dados, ip):
         writer.add_page(p)
     writer.add_page(PdfReader(comp).pages[0])
     fname = base_name + "_assinado.pdf"
+    # bytes do PDF final (para gravar local E subir pro Storage)
+    _buf = io.BytesIO(); writer.write(_buf); pdf_bytes = _buf.getvalue()
     pdf_path = os.path.join(OUT_DIR, fname)
     with open(pdf_path, "wb") as f:
-        writer.write(f)
+        f.write(pdf_bytes)
 
     reg = {**{k: dados[k] for k in ("nome","cpf_fmt","email","telefone",
               "endereco","municipio","plano","vencimento","pagamento")},
            "arquivo": fname, "data": agora, "ip": ip, "hash": h}
 
-    # 1) backup local imediato (efemero no Render, mas util enquanto o processo vive)
+    # 1) cache local imediato (efemero no Render, mas util enquanto o processo vive)
     try:
         with open(os.path.join(OUT_DIR, "_registro.jsonl"), "a", encoding="utf-8") as f:
             f.write(json.dumps(reg, ensure_ascii=False) + "\n")
     except Exception as e:
         print("[registro] falha ao gravar jsonl local:", e)
 
-    # 2) lista duravel no Supabase (sobrevive a restart/deploy)
+    # 2) PDF duravel no Supabase Storage (bucket privado)
+    ok_pdf, det_pdf = supa_upload_pdf(fname, pdf_bytes)
+    if not ok_pdf:
+        print("[registro] storage NAO subiu o PDF:", det_pdf)
+
+    # 3) lista duravel no Supabase (sobrevive a restart/deploy)
     ok_supa, det_supa = supa_inserir(reg)
     if not ok_supa:
         print("[registro] supabase NAO gravou:", det_supa)
-
-    # 3) copia assinada por e-mail (fonte de verdade do PDF)
-    ok_mail, det_mail = enviar_email(dados, pdf_path, agora, h)
-    if not ok_mail:
-        print("[registro] e-mail NAO enviado:", det_mail)
 
     return fname
 
@@ -526,10 +520,18 @@ def assinar():
 
 @app.route("/baixar/<path:fname>")
 def baixar(fname):
-    fpath = os.path.join(OUT_DIR, fname)
-    if ".." in fname or not os.path.isfile(fpath):
+    if ".." in fname or "/" in fname:
         abort(404)
-    return send_file(fpath, mimetype="application/pdf", download_name="Contrato_Move_Assinado.pdf")
+    fpath = os.path.join(OUT_DIR, fname)
+    # 1) tem no disco local (recem-assinado) -> serve direto
+    if os.path.isfile(fpath):
+        return send_file(fpath, mimetype="application/pdf", download_name="Contrato_Move_Assinado.pdf")
+    # 2) sumiu do disco (restart do Render) -> busca no Supabase Storage
+    pdf = supa_baixar_pdf(fname)
+    if pdf:
+        return send_file(io.BytesIO(pdf), mimetype="application/pdf",
+                         download_name="Contrato_Move_Assinado.pdf")
+    abort(404)
 
 @app.route("/painel")
 def painel():
@@ -546,9 +548,9 @@ def painel():
         linhas.reverse()
     def pdf_cell(x):
         arq = x.get("arquivo", "")
-        if arq and os.path.isfile(os.path.join(OUT_DIR, arq)):
+        if arq:
             return f"<a href='/baixar/{arq}'>abrir</a>"
-        return "<span style='color:#94a3b8'>no e-mail</span>"
+        return "<span style='color:#94a3b8'>—</span>"
     rows = "".join(
         f"<tr><td>{x.get('nome','')}</td><td>{x.get('cpf_fmt','')}</td><td>{x.get('plano','')}</td>"
         f"<td>{x.get('data','')}</td><td>{pdf_cell(x)}</td></tr>" for x in linhas)
@@ -558,7 +560,7 @@ def painel():
             "table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left}"
             "a{color:#0B7F6E}</style></head><body>"
             f"<h1>Contratos assinados ({len(linhas)})</h1>"
-            f"<div class='fonte'>Fonte: {fonte} · o PDF de cada contrato também é enviado por e-mail.</div>"
+            f"<div class='fonte'>Fonte: {fonte} · PDF guardado no Supabase (abre pelo botão).</div>"
             "<table><tr><th>Nome</th><th>CPF</th><th>Plano</th><th>Assinado em</th><th>PDF</th></tr>"
             f"{rows}</table></body></html>")
 
