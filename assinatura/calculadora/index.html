@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simples x Híbrido — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  /* PDF */
+  #pdf{width:760px;padding:36px 40px;background:#fff;color:var(--ink);font-family:Helvetica,Arial,sans-serif}
+  #pdf .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--green);padding-bottom:14px}
+  #pdf .ph img{height:78px}
+  #pdf .ph div{text-align:right;font-size:12px;color:var(--mut);line-height:1.6}
+  #pdf h2{color:var(--navy);font-size:22px;margin:24px 0 4px}
+  #pdf .meta{font-size:13px;color:var(--mut);margin-bottom:18px}
+  #pdf table{width:100%;border-collapse:collapse;font-size:14px}
+  #pdf th{background:var(--navy);color:#fff;text-align:right;padding:10px 12px;font-size:13px}
+  #pdf th:first-child{text-align:left;border-radius:8px 0 0 0}#pdf th:last-child{border-radius:0 8px 0 0}
+  #pdf td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right}
+  #pdf td:first-child{text-align:left;color:var(--mut)}
+  #pdf tr.t td{font-weight:800;font-size:16px;color:var(--navy);border-bottom:none;background:#f4f8fb}
+  #pdf .ph2{margin-top:22px;background:var(--navy);color:#fff;border-radius:14px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center}
+  #pdf .ph2 .l{font-size:12px;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  #pdf .ph2 .v{font-size:30px;font-weight:800;margin-top:2px}
+  #pdf .ph2 .p{font-size:34px;font-weight:800;color:var(--green)}
+  #pdf .pn{font-size:11px;color:var(--mut);margin-top:22px;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Simples Nacional <span>×</span> Simples Híbrido</h1>
+    <p>Quanto o cliente passa a pagar com a CBS/IBS da Reforma Tributária (2027).</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Cliente (opcional)</label>
+      <input id="nome" placeholder="Nome do cliente ou empresa">
+
+      <label>Atividade</label>
+      <select id="atv"></select>
+      <div id="bdg"></div>
+
+      <label>Faturamento mensal</label>
+      <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="10.000,00"></div>
+
+      <div id="prow">
+      <label>Pró-labore</label>
+      <div class="money"><span>R$</span><input id="pro" inputmode="decimal"></div>
+      <div class="hint" id="proh"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Escolha a atividade e digite o faturamento.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>Simples Nacional</h3><div id="lA"></div>
+            <div class="tot"><span>TOTAL / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt b"><h3>Simples Híbrido</h3><div id="lB"></div>
+            <div class="tot"><span>TOTAL / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl">Aumento no imposto</div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span>em relação ao Simples Nacional</span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+        <div class="note" id="nota"></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com base na LC 123/2006 e LC 214/2025. Não considera a alíquota efetiva do Simples Nacional.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+<div style="position:absolute;left:-9999px;top:0"><div id="pdf"></div></div>
+
+<script>
+// Parâmetros 2027 (LC 214/2025): CBS cheia − 0,1 p.p. e IBS de teste 0,1%
+const CBS=.087, IBS=.001, DAS=.06, INSS=.11, FATOR_R=.28;
+const SAL_MIN=1621.00, TETO_INSS=8475.55;
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+// [atividade, usa fator R, redução CBS/IBS]
+const S=.6, P=.3, N=0; // S: saúde (LC 214 art. 130) · P: profissão regulamentada (art. 127) · N: sem redução
+const ATV=[
+ ['Médico',1,S],['Dentista',1,S],['Psicólogo',1,S],['Fisioterapeuta',1,S],['Fonoaudiólogo',1,S],
+ ['Terapeuta ocupacional',1,S],['Nutricionista',1,S],['Professor de pilates (fisioterapeuta)',1,S],
+ ['Professor de pilates (educador físico)',0,P],['Personal trainer',0,P],['Educador físico',0,P],
+ ['Musicoterapeuta',0,N],['Acompanhante / atendente terapêutico',0,N],['Psicopedagogo',0,N],['Neuropsicopedagogo',0,N],
+ ['Aplicador ABA',0,N],['Psicanalista',0,N],['Psicomotricista',0,N],['Arteterapeuta',0,N],['Acupunturista',0,N],
+ ['Massoterapeuta',0,N],['Terapeuta integrativo / holístico',0,N],['Instrutor de yoga',0,N],['Doula',0,N]
+].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+
+const FUND={
+ [S]:'<b>Redução de 60%</b> — serviços de saúde humana listados no Anexo III da LC 214/2025 (art. 130).',
+ [P]:'<b>Redução de 30%</b> — profissões intelectuais regulamentadas e fiscalizadas por conselho profissional, incluindo profissionais de educação física (LC 214/2025, art. 127).',
+ [N]:'<b>Sem redução</b> — a atividade não consta no Anexo III (saúde, art. 130) nem nas profissões regulamentadas do art. 127 da LC 214/2025. Alíquota cheia.'
+};
+const BASE='Simples Híbrido: opção por recolher IBS/CBS pelo regime regular, fora do DAS (LC 214/2025, art. 41, §3º). Alíquotas de 2027: CBS de referência (8,8%) reduzida em 0,1 p.p. = 8,7%, e IBS de teste de 0,1% (EC 132/2023, ADCT art. 127).';
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let proManual=false, R=null;
+
+$('atv').innerHTML='<option value="">Selecione…</option>'+ATV.map((a,i)=>`<option value="${i}">${a[0]}</option>`).join('');
+
+// Com Fator R: até R$ 5.000 = 1 salário mínimo; acima, 28% do faturamento (nunca abaixo do mínimo). Sem Fator R: sem INSS.
+function proAuto(a,fat){return a[1]?(fat<=5000?SAL_MIN:Math.max(fat*FATOR_R,SAL_MIN)):0}
+
+function calc(){
+  const i=$('atv').value, a=i===''?null:ATV[i], fat=num($('fat').value);
+  $('bdg').innerHTML=a?(a[1]?'<span class="badge r">Com Fator R · pró-labore de 28%</span>':'<span class="badge n">Sem Fator R · sem INSS</span>')+` <span class="badge ${a[2]?'r':'n'}">CBS/IBS ${a[2]?'−'+a[2]*100+'%':'sem redução'}</span>`:'';
+  $('prow').style.display=a&&!a[1]?'none':'';
+  if(a&&!proManual)$('pro').value=fat?fmt(proAuto(a,fat)):'';
+  $('proh').textContent=a?`Até R$ 5.000 de faturamento: 1 salário mínimo (${brl(SAL_MIN)}). Acima: 28% do faturamento. INSS de 11% limitado ao teto.`+(proManual?' · editado manualmente':''):'';
+  if(!a||!fat){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+
+  const pro=a[1]?num($('pro').value):0;
+  const das=fat*DAS, inss=Math.min(pro,TETO_INSS)*INSS;
+  const cbsA=CBS*(1-a[2]), ibsA=IBS*(1-a[2]);
+  const cbs=fat*cbsA, ibs=fat*ibsA;
+  const totA=das+inss, totB=das+inss+cbs+ibs, dif=totB-totA, var_=totA?dif/totA:0;
+  R={nome:$('nome').value.trim(),atv:a[0],fr:a[1],red:a[2],fat,pro,das,inss,cbs,ibs,cbsA,ibsA,totA,totB,dif,var_};
+
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  $('lA').innerHTML=L([['DAS','6%',das],['INSS',a[1]?`11% s/ ${brl(pro)}`:'não se aplica',inss]]);
+  $('lB').innerHTML=L([['DAS','6%',das],['INSS',a[1]?`11% s/ ${brl(pro)}`:'não se aplica',inss],['CBS',pct(cbsA),cbs],['IBS',pct(ibsA),ibs]]);
+  $('tA').textContent=brl(totA);$('tB').textContent=brl(totB);
+  $('pA').textContent=`${pct(totA/fat)} do faturamento`;$('pB').textContent=`${pct(totB/fat)} do faturamento`;
+  const up=dif>=0;
+  $('hl').textContent=up?'Aumento no imposto com o Híbrido':'Economia com o Híbrido';
+  $('hv').textContent=(up?'+ ':'− ')+brl(Math.abs(dif))+'/mês';$('hv').className='val '+(up?'up':'down');
+  $('hs').textContent=`${brl(Math.abs(dif)*12)} por ano`;
+  $('hp').textContent=(up?'+':'−')+pct(Math.abs(var_));
+  const mx=Math.max(totA,totB);
+  $('bars').innerHTML=[['Simples Nacional',totA,'#94a3b8'],['Simples Híbrido',totB,'var(--navy)']].map(([k,v,c])=>
+    `<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${v/mx*100}%;background:${c}"></div></div><b>${brl(v)}</b></div>`).join('');
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Fundamento legal · CBS ${pct(cbsA)} + IBS ${pct(ibsA)}</div>${FUND[a[2]]}<br>${BASE}</div>`;
+}
+
+function montaPDF(){
+  const r=R, d=new Date().toLocaleDateString('pt-BR'), up=r.dif>=0;
+  $('pdf').innerHTML=`
+   <div class="ph"><img src="logo_move.png"><div>Simulação tributária<br>${d}</div></div>
+   <h2>Simples Nacional × Simples Híbrido</h2>
+   <div class="meta">${r.nome?`<b>${r.nome}</b> · `:''}${r.atv} (${r.fr?'com':'sem'} Fator R) · Faturamento mensal ${brl(r.fat)}</div>
+   <table><tr><th>Tributo</th><th>Simples Nacional</th><th>Simples Híbrido</th></tr>
+    <tr><td>DAS (6%)</td><td>${brl(r.das)}</td><td>${brl(r.das)}</td></tr>
+    <tr><td>${r.fr?`INSS (11% s/ pró-labore ${brl(r.pro)})`:'INSS (não se aplica)'}</td><td>${brl(r.inss)}</td><td>${brl(r.inss)}</td></tr>
+    <tr><td>CBS (${pct(r.cbsA)})</td><td>—</td><td>${brl(r.cbs)}</td></tr>
+    <tr><td>IBS (${pct(r.ibsA)})</td><td>—</td><td>${brl(r.ibs)}</td></tr>
+    <tr class="t"><td>Total mensal</td><td>${brl(r.totA)}</td><td>${brl(r.totB)}</td></tr>
+    <tr><td>Total anual</td><td>${brl(r.totA*12)}</td><td>${brl(r.totB*12)}</td></tr></table>
+   <div class="ph2"><div><div class="l">${up?'Aumento':'Economia'} com o Simples Híbrido</div><div class="v">${up?'+':'−'} ${brl(Math.abs(r.dif))}/mês</div>
+     <div style="font-size:13px;opacity:.85">${brl(Math.abs(r.dif)*12)} por ano</div></div><div class="p">${up?'+':'−'}${pct(Math.abs(r.var_))}</div></div>
+   <div class="pn">Simulação estimada para 2027 com base na LC 123/2006 e LC 214/2025. DAS calculado pela alíquota nominal de 6% (não considera a alíquota efetiva do Simples Nacional). ${FUND[r.red].replace(/<\/?b>/g,'')} ${BASE} Não substitui a análise do contador.<br><b>Move Online Contabilidade Médica</b></div>`;
+}
+
+$('atv').addEventListener('change',()=>{proManual=false;calc()});
+$('fat').addEventListener('input',()=>{calc()});
+$('nome').addEventListener('input',calc);
+$('pro').addEventListener('input',()=>{proManual=true;calc()});
+document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(!R)return;montaPDF();
+  html2pdf().set({margin:0,filename:`Simples x Hibrido - ${R.nome||R.atv}.pdf`,image:{type:'jpeg',quality:.96},html2canvas:{scale:2},jsPDF:{unit:'px',format:[760,1075],orientation:'portrait'}}).from($('pdf')).save()};
+$('bzap').onclick=()=>{if(!R)return;const r=R,up=r.dif>=0;
+  const t=`*Simulação Simples Nacional × Híbrido*${r.nome?'\n'+r.nome:''}\n${r.atv} · Faturamento ${brl(r.fat)}/mês\n\n• Simples Nacional: *${brl(r.totA)}*/mês\n• Simples Híbrido: *${brl(r.totB)}*/mês\n\n${up?'📈 Aumento':'✅ Economia'}: *${brl(Math.abs(r.dif))}/mês* (${up?'+':'−'}${pct(Math.abs(r.var_))})\n${brl(Math.abs(r.dif)*12)} por ano\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>

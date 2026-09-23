@@ -479,6 +479,20 @@ def home():
         imgs = contrato_html()  # fallback: texto
     return PAGINA.replace("__CONTRATO_HTML__", imgs)
 
+# ── Calculadora Simples Nacional x Simples Híbrido (página estática) ──
+CALC_DIR = os.path.join(BASE, "calculadora")
+
+@app.route("/calculadora/")
+def calculadora():
+    return send_file(os.path.join(CALC_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/calculadora/<nome>.png")
+def calculadora_img(nome):
+    f = os.path.join(CALC_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
