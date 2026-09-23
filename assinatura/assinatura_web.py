@@ -493,6 +493,13 @@ def calculadora_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora de orçamento RK Distribuição (página estática) ──
+RK_DIR = os.path.join(BASE, "orcamento-rk")
+
+@app.route("/orcamento-rk/")
+def orcamento_rk():
+    return send_file(os.path.join(RK_DIR, "index.html"), mimetype="text/html")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

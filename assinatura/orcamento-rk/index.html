@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orçamento RK Distribuição</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ink:#12213A;
+    --ink-2:#3B4A63;
+    --muted:#6B778C;
+    --line:#DCE1EA;
+    --paper:#F4F6F9;
+    --card:#FFFFFF;
+    --hivis:#F7C42B;
+    --hivis-soft:#FFF4CC;
+    --route:#1F5FD6;
+    --ok:#1E8E5A;
+    --display:"Archivo","Arial Narrow",Arial,sans-serif;
+    --body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:44px;height:44px;border-radius:10px;background:var(--ink);display:grid;place-items:center;color:var(--hivis);font:900 18px/1 var(--display);font-stretch:112%;letter-spacing:-.02em}
+  .brand small{display:block;font:600 11px/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .brand strong{font:800 20px/1.1 var(--display);font-stretch:108%}
+  h1{font:800 clamp(28px,4.4vw,44px)/1.02 var(--display);font-stretch:118%;letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+  h1 mark{background:linear-gradient(transparent 58%,var(--hivis) 58%);color:inherit;padding:0 .08em}
+  .lede{margin:0;color:var(--ink-2);max-width:58ch}
+
+  /* modalidade */
+  .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 18px}
+  .mode{appearance:none;text-align:left;cursor:pointer;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:14px 16px;font:inherit;color:inherit;display:flex;flex-direction:column;gap:2px;transition:border-color .15s,box-shadow .15s}
+  .mode b{font:800 17px/1.15 var(--display);font-stretch:108%}
+  .mode span{font-size:13px;color:var(--muted)}
+  .mode:hover{border-color:#B8C2D3}
+  .mode[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--hivis)}
+  .mode:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--route);outline-offset:2px}
+
+  .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .opt{appearance:none;cursor:pointer;text-align:left;font:inherit;color:var(--ink-2);background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.45}
+  .opt:hover{border-color:#B8C2D3}
+  .opt[aria-pressed="true"]{border-color:var(--ink);background:var(--hivis-soft)}
+  .opt:focus-visible{outline:3px solid var(--route);outline-offset:2px}
+  .opt-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .opt-top b{font:800 16px/1.15 var(--display);font-stretch:108%;color:var(--ink)}
+  .opt-top em{font-style:normal;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .panel h2{font:800 13px/1 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+  fieldset{border:0;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px;align-items:end}
+  fieldset + fieldset{margin-top:22px;padding-top:20px;border-top:1px dashed var(--line)}
+  legend{grid-column:1/-1;font:800 15px/1.2 var(--display);font-stretch:108%;padding:0;margin-bottom:12px;float:left;width:100%}
+  .full{grid-column:1/-1}
+  label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13.5px}
+  label.f em{font-style:normal;font-weight:400;color:var(--muted);font-size:12.5px}
+  label.f em.alerta{color:#9A5B00;font-weight:600}
+  input:disabled{opacity:.5;cursor:not-allowed}
+  input[type=number],select{width:100%;font:500 15px/1.2 var(--body);color:var(--ink);background:#FBFCFD;border:1.5px solid var(--line);border-radius:9px;padding:11px 12px;font-variant-numeric:tabular-nums}
+  input[type=number]:hover,select:hover{border-color:#B8C2D3}
+  .qty{display:flex;flex-direction:column;gap:10px}
+  .qty-row{display:flex;gap:10px;align-items:center}
+  .qty-row input[type=number]{font:800 22px/1 var(--display);font-stretch:105%;max-width:190px}
+  .qty-row span{color:var(--muted);font-size:13px}
+  input[type=range]{width:100%;accent-color:var(--ink)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{appearance:none;cursor:pointer;font:600 13px/1 var(--body);color:var(--ink-2);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 12px}
+  .chip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;font-size:13.5px}
+  .check input{margin:2px 0 0;width:17px;height:17px;accent-color:var(--ink);flex:none}
+  .check b{display:block;font-weight:600}
+  .check small{color:var(--muted)}
+  .check:has(input:checked){border-color:var(--ink);background:var(--hivis-soft)}
+
+  /* recibo */
+  .receipt{position:sticky;top:16px;background:var(--ink);color:#fff;border-radius:14px;overflow:hidden}
+  .receipt .head{padding:20px 22px 16px}
+  .receipt .kicker{font:700 11px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--hivis)}
+  .receipt .total{font:900 clamp(34px,5vw,42px)/1 var(--display);font-stretch:112%;letter-spacing:-.02em;margin:10px 0 4px;font-variant-numeric:tabular-nums}
+  .receipt .per{font-size:13px;color:#B9C4D8}
+  .stats{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #2A3A57;border-bottom:1px solid #2A3A57}
+  .stats div{padding:12px 22px}
+  .stats div + div{border-left:1px solid #2A3A57}
+  .stats small{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8E9BB3}
+  .stats b{font:800 18px/1.2 var(--display);font-variant-numeric:tabular-nums}
+  .lines{list-style:none;margin:0;padding:14px 22px;display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+  .lines li{display:flex;justify-content:space-between;gap:12px}
+  .lines li span:first-child{color:#C8D1E1}
+  .lines li span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .lines li.disc span{color:#8FE0B5}
+  .lines li.info span:last-child{color:#8E9BB3;font-style:italic}
+  .lines li.sub{border-top:1px dashed #3A4B6A;padding-top:8px;margin-top:2px}
+  .actions{padding:4px 22px 22px;display:flex;flex-direction:column;gap:10px}
+  .btn{appearance:none;cursor:pointer;border:0;border-radius:10px;padding:14px 16px;font:800 15px/1 var(--display);font-stretch:108%;text-align:center;text-decoration:none;display:block}
+  .btn.primary{background:var(--hivis);color:var(--ink)}
+  .btn.primary:hover{background:#FFD24F}
+  .btn.ghost{background:transparent;color:#fff;border:1.5px solid #3A4B6A}
+  .btn.ghost:hover{border-color:#6B7C9B}
+  .note{font-size:12px;color:#8E9BB3;padding:0 22px 20px;margin:0}
+  .toast{font-size:12.5px;color:var(--hivis);text-align:center;min-height:1em;margin:0}
+
+  /* tabela de faixas */
+  .faixas{overflow-x:auto}
+  .faixas table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+  .faixas caption{text-align:left;font-weight:700;font-size:13.5px;margin-bottom:8px}
+  .faixas th{text-align:left;font:600 11px/1 var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 12px;border-bottom:1.5px solid var(--line)}
+  .faixas td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .faixas th:not(:first-child),.faixas td:not(:first-child){text-align:right}
+  .faixas td:nth-child(3){color:var(--ok);font-weight:600}
+  .faixas tbody tr{cursor:pointer}
+  .faixas tbody tr:hover td{background:var(--paper)}
+  .faixas tbody tr:focus-visible{outline:3px solid var(--route);outline-offset:-3px}
+  .faixas tr.atual td{background:var(--hivis-soft);font-weight:800}
+  .faixas tr.atual td:first-child::before{content:"● ";color:var(--ink)}
+  .faixas-nota{font-size:12px;color:var(--muted);margin:8px 0 0}
+
+  /* planos */
+  .planos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .plano{appearance:none;cursor:pointer;text-align:left;font:inherit;color:inherit;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+  .plano:hover{border-color:#B8C2D3}
+  .plano[aria-pressed="true"]{border-color:var(--ink);background:var(--hivis-soft)}
+  .pl-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .pl-top b{font:800 15px/1.1 var(--display);font-stretch:108%}
+  .pl-top i{font-style:normal;font-size:12px;font-weight:700;color:var(--ok);background:#E3F4EA;border-radius:999px;padding:3px 8px}
+  .pl-mes{font:800 19px/1.1 var(--display);font-variant-numeric:tabular-nums}
+  .plano small{font-size:12px;color:var(--muted)}
+
+  .foot{margin-top:22px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .receipt{position:static}
+  }
+  @media (max-width:560px){
+    .modes{grid-template-columns:1fr}
+    .planos{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .opts{grid-template-columns:1fr}
+    fieldset{grid-template-columns:1fr}
+    .panel{padding:18px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  .cliente{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:#C8D1E1}
+  .cliente em{font-style:normal;font-weight:400;color:#8E9BB3}
+  .cliente input{font:500 14px/1.2 var(--body);color:#fff;background:#1B2C48;border:1.5px solid #3A4B6A;border-radius:9px;padding:11px 12px}
+  .cliente input::placeholder{color:#6F7F9C}
+  .cliente input:focus-visible{outline:3px solid var(--hivis);outline-offset:1px}
+  .foot a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="brand">
+        <div class="mark" aria-hidden="true">RK</div>
+        <div><small>Distribuição &amp; Propaganda</small><strong>RK Distribuição</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <h1>Monte seu orçamento de <mark>panfletagem</mark> em 1 minuto</h1>
+  <p class="lede">Escolha a modalidade, ajuste quantidade e período e veja o valor estimado na hora. Envie pelo WhatsApp e nossa equipe confirma a rota.</p>
+
+  <div class="modes" role="group" aria-label="Modalidade">
+    <button class="mode" type="button" data-mode="porta" aria-pressed="true"><b>Porta a porta</b><span>Cobrança por milheiro, com rota</span></button>
+    <button class="mode" type="button" data-mode="ponto" aria-pressed="false"><b>Ponto fixo</b><span>Semáforo, metrô, porta de loja</span></button>
+    <button class="mode" type="button" data-mode="acao" aria-pressed="false"><b>Ação promocional</b><span>Promotoras, blitz, degustação</span></button>
+  </div>
+
+  <div class="grid">
+    <form class="panel" id="form" autocomplete="off">
+
+      <!-- PORTA A PORTA -->
+      <div data-section="porta">
+        <h2>Porta a porta</h2>
+        <fieldset>
+          <legend>Quantidade</legend>
+          <div class="qty full">
+            <div class="qty-row">
+              <input type="number" id="pp-qtd" min="5000" max="1000000" step="1000" value="20000" aria-label="Quantidade de panfletos">
+              <span>panfletos · de 5 mil a 1 milhão</span>
+            </div>
+            <input type="range" id="pp-qtd-r" min="0" max="1000" step="1" value="0" aria-label="Ajustar quantidade">
+            <div class="chips" data-target="pp-qtd">
+              <button type="button" class="chip" data-v="5000">5 mil</button>
+              <button type="button" class="chip" data-v="10000">10 mil</button>
+              <button type="button" class="chip" data-v="20000">20 mil</button>
+              <button type="button" class="chip" data-v="50000">50 mil</button>
+              <button type="button" class="chip" data-v="100000">100 mil</button>
+              <button type="button" class="chip" data-v="500000">500 mil</button>
+              <button type="button" class="chip" data-v="1000000">1 milhão</button>
+            </div>
+          </div>
+          <div class="faixas full">
+            <table>
+              <caption>Preço por milheiro — quanto maior o volume, menor o milheiro</caption>
+              <thead><tr><th scope="col">Quantidade</th><th scope="col">R$ / milheiro</th><th scope="col">Economia</th></tr></thead>
+              <tbody id="pp-faixas"></tbody>
+            </table>
+            <p class="faixas-nota">Valores já ajustados para o tipo de região e localidade escolhidos. Toque numa faixa para simular.</p>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Onde distribuir</legend>
+          <label class="f">Tipo de região
+            <select id="pp-regiao">
+              <option value="casas">Residencial — casas</option>
+              <option value="predios">Residencial — condomínios / prédios</option>
+              <option value="comercial">Comercial — lojas e escritórios</option>
+              <option value="misto" selected>Misto (bairro inteiro)</option>
+            </select>
+          </label>
+          <label class="f">Localidade
+            <select id="pp-zona">
+              <option value="capital" selected>São Paulo — capital</option>
+              <option value="grande">Grande SP / ABC</option>
+              <option value="interior">Interior e litoral de SP</option>
+            </select>
+          </label>
+          <label class="f">Prazo
+            <select id="pp-prazo">
+              <option value="normal" selected>Normal (agenda da equipe)</option>
+              <option value="urgente">Urgente — início em 48h</option>
+            </select>
+          </label>
+          <label class="f">Segmentação
+            <select id="pp-seg">
+              <option value="mapa" selected>Por mapa — bairros e ruas escolhidos</option>
+              <option value="raio">Por raio — em volta do endereço</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Plano</legend>
+          <div class="full">
+            <div class="chips" id="pp-freq" role="group" aria-label="Frequência">
+              <button type="button" class="chip" data-f="avulsa" aria-pressed="true">Distribuição única</button>
+              <button type="button" class="chip" data-f="semanal" aria-pressed="false">Semanal</button>
+              <button type="button" class="chip" data-f="quinzenal" aria-pressed="false">Quinzenal</button>
+              <button type="button" class="chip" data-f="mensal" aria-pressed="false">Mensal</button>
+            </div>
+          </div>
+          <div class="full" id="pp-planos-wrap" hidden>
+            <p class="faixas-nota" style="margin:0 0 10px">Escolha a duração do contrato. Quanto mais longo, maior o desconto. A quantidade acima vale para cada distribuição.</p>
+            <div class="planos" id="pp-planos"></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Extras</legend>
+          <label class="check full"><input type="checkbox" id="pp-gps" checked><span><b>Relatório com GPS e fotos</b><small>Rota rastreada e comprovação por rua</small></span></label>
+        </fieldset>
+      </div>
+
+      <!-- PONTO FIXO -->
+      <div data-section="ponto" hidden>
+        <h2>Ponto fixo</h2>
+        <fieldset>
+          <legend>Tipo de ação</legend>
+          <div class="full opts" id="pf-tipo" role="group" aria-label="Tipo de ação">
+            <button type="button" class="opt" data-t="externa" aria-pressed="true">
+              <span class="opt-top"><b>Panfletagem de rua</b><em data-desde="externa"></em></span>
+              <span>Promotoras em semáforos, calçadas de grande fluxo, saídas de metrô e porta de loja. Jornadas de até 4h, de 4h a 6h ou de 6h a 8h.</span>
+            </button>
+            <button type="button" class="opt" data-t="interna" aria-pressed="false">
+              <span class="opt-top"><b>Feiras, eventos e shows</b><em data-desde="interna"></em></span>
+              <span>Promotoras dentro do evento: recepção, entrega de material e abordagem do público. Jornadas de 4h a 6h ou de 6h a 8h.</span>
+            </button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Equipe e período</legend>
+          <label class="f">Promotoras <em>por dia · mínimo 2</em>
+            <input type="number" id="pf-pessoas" min="2" max="100" value="4">
+          </label>
+          <label class="f">Jornada
+            <select id="pf-horas">
+              <option value="4">4 horas</option>
+              <option value="6" selected>6 horas</option>
+              <option value="8">8 horas</option>
+            </select>
+          </label>
+          <label class="f">Dias de ação
+            <input type="number" id="pf-dias" min="1" max="60" value="5">
+          </label>
+          <label class="f">Horário de início <em id="pf-fim">término até 14h</em>
+            <select id="pf-inicio"></select>
+          </label>
+          <label class="f full">Dias em sábado, domingo ou feriado <em>adicional de 25% nesses dias</em>
+            <input type="number" id="pf-adic" min="0" max="60" value="0">
+          </label>
+          <label class="f full">Localidade
+            <select id="pf-zona">
+              <option value="capital" selected>São Paulo — capital</option>
+              <option value="grande">Grande SP / ABC</option>
+              <option value="interior">Interior e litoral de SP</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Coordenação e material</legend>
+          <label class="check full"><input type="checkbox" id="pf-coord"><span><b>Coordenadora em campo</b><small data-coord>Acompanha a equipe em todos os dias da ação</small></span></label>
+          <label class="f full">Uniforme / personalizados
+            <select id="pf-perso">
+              <option value="nao" selected>Não preciso</option>
+              <option value="cotar">Quero cotar camiseta, boné etc.</option>
+              <option value="envio">Vou enviar o material à equipe</option>
+            </select>
+          </label>
+        </fieldset>
+      </div>
+
+      <!-- AÇÃO PROMOCIONAL -->
+      <div data-section="acao" hidden>
+        <h2>Ação promocional</h2>
+        <fieldset>
+          <legend>Tipo de ação</legend>
+          <label class="f full">Formato
+            <select id="ap-tipo">
+              <option value="blitz" selected>Blitz / abordagem na rua</option>
+              <option value="sampling">Sampling — entrega de amostras</option>
+              <option value="degustacao">Degustação em PDV</option>
+              <option value="ativacao">Ativação de marca / evento</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Equipe e período</legend>
+          <label class="f">Promotoras <em>por dia · a partir de 1</em>
+            <input type="number" id="ap-pessoas" min="1" max="100" value="4">
+          </label>
+          <label class="f">Perfil
+            <select id="ap-perfil">
+              <option value="padrao" selected>Promotora padrão</option>
+              <option value="exp">Experiente em PDV</option>
+              <option value="recep">Recepcionista</option>
+              <option value="sampling">Sampling</option>
+            </select>
+          </label>
+          <label class="f">Jornada
+            <select id="ap-horas">
+              <option value="4">4 horas</option>
+              <option value="6" selected>6 horas</option>
+              <option value="8">8 horas</option>
+            </select>
+          </label>
+          <label class="f">Dias de ação
+            <input type="number" id="ap-dias" min="1" max="60" value="3">
+          </label>
+          <label class="f">Horário de início <em id="ap-fim">término até 16h</em>
+            <select id="ap-inicio"></select>
+          </label>
+          <label class="f full">Dias em sábado, domingo ou feriado <em>adicional de 25% nesses dias</em>
+            <input type="number" id="ap-adic" min="0" max="60" value="0">
+          </label>
+          <label class="f full">Localidade
+            <select id="ap-zona">
+              <option value="capital" selected>São Paulo — capital</option>
+              <option value="grande">Grande SP / ABC</option>
+              <option value="interior">Interior e litoral de SP</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Coordenação e material</legend>
+          <label class="check full"><input type="checkbox" id="ap-coord"><span><b>Coordenadora da ação</b><small data-coord>Acompanha a equipe em todos os dias da ação</small></span></label>
+          <label class="f full">Uniforme / personalizados
+            <select id="ap-perso">
+              <option value="nao" selected>Não preciso</option>
+              <option value="cotar">Quero cotar camiseta, boné etc.</option>
+              <option value="envio">Vou enviar o material à equipe</option>
+            </select>
+          </label>
+        </fieldset>
+      </div>
+    </form>
+
+    <aside class="receipt" aria-live="polite">
+      <div class="head">
+        <div class="kicker" id="r-kicker">Porta a porta</div>
+        <div class="total" id="r-total">R$ 0</div>
+        <div class="per" id="r-per">—</div>
+      </div>
+      <div class="stats">
+        <div><small id="r-s1l">Prazo estimado</small><b id="r-s1">—</b></div>
+        <div><small id="r-s2l">Equipe</small><b id="r-s2">—</b></div>
+      </div>
+      <ul class="lines" id="r-lines"></ul>
+      <div class="actions">
+        <label class="cliente" for="r-cliente">Seu nome ou empresa <em>opcional · sai no PDF</em>
+          <input type="text" id="r-cliente" maxlength="80" placeholder="Ex.: Padaria Bom Pão" autocomplete="organization">
+        </label>
+        <a class="btn primary" id="r-wa" href="https://wa.me/5511957917238" target="_blank" rel="noopener">Enviar orçamento no WhatsApp</a>
+        <button class="btn ghost" type="button" id="r-pdf">Baixar orçamento em PDF</button>
+        <button class="btn ghost" type="button" id="r-copy">Copiar orçamento</button>
+        <p class="toast" id="r-toast"></p>
+      </div>
+      <p class="note">Impostos inclusos. Valores estimados, sujeitos à análise da região e disponibilidade de equipe. Proposta final enviada por um consultor.</p>
+    </aside>
+  </div>
+
+  <div class="foot">
+    <a href="https://wa.me/5511957917238" target="_blank" rel="noopener">WhatsApp (11) 95791-7238</a>
+    <span>contato@rkdistribuicao.com.br</span>
+    <span>Av. João XXIII, 649 — Vila Formosa, São Paulo/SP</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+
+const PRECOS = {
+  whatsapp: "5511957917238",
+  imposto: 0,                 
+  zona: { capital:1, grande:1.30, interior:1.40 },                 
+  porta: {
+    minimo: 5000,
+    maximo: 1000000,
+    faixas: {                 
+      5000:160, 10000:140, 20000:120, 50000:105, 100000:95, 250000:85, 500000:75
+    },
+    regiao: { casas:1, predios:1.25, comercial:0.9, misto:1 },     
+    segmentacao: { mapa:0, raio:0 },                                 
+    gps: 12,                  
+    urgente: 0.20,
+    capacidadeDia: { casas:10000, predios:6000, comercial:12000, misto:9000 }, 
+    equipePadrao: 6,
+    panfletosPorEquipe: 100000  
+  },
+  planos: {                   
+    duracao: { 3:0.03, 6:0.05, 9:0.07, 12:0.10, 24:0.13, 36:0.15 },
+    frequencia: { semanal:0.05, quinzenal:0.03, mensal:0 }
+  },
+  ponto: {
+    kc: {                  
+      externa: { 4:100, 6:130, 8:180 },
+      interna: { 6:180, 8:220 }
+    },
+    kd: {             
+      externa: { 4:100, 6:120, 8:150 },
+      interna: { 6:150, 8:180 }
+    },
+    gestao: 250,              
+    coordenadora: 250,        
+    volume: {                 
+      0:1, 10:0.8, 30:0.65, 60:0.5   
+    },
+    impostoNF: 0.08,          
+    minimoPessoas: 2,
+    adicional: 0.25,          
+    inicioNoturno: 19,        
+    translado: 180,           
+    rendimentoDia: { min:1250, max:2000 }        
+  },
+  acao: {
+    projeto: {                
+      1:  { nome:"diária avulsa",    kc:{ 4:100, 6:170, 8:201 }, kg:{ 4:50, 6:60, 8:75 } },
+      5:  { nome:"projeto de 5 a 14 dias",  kc:{ 4:90,  6:152, 8:179 }, kg:{ 4:45, 6:50, 8:60 } },
+      15: { nome:"projeto de 15 dias ou mais",kc:{ 4:80, 6:135, 8:152 }, kg:{ 4:40, 6:40, 8:50 } }
+    },
+    gestao: 250,              
+    coordenadora: 250,        
+    minimoPessoas: 1,
+    adicional: 0.25,         
+    inicioNoturno: 19,
+    impostoNF: 0.08           
+  }
+};
+
+const LABEL = {
+  regiao:{casas:"residencial — casas",predios:"condomínios / prédios",comercial:"comercial",misto:"misto"},
+  zona:{capital:"São Paulo capital",grande:"Grande SP / ABC",interior:"interior / litoral"},
+  local:{semaforo:"semáforo",metro:"metrô / terminal",loja:"porta de loja",evento:"evento"},
+  tipo:{blitz:"Blitz",sampling:"Sampling",degustacao:"Degustação",ativacao:"Ativação de marca"},
+  perfil:{padrao:"promotoras padrão",exp:"promotoras experientes em PDV",recep:"recepcionistas",sampling:"promotoras de sampling"}};
+
+const $ = id => document.getElementById(id);
+const brl = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:2});
+const brl0 = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const n = v => Math.round(v).toLocaleString("pt-BR");
+const num = (id,min=0) => Math.max(min, parseFloat($(id).value) || 0);
+const on = id => $(id).checked;
+const tier = (faixas, q) => {
+  const lim = Object.keys(faixas).map(Number).sort((a,b)=>b-a).find(l => q >= l);
+  return lim === undefined ? null : faixas[lim];
+};
+
+
+function lerNumero(txt){
+  let s = String(txt).replace(/[^\d,.\-]/g, "");
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+  return parseFloat(s);
+}
+function aplicarPlanilha(csv){
+  const linhas = csv.replace(/^﻿/, "").split(/\r?\n/).filter(l => l.trim());
+  const sep = (linhas[0].match(/;/g)||[]).length >= (linhas[0].match(/,/g)||[]).length ? ";" : ",";
+  let aplicados = 0;
+  for (const linha of linhas.slice(1)) {
+    const [codigo, , valor, unidade=""] = linha.split(sep).map(c => c.trim().replace(/^"|"$/g, ""));
+    if (!codigo || valor === undefined || valor === "") continue;
+    let v = lerNumero(valor);
+    if (isNaN(v)) continue;
+    const u = unidade.toLowerCase();
+    if (u.includes("acréscimo") || u.includes("acrescimo")) v = 1 + v/100;
+    else if (u.startsWith("%")) v = v/100;
+    
+    if (codigo.startsWith("porta.faixas.") && !aplicarPlanilha.faixasZeradas) { PRECOS.porta.faixas = {}; aplicarPlanilha.faixasZeradas = true; }
+    const partes = codigo.split(".");
+    let alvo = PRECOS;
+    for (const p of partes.slice(0,-1)) { if (typeof alvo[p] !== "object") alvo[p] = {}; alvo = alvo[p]; }
+    alvo[partes[partes.length-1]] = v;
+    aplicados++;
+  }
+  return aplicados;
+}
+async function carregarPrecos(){
+  try {
+    const r = await fetch("precos.csv?v=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const buf = await r.arrayBuffer();
+    let txt = new TextDecoder("utf-8").decode(buf);
+    if (txt.includes("�")) txt = new TextDecoder("windows-1252").decode(buf); 
+    aplicarPlanilha(txt);
+  } catch (e) {
+    console.warn("precos.csv não carregou — usando valores padrão do arquivo.", e);
+  }
+}
+
+let mode = "porta";
+
+function calcPorta(){
+  const P = PRECOS.porta;
+  const qtd = Math.min(P.maximo, Math.max(P.minimo, num("pp-qtd")));
+  const mil = qtd/1000;
+  const reg = $("pp-regiao").value, zona = $("pp-zona").value, seg = $("pp-seg").value;
+  const fz = PRECOS.zona[zona];
+  const lines = [];
+
+  const precoMil = tier(P.faixas, qtd) * P.regiao[reg] * fz;
+  renderFaixas(P.regiao[reg] * fz, qtd);
+  const dist = mil * precoMil;
+  lines.push([`Distribuição ${n(qtd)} un. × ${brl(precoMil)}/milheiro`, dist]);
+  if (P.segmentacao[seg]) lines.push([seg==="raio"?"Segmentação por raio":"Segmentação por mapa", mil*P.segmentacao[seg]]);
+  if (on("pp-gps")) lines.push(["Relatório GPS + fotos", mil*P.gps]);
+  if ($("pp-prazo").value==="urgente") lines.push(["Urgência (início em 48h)", dist*P.urgente]);
+
+  const equipes = Math.min(8, Math.max(1, Math.ceil(qtd / P.panfletosPorEquipe)));
+  const dias = Math.max(1, Math.ceil(qtd / (P.capacidadeDia[reg] * equipes)));
+  return {
+    kicker:"Porta a porta · " + LABEL.zona[zona], lines,
+    unit: t => `${brl(t/mil)} por milheiro com extras · ${n(qtd)} panfletos`,
+    s1l:"Prazo estimado", s1: dias===1 ? "1 dia útil" : `${dias} dias úteis`,
+    s2l:"Equipe em rua", s2: equipes===1 ? `${P.equipePadrao} + supervisor` : `${equipes} equipes (${equipes*P.equipePadrao} pessoas)`,
+    resumo: `Porta a porta — ${n(qtd)} panfletos, ${LABEL.regiao[reg]}, ${LABEL.zona[zona]}`
+  };
+}
+
+function renderFaixas(fator, qtd){
+  const lims = Object.keys(PRECOS.porta.faixas).map(Number).sort((a,b)=>a-b);
+  const topo = PRECOS.porta.faixas[lims[0]] * fator;
+  const fmtQ = v => v >= 1000000 ? `${n(v/1000000)} milhão` : `${n(v/1000)} mil`;
+  const body = $("pp-faixas"); body.innerHTML = "";
+  lims.forEach((lim, i) => {
+    const ate = i < lims.length-1 ? lims[i+1]-1 : PRECOS.porta.maximo;
+    const preco = PRECOS.porta.faixas[lim] * fator;
+    const tr = document.createElement("tr");
+    const atual = qtd >= lim && qtd <= ate;
+    if (atual) tr.className = "atual";
+    const eco = 1 - preco/topo;
+    tr.innerHTML = `<td></td><td></td><td></td>`;
+    tr.children[0].textContent = i < lims.length-1 ? `${fmtQ(lim)} a ${n(ate)}` : `${fmtQ(lim)} a ${fmtQ(ate)}`;
+    tr.children[1].textContent = brl(preco);
+    tr.children[2].textContent = eco > 0.005 ? `−${Math.round(eco*100)}%` : "—";
+    tr.dataset.v = lim;
+    tr.tabIndex = 0;
+    tr.title = `Usar ${fmtQ(lim)} panfletos`;
+    body.appendChild(tr);
+  });
+}
+
+
+function descontoVolume(faixas, diarias, kp){
+  const lims = Object.keys(faixas).map(Number).sort((a,b)=>a-b);
+  let desc = 0;
+  lims.forEach((lim, i) => {
+    const ate = i < lims.length-1 ? lims[i+1] : Infinity;
+    desc += Math.max(0, Math.min(diarias, ate) - lim) * kp * (1 - faixas[lim]);
+  });
+  return desc;
+}
+
+function calcPonto(){
+  const P = PRECOS.ponto;
+  const tipo = pontoTipo;
+  const pes = Math.max(P.minimoPessoas, Math.round(num("pf-pessoas")));
+  let h = num("pf-horas");
+  if (P.kc[tipo][h] === undefined) { h = Math.min(...Object.keys(P.kc[tipo]).map(Number)); $("pf-horas").value = h; }
+  const dias = Math.max(1, Math.round(num("pf-dias",1)));
+  const inicio = +$("pf-inicio").value, fim = inicio + h;
+  const noturno = fim > P.inicioNoturno;       
+  const fds = Math.min(dias, Math.max(0, Math.round(num("pf-adic"))));
+  const adic = noturno ? dias : fds;           
+  const pct = Math.round(P.adicional*100);
+  const hh = v => `${String(v % 24).padStart(2,"0")}h`;
+  const jornada = JORNADA[h] || `${h}h`;
+  $("pf-fim").textContent = `término até ${hh(fim)}${noturno ? ` · adicional noturno +${pct}%` : ""}`;
+  $("pf-fim").classList.toggle("alerta", noturno);
+  $("pf-adic").disabled = noturno;
+  const zona = $("pf-zona").value, fz = PRECOS.zona[zona];
+  
+  const bruto = v => v;
+  const kc = P.kc[tipo][h], kp = P.kd[tipo][h] / 2;
+  const diaria = bruto(kc + kp);
+  const diariaAdic = bruto(kc*(1+P.adicional) + kp);
+  const lines = [], notas = [];
+
+  const normais = dias - adic;
+  if (normais) lines.push([`Promotoras ${pes} × ${normais} dia(s) × ${brl(diaria)} (${jornada})`, pes*normais*diaria]);
+  if (adic) lines.push([`Promotoras ${pes} × ${adic} dia(s) × ${brl(diariaAdic)} · adicional ${noturno ? "noturno" : "fim de semana/feriado"}`, pes*adic*diariaAdic]);
+  
+  const diarias = pes*dias;
+  const desc = descontoVolume(P.volume, diarias, kp);
+  if (desc > 0.005) lines.push([`Desconto por volume (${diarias} diárias)`, -desc, "disc"]);
+  const pt = lines.reduce((s,l)=>s+l[1],0);
+
+  if (on("pf-coord")) {
+    const cAdic = P.coordenadora*(1+P.adicional);
+    lines.push([adic ? `Coordenadora 1 × ${dias} dia(s) (${adic} com adicional)` : `Coordenadora 1 × ${dias} dia(s) × ${brl(P.coordenadora)}`, normais*P.coordenadora + adic*cAdic, "", "semImposto"]);
+  }
+  lines.push(["Gestão da ação (planejamento, escala e acompanhamento)", bruto(P.gestao)]);
+  
+  lines.push(["Translado de equipe e material", P.translado]);
+  if (fz !== 1) {
+    const base = lines.reduce((s,l)=>s+l[1],0);
+    lines.push([`Acréscimo ${LABEL.zona[zona]} (+${Math.round((fz-1)*100)}%)`, base*(fz-1)]);
+  }
+
+  const perso = $("pf-perso").value;
+  if (perso==="cotar") notas.push(["Uniforme / personalizados", "cotação à parte"]);
+  if (perso==="envio") notas.push(["Uniforme / personalizados", "enviado pelo cliente"]);
+
+  kr = P.gestao + diarias*kp - desc;
+  const entreguesMin = diarias*P.rendimentoDia.min, entreguesMax = diarias*P.rendimentoDia.max;
+  const faixaEntregues = `${n(entreguesMin)} a ${n(entreguesMax)}`;
+  const nomeTipo = tipo==="externa" ? "panfletagem de rua" : "feiras, eventos e shows";
+  return {
+    kicker:"Ponto fixo · " + nomeTipo, lines, notas, impostoNF: P.impostoNF,
+    unit: () => `${brl(pt/diarias)} por promotora/dia (média, sem impostos) · ${n(P.rendimentoDia.min)} a ${n(P.rendimentoDia.max)} panfletos por promotora/dia`,
+    s1l:"Panfletos entregues", s1: faixaEntregues,
+    s2l:`Jornada de ${h}h`, s2:`${hh(inicio)} às ${hh(fim)}`,
+    resumo: `Ponto fixo, ${nomeTipo} — ${pes} promotoras, jornada ${jornada.toLowerCase()} por dia (início ${hh(inicio)}, término até ${hh(fim)}), ${dias} dia(s)${noturno?" (noturno)":fds?` (${fds} em fim de semana/feriado)`:""}, ${LABEL.zona[zona]}`
+  };
+}
+
+function calcAcao(){
+  const P = PRECOS.acao;
+  const tipo = $("ap-tipo").value;
+  const pes = Math.max(P.minimoPessoas, Math.round(num("ap-pessoas")));
+  const h = num("ap-horas"), dias = Math.max(1, Math.round(num("ap-dias",1)));
+  const inicio = +$("ap-inicio").value, fim = inicio + h;
+  const noturno = fim > P.inicioNoturno;
+  const fds = Math.min(dias, Math.max(0, Math.round(num("ap-adic"))));
+  const adic = noturno ? dias : fds;           
+  const normais = dias - adic;
+  const pct = Math.round(P.adicional*100);
+  const hh = v => `${String(v % 24).padStart(2,"0")}h`;
+  const jornada = JORNADA[h] || `${h}h`;
+  $("ap-fim").textContent = `término até ${hh(fim)}${noturno ? ` · adicional noturno +${pct}%` : ""}`;
+  $("ap-fim").classList.toggle("alerta", noturno);
+  $("ap-adic").disabled = noturno;
+  const zona = $("ap-zona").value, fz = PRECOS.zona[zona];
+
+  
+  const lims = Object.keys(P.projeto).map(Number).sort((a,b)=>a-b);
+  const idx = lims.reduce((k, lim, i) => dias >= lim ? i : k, 0);
+  const faixa = P.projeto[lims[idx]];
+  const kc = faixa.kc[h], kp = faixa.kg[h];
+  const diaria = kc + kp, diariaAdic = kc*(1+P.adicional) + kp;
+  const lines = [], notas = [];
+  const quem = { recep:"Recepcionistas" }[$("ap-perfil").value] || "Promotoras";
+  if (normais) lines.push([`${quem} ${pes} × ${normais} dia(s) × ${brl(diaria)} · ${jornada}`, pes*normais*diaria]);
+  if (adic) lines.push([`${quem} ${pes} × ${adic} dia(s) × ${brl(diariaAdic)} · adicional ${noturno ? "noturno" : "fim de semana/feriado"}`, pes*adic*diariaAdic]);
+  
+  let ajuste = 0;
+  if (idx > 0) {
+    const ant = P.projeto[lims[idx-1]], diasAnt = lims[idx] - 1;
+    const pisoTotal = pes * diasAnt * (ant.kc[h] + ant.kg[h]);
+    const atual = lines.reduce((s,l)=>s+l[1],0);
+    if (atual < pisoTotal) { ajuste = pisoTotal - atual; lines.push([`Mínimo do projeto (equivale a ${diasAnt} dias da faixa anterior)`, ajuste]); }
+  }
+  const diarias = pes*dias;
+  const pt = lines.reduce((s,l)=>s+l[1],0);
+
+  if (on("ap-coord")) {
+    lines.push([adic ? `Coordenadora 1 × ${dias} dia(s) (${adic} com adicional)` : `Coordenadora 1 × ${dias} dia(s) × ${brl(P.coordenadora)}`,
+      normais*P.coordenadora + adic*P.coordenadora*(1+P.adicional), "", "semImposto"]);
+  }
+  lines.push(["Gestão da ação (planejamento, escala e acompanhamento)", P.gestao]);
+  if (fz !== 1) {
+    const base = lines.reduce((s,l)=>s+l[1],0);
+    lines.push([`Acréscimo ${LABEL.zona[zona]} (+${Math.round((fz-1)*100)}%)`, base*(fz-1)]);
+  }
+
+  const perso = $("ap-perso").value;
+  if (perso==="cotar") notas.push(["Uniforme / personalizados", "cotação à parte"]);
+  if (perso==="envio") notas.push(["Uniforme / personalizados", "enviado pelo cliente"]);
+
+  kr = P.gestao + diarias*kp + ajuste;
+  return {
+    kicker:"Ação promocional · " + LABEL.tipo[tipo], lines, notas, impostoNF: P.impostoNF,
+    unit: () => `${brl(pt/diarias)} por promotora/dia (média, sem impostos)`,
+    s1l:"Diárias de promotora", s1:`${diarias} (${pes} × ${dias} dia${dias>1?"s":""})`,
+    s2l:`Jornada de ${h}h`, s2:`${hh(inicio)} às ${hh(fim)}`,
+    resumo: `${LABEL.tipo[tipo]} — ${pes} ${LABEL.perfil[$("ap-perfil").value]}, jornada ${jornada.toLowerCase()} por dia (início ${hh(inicio)}, término até ${hh(fim)}), ${dias} dia(s)${noturno?" (noturno)":fds?` (${fds} em fim de semana/feriado)`:""}, ${LABEL.zona[zona]}`
+  };
+}
+
+let ultimoTexto = "";
+
+const JORNADA = { 4:"até 4h", 6:"4h a 6h", 8:"6h a 8h" };
+let kr = 0;  
+
+
+const DURACOES = [3, 6, 9, 12, 24, 36];
+const durLabel = m => m < 24 ? `${m} meses` : `${m/12} anos`;
+const FREQ = { semanal:"Semanal", quinzenal:"Quinzenal", mensal:"Mensal" };
+const distribuicoes = (freq, meses) => freq==="semanal" ? Math.round(meses*52/12) : freq==="quinzenal" ? meses*2 : meses;
+let plano = { freq:"avulsa", meses:12 };
+
+function calcPlano(subDist, freq, meses){
+  const qtd = distribuicoes(freq, meses);
+  const d = (PRECOS.planos.duracao[meses]||0) + (PRECOS.planos.frequencia[freq]||0);
+  const bruto = subDist*qtd, desconto = bruto*d, liquido = bruto-desconto;
+  const imp = liquido*PRECOS.imposto, total = liquido+imp;
+  return { qtd, d, bruto, desconto, imp, total, mensal: total/meses };
+}
+
+function renderPlanos(subDist){
+  const box = $("pp-planos");
+  $("pp-planos-wrap").hidden = plano.freq === "avulsa";
+  if (plano.freq === "avulsa") return;
+  box.innerHTML = "";
+  DURACOES.forEach(m => {
+    const p = calcPlano(subDist, plano.freq, m);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "plano"; b.dataset.m = m;
+    b.setAttribute("aria-pressed", m === plano.meses);
+    b.innerHTML = `<span class="pl-top"><b></b><i></i></span><span class="pl-mes"></span><small></small>`;
+    b.querySelector("b").textContent = durLabel(m);
+    b.querySelector("i").textContent = `−${Math.round(p.d*100)}%`;
+    b.querySelector(".pl-mes").textContent = `${brl0(p.mensal)}/mês`;
+    b.querySelector("small").textContent = `${p.qtd} distribuições · ${brl0(p.total)} no total`;
+    box.appendChild(b);
+  });
+}
+
+function render(){
+  const r = mode==="porta" ? calcPorta() : mode==="ponto" ? calcPonto() : calcAcao();
+  const sub = r.lines.reduce((s,l)=>s+l[1],0);
+  const temPlano = mode==="porta" && plano.freq !== "avulsa";
+  if (mode==="porta") renderPlanos(sub);
+
+  const ul = $("r-lines"); ul.innerHTML = "";
+  const pdfLinhas = [];
+  const add = (label, val, cls) => {
+    pdfLinhas.push([label, brl(val), cls || ""]);
+    const li = document.createElement("li"); if (cls) li.className = cls;
+    li.innerHTML = `<span></span><span></span>`;
+    li.children[0].textContent = label; li.children[1].textContent = brl(val);
+    ul.appendChild(li);
+  };
+  r.lines.forEach(l => add(l[0], l[1], l[2]));
+  const notas = r.notas || [];
+  const addNotas = () => notas.forEach(([label, txt]) => {
+    pdfLinhas.push([label, txt, "info"]);
+    const li = document.createElement("li"); li.className = "info";
+    li.innerHTML = `<span></span><span></span>`;
+    li.children[0].textContent = label; li.children[1].textContent = txt;
+    ul.appendChild(li);
+  });
+  const textoNotas = notas.length ? "\n" + notas.map(([l,t]) => `• ${l}: ${t}`).join("\n") : "";
+  
+  const aliq = r.impostoNF || 0;
+  const temImposto = aliq > 0;
+
+  let texto;
+  $("r-s1l").textContent = r.s1l; $("r-s1").textContent = r.s1;
+  $("r-s2l").textContent = r.s2l; $("r-s2").textContent = r.s2;
+
+  if (temPlano) {
+    const p = calcPlano(sub, plano.freq, plano.meses);
+    const nome = `Plano ${FREQ[plano.freq].toLowerCase()} · ${durLabel(plano.meses)}`;
+    add("Valor por distribuição", sub, "sub");
+    add(`× ${p.qtd} distribuições`, p.bruto);
+    add(`Desconto do plano (${Math.round(p.d*100)}%)`, -p.desconto, "disc");
+    if (temImposto) add(`Impostos e NF (${PRECOS.imposto*100}%)`, p.imp);
+    add("Total do contrato", p.total, "sub");
+    $("r-kicker").textContent = nome;
+    $("r-total").textContent = `${brl0(p.mensal)}/mês`;
+    $("r-per").textContent = `${p.qtd} distribuições de ${n(num("pp-qtd"))} panfletos · ${brl0(p.total)} no contrato`;
+    $("r-s1l").textContent = "Prazo por distribuição";
+    texto =
+`${r.resumo}
+${nome} — ${p.qtd} distribuições
+
+Por distribuição:
+${r.lines.map(l=>`• ${l[0]}: ${brl(l[1])}`).join("\n")}
+• Subtotal por distribuição: ${brl(sub)}
+
+Desconto do plano: ${Math.round(p.d*100)}%
+Valor mensal: ${brl(p.mensal)}
+Total do contrato (impostos inclusos): ${brl(p.total)}`;
+  } else {
+    
+    const isento = r.lines.filter(l => l[3]==="semImposto").reduce((s,l)=>s+l[1],0);
+    const base = sub - isento;
+    const imp = base/(1 - aliq) - base, total = sub + imp;
+    if (temImposto) { add("Subtotal", sub, "sub"); add(`Impostos e NF (${Math.round(aliq*100)}%${isento ? ", exceto coordenadora" : ""})`, imp); }
+    add("Total", total, "sub");
+    addNotas();
+    $("r-kicker").textContent = r.kicker;
+    $("r-total").textContent = brl0(total);
+    $("r-per").textContent = r.unit(total);
+    texto =
+`${r.resumo}
+
+${r.lines.map(l=>`• ${l[0]}: ${brl(l[1])}`).join("\n")}${temImposto?`\n• Impostos e NF: ${brl(imp)}`:""}${textoNotas}
+
+Total estimado: ${brl(total)} (impostos inclusos)
+${r.s1l}: ${r.s1}`;
+  }
+
+  const cliente = $("r-cliente").value.trim();
+  ultimoTexto = `Olá, RK! Gostaria de um orçamento${cliente ? ` para ${cliente}` : ""}:\n${texto}`;
+  $("r-wa").href = `https://wa.me/${PRECOS.whatsapp}?text=${encodeURIComponent(ultimoTexto)}`;
+  const totalLinha = pdfLinhas.find(l => l[0] === "Total" || l[0] === "Total do contrato");
+  ultimoOrc = {
+    cliente, titulo: $("r-kicker").textContent, destaque: $("r-total").textContent,
+    totalExato: totalLinha ? totalLinha[1] : $("r-total").textContent, ehPlano: temPlano,
+    detalhe: $("r-per").textContent, resumo: r.resumo, linhas: pdfLinhas,
+    stats: [[$("r-s1l").textContent, $("r-s1").textContent], [$("r-s2l").textContent, $("r-s2").textContent]]
+  };
+}
+
+
+let ultimoOrc = null;
+function gerarPDF(){ const { doc, num } = montarPDF(); doc.save(`orcamento-${num}.pdf`); }
+function montarPDF(){
+  const { jsPDF } = window.jspdf;
+  const o = ultimoOrc, doc = new jsPDF({ unit:"mm", format:"a4" });
+  const limpa = s => String(s).replace(/≈/g,"~").replace(/−/g,"-").replace(/[•]/g,"-");
+  const W = 210, M = 16;
+  const agora = new Date();
+  const num = `RK-${agora.getFullYear()}${String(agora.getMonth()+1).padStart(2,"0")}${String(agora.getDate()).padStart(2,"0")}-${String(agora.getHours()).padStart(2,"0")}${String(agora.getMinutes()).padStart(2,"0")}`;
+  const validade = new Date(agora.getTime() + 15*864e5);
+  const dt = d => d.toLocaleDateString("pt-BR");
+
+  
+  doc.setFillColor(18,33,58); doc.rect(0,0,W,34,"F");
+  doc.setFillColor(247,196,43); doc.rect(0,34,W,1.2,"F");
+  doc.setFillColor(247,196,43); doc.roundedRect(M,9,16,16,2.5,2.5,"F");
+  doc.setTextColor(18,33,58); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("RK", M+8, 19.2, { align:"center" });
+  doc.setTextColor(255,255,255); doc.setFontSize(15); doc.text("RK Distribuição", M+21, 16);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(185,196,216);
+  doc.text("Distribuição & Propaganda · rkdistribuicao.com.br", M+21, 22);
+  doc.setTextColor(247,196,43); doc.setFont("helvetica","bold"); doc.setFontSize(10);
+  doc.text("ORÇAMENTO", W-M, 14, { align:"right" });
+  doc.setTextColor(255,255,255); doc.setFont("helvetica","normal"); doc.setFontSize(9);
+  doc.text(`Nº ${num}`, W-M, 19.5, { align:"right" });
+  doc.text(`Emitido em ${dt(agora)} · válido até ${dt(validade)}`, W-M, 24.5, { align:"right" });
+
+  let y = 46;
+  doc.setTextColor(107,119,140); doc.setFontSize(8.5); doc.setFont("helvetica","bold");
+  doc.text("CLIENTE", M, y);
+  doc.setTextColor(18,33,58); doc.setFont("helvetica","normal"); doc.setFontSize(11);
+  doc.text(limpa(o.cliente || "A definir"), M, y+6);
+
+  y += 17;
+  doc.setTextColor(107,119,140); doc.setFontSize(8.5); doc.setFont("helvetica","bold");
+  doc.text("SERVIÇO", M, y);
+  doc.setTextColor(18,33,58); doc.setFontSize(12); doc.text(limpa(o.titulo), M, y+6.5);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(59,74,99);
+  
+  const detalhe = o.resumo.includes(" — ") ? o.resumo.split(" — ").slice(1).join(" — ") : o.resumo;
+  const res = doc.splitTextToSize(limpa(detalhe.charAt(0).toUpperCase() + detalhe.slice(1)) + ".", W-2*M);
+  doc.text(res, M, y+12.5);
+  y += 12.5 + res.length*4.6 + 4;
+
+  
+  const colW = (W-2*M)/2;
+  o.stats.forEach(([l,v], i) => {
+    const x = M + i*colW;
+    doc.setFillColor(244,246,249); doc.roundedRect(x + (i?2:0), y, colW-2, 15, 2, 2, "F");
+    doc.setTextColor(107,119,140); doc.setFontSize(7.5); doc.setFont("helvetica","bold");
+    doc.text(limpa(l).toUpperCase(), x + (i?2:0) + 4, y+5.5);
+    doc.setTextColor(18,33,58); doc.setFontSize(11); doc.text(limpa(v), x + (i?2:0) + 4, y+11.5);
+  });
+  y += 21;
+
+  
+  const itens = o.linhas.filter(l => l[0] !== "Total" && l[0] !== "Total do contrato");
+  doc.autoTable({
+    startY: y, margin:{ left:M, right:M },
+    head: [["ITEM", { content:"VALOR", styles:{ halign:"right" } }]],
+    body: itens.map(([a,b]) => [limpa(a), limpa(b)]),
+    theme: "plain",
+    styles: { font:"helvetica", fontSize:9.5, textColor:[18,33,58], cellPadding:{ top:2.6, bottom:2.6, left:2, right:2 } },
+    headStyles: { fontStyle:"bold", fontSize:8, textColor:[107,119,140], lineWidth:{ bottom:0.4 }, lineColor:[220,225,234] },
+    columnStyles: { 1:{ halign:"right", cellWidth:40 } },
+    didParseCell: d => {
+      if (d.section !== "body") return;
+      const cls = itens[d.row.index][2];
+      d.cell.styles.lineWidth = { bottom:0.2 }; d.cell.styles.lineColor = [230,234,241];
+      if (cls === "sub") d.cell.styles.fontStyle = "bold";
+      if (cls === "disc") d.cell.styles.textColor = [30,142,90];
+      if (cls === "info") { d.cell.styles.textColor = [107,119,140]; d.cell.styles.fontStyle = "italic"; }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  
+  doc.setFillColor(255,244,204); doc.roundedRect(M, y, W-2*M, 20, 2.5, 2.5, "F");
+  doc.setFillColor(247,196,43); doc.rect(M, y, 2.2, 20, "F");
+  doc.setTextColor(18,33,58); doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
+  doc.text(o.ehPlano ? "TOTAL DO CONTRATO" : "TOTAL DO ORÇAMENTO", M+6, y+7.5);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(59,74,99);
+  doc.text(doc.splitTextToSize(limpa(o.detalhe), W-2*M-80), M+6, y+12.5);
+  doc.setTextColor(18,33,58); doc.setFont("helvetica","bold"); doc.setFontSize(18);
+  doc.text(limpa(o.ehPlano ? o.destaque : o.totalExato), W-M-5, y+11, { align:"right" });
+  doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(107,119,140);
+  doc.text(o.ehPlano ? `${limpa(o.totalExato)} no contrato · impostos inclusos` : "impostos inclusos", W-M-5, y+16, { align:"right" });
+  y += 28;
+
+  
+  doc.setTextColor(18,33,58); doc.setFont("helvetica","bold"); doc.setFontSize(10.5);
+  doc.text("Próximos passos", M, y);
+  const passos = [
+    "Envie este orçamento para a RK pelo WhatsApp (11) 95791-7238.",
+    "Um consultor confirma região, datas, horários e a equipe ideal.",
+    "Você recebe a proposta final e agendamos o início da ação."
+  ];
+  doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(59,74,99);
+  passos.forEach((p, i) => {
+    const py = y + 7 + i*7;
+    doc.setFillColor(18,33,58); doc.circle(M+2.6, py-1.3, 2.6, "F");
+    doc.setTextColor(247,196,43); doc.setFont("helvetica","bold"); doc.setFontSize(8);
+    doc.text(String(i+1), M+2.6, py-0.2, { align:"center" });
+    doc.setTextColor(59,74,99); doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
+    doc.text(p, M+8, py);
+  });
+  y += 7 + passos.length*7 + 3;
+
+  
+  const bw = 84, bh = 11;
+  doc.setFillColor(37,211,102); doc.roundedRect(M, y, bw, bh, 2.5, 2.5, "F");
+  doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(10);
+  doc.text("Aprovar pelo WhatsApp  >", M + bw/2, y + 7.2, { align:"center" });
+  doc.link(M, y, bw, bh, { url:"https://wa.me/5511957917238" });
+  y += bh + 9;
+
+  
+  doc.setTextColor(107,119,140); doc.setFont("helvetica","normal"); doc.setFontSize(8);
+  const cond = doc.splitTextToSize("Condições: valores estimados, sujeitos à análise da região e à disponibilidade de equipe. Orçamento válido por 15 dias a partir da emissão. Itens marcados como “à parte” são cotados separadamente.", W-2*M);
+  doc.text(cond, M, y);
+
+  
+  doc.setDrawColor(220,225,234); doc.line(M, 280, W-M, 280);
+  doc.setFontSize(8.5); doc.setTextColor(59,74,99);
+  doc.text("WhatsApp (11) 95791-7238  ·  contato@rkdistribuicao.com.br  ·  Av. João XXIII, 649 — Vila Formosa, São Paulo/SP", W/2, 286, { align:"center" });
+  doc.setTextColor(31,95,214);
+  doc.textWithLink("Falar com a RK no WhatsApp", W/2, 291, { url:"https://wa.me/5511957917238", align:"center" });
+
+  return { doc, num };
+}
+
+
+document.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll(".mode").forEach(x => x.setAttribute("aria-pressed", x===b));
+  document.querySelectorAll("[data-section]").forEach(s => s.hidden = s.dataset.section !== mode);
+  render();
+}));
+
+
+const qn = $("pp-qtd"), qr = $("pp-qtd-r");
+
+const QMIN = 5000, QMAX = 1000000;
+const sliderParaQtd = t => {
+  const q = QMIN * Math.pow(QMAX/QMIN, t/1000);
+  const passo = q < 100000 ? 1000 : q < 500000 ? 5000 : 10000;
+  return Math.min(QMAX, Math.round(q/passo)*passo);
+};
+const qtdParaSlider = q => Math.round(1000*Math.log(Math.min(QMAX,Math.max(QMIN,q))/QMIN)/Math.log(QMAX/QMIN));
+const syncChips = () => document.querySelectorAll('.chips[data-target="pp-qtd"] .chip')
+  .forEach(c => c.setAttribute("aria-pressed", +c.dataset.v === +qn.value));
+const setQtd = v => { qn.value = v; qr.value = qtdParaSlider(v); syncChips(); render(); };
+qr.addEventListener("input", () => { qn.value = sliderParaQtd(+qr.value); syncChips(); render(); });
+qn.addEventListener("input", () => { qr.value = qtdParaSlider(+qn.value||QMIN); syncChips(); render(); });
+qn.addEventListener("change", () => {
+  const v = Math.min(PRECOS.porta.maximo, Math.max(PRECOS.porta.minimo, +qn.value||0));
+  if (v !== +qn.value) setQtd(v);
+});
+document.querySelectorAll('.chips[data-target="pp-qtd"] .chip').forEach(c => c.addEventListener("click", () => setQtd(+c.dataset.v)));
+$("pp-faixas").addEventListener("click", e => { const tr = e.target.closest("tr"); if (tr) setQtd(+tr.dataset.v); });
+$("pp-faixas").addEventListener("keydown", e => { const tr = e.target.closest("tr"); if (tr && (e.key==="Enter"||e.key===" ")) { e.preventDefault(); setQtd(+tr.dataset.v); } });
+qr.value = qtdParaSlider(+qn.value);
+
+
+let pontoTipo = "externa";
+for (let hr = 6; hr <= 22; hr++) {
+  const o = document.createElement("option");
+  o.value = hr; o.textContent = `${String(hr).padStart(2,"0")}:00`;
+  if (hr === 8) o.selected = true;
+  $("pf-inicio").appendChild(o);
+  const o2 = o.cloneNode(true); o2.selected = hr === 10; $("ap-inicio").appendChild(o2);
+}
+[["pf-pessoas","ponto"],["ap-pessoas","acao"]].forEach(([id, m]) => $(id).addEventListener("change", e => {
+  const min = PRECOS[m].minimoPessoas;
+  if (+e.target.value < min) { e.target.value = min; render(); }
+}));
+const desdeDiaria = () => document.querySelectorAll("[data-desde]").forEach(el => {
+  const P = PRECOS.ponto, t = el.dataset.desde;
+  const menor = Math.min(...Object.keys(P.kc[t]).map(h => P.kc[t][h] + P.kd[t][h]/2));
+  el.textContent = `a partir de ${brl0(menor)}/promotora/dia + impostos`;
+});
+document.querySelectorAll("#pf-tipo .opt").forEach(c => c.addEventListener("click", () => {
+  pontoTipo = c.dataset.t;
+  document.querySelectorAll("#pf-tipo .opt").forEach(x => x.setAttribute("aria-pressed", x===c));
+  const op4 = $("pf-horas").querySelector('option[value="4"]');
+  op4.disabled = pontoTipo === "interna";
+  if (op4.disabled && $("pf-horas").value === "4") $("pf-horas").value = "6";
+  render();
+}));
+$("pf-pessoas").addEventListener("change", e => { if (+e.target.value < PRECOS.ponto.minimoPessoas) { e.target.value = PRECOS.ponto.minimoPessoas; render(); } });
+
+
+document.querySelectorAll("#pp-freq .chip").forEach(c => c.addEventListener("click", () => {
+  plano.freq = c.dataset.f;
+  document.querySelectorAll("#pp-freq .chip").forEach(x => x.setAttribute("aria-pressed", x===c));
+  render();
+}));
+$("pp-planos").addEventListener("click", e => { const b = e.target.closest(".plano"); if (b) { plano.meses = +b.dataset.m; render(); } });
+
+
+const toggleShow = () => document.querySelectorAll("[data-show]").forEach(el => el.hidden = !$(el.dataset.show).checked);
+$("form").addEventListener("input", () => { toggleShow(); render(); });
+$("form").addEventListener("change", () => { toggleShow(); render(); });
+$("form").addEventListener("submit", e => e.preventDefault());
+
+
+$("r-cliente").addEventListener("input", render);
+$("r-pdf").addEventListener("click", () => {
+  const t = $("r-toast");
+  if (!window.jspdf || !window.jspdf.jsPDF) { t.textContent = "Não foi possível gerar o PDF agora. Tente de novo em instantes."; return; }
+  try { gerarPDF(); t.textContent = "PDF do orçamento baixado."; }
+  catch (e) { console.error(e); t.textContent = "Não foi possível gerar o PDF. Use “Copiar orçamento”."; }
+  setTimeout(()=>t.textContent="",3500);
+});
+$("r-copy").addEventListener("click", () => {
+  const t = $("r-toast");
+  const ok = () => { t.textContent = "Orçamento copiado. Cole no WhatsApp ou e-mail."; setTimeout(()=>t.textContent="",3500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ultimoTexto).then(ok).catch(fallback);
+  } else fallback();
+  function fallback(){
+    const ta = document.createElement("textarea"); ta.value = ultimoTexto;
+    ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); ok(); } catch(e) { t.textContent = "Selecione e copie o texto manualmente."; }
+    ta.remove();
+  }
+});
+
+toggleShow(); syncChips(); render();
+const coordTxt = () => document.querySelectorAll("[data-coord]").forEach(el =>
+  el.textContent = `Acompanha a equipe em todos os dias da ação · ${brl0(PRECOS.ponto.coordenadora)}/dia, sem impostos`);
+desdeDiaria(); coordTxt();
+
+</script>
+</body>
+</html>
