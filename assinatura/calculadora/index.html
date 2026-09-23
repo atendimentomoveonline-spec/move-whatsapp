@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Simples x Híbrido — Move Online</title>
 <link rel="icon" href="logo_move.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
   *{box-sizing:border-box}
@@ -70,24 +70,6 @@
   .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1}
-  /* PDF */
-  #pdf{width:760px;padding:36px 40px;background:#fff;color:var(--ink);font-family:Helvetica,Arial,sans-serif}
-  #pdf .ph{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--green);padding-bottom:14px}
-  #pdf .ph img{height:78px}
-  #pdf .ph div{text-align:right;font-size:12px;color:var(--mut);line-height:1.6}
-  #pdf h2{color:var(--navy);font-size:22px;margin:24px 0 4px}
-  #pdf .meta{font-size:13px;color:var(--mut);margin-bottom:18px}
-  #pdf table{width:100%;border-collapse:collapse;font-size:14px}
-  #pdf th{background:var(--navy);color:#fff;text-align:right;padding:10px 12px;font-size:13px}
-  #pdf th:first-child{text-align:left;border-radius:8px 0 0 0}#pdf th:last-child{border-radius:0 8px 0 0}
-  #pdf td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right}
-  #pdf td:first-child{text-align:left;color:var(--mut)}
-  #pdf tr.t td{font-weight:800;font-size:16px;color:var(--navy);border-bottom:none;background:#f4f8fb}
-  #pdf .ph2{margin-top:22px;background:var(--navy);color:#fff;border-radius:14px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center}
-  #pdf .ph2 .l{font-size:12px;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
-  #pdf .ph2 .v{font-size:30px;font-weight:800;margin-top:2px}
-  #pdf .ph2 .p{font-size:34px;font-weight:800;color:var(--green)}
-  #pdf .pn{font-size:11px;color:var(--mut);margin-top:22px;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
 </style>
 </head>
 <body>
@@ -143,7 +125,6 @@
   <div class="foot">Simulação estimada com base na LC 123/2006 e LC 214/2025. Não considera a alíquota efetiva do Simples Nacional.<br>Move Online Contabilidade Médica</div>
 </div>
 <div class="toast" id="toast"></div>
-<div style="position:absolute;left:-9999px;top:0"><div id="pdf"></div></div>
 
 <script>
 // Parâmetros 2027 (LC 214/2025): CBS cheia − 0,1 p.p. e IBS de teste 0,1%
@@ -211,22 +192,69 @@ function calc(){
   $('nota').innerHTML=`<div class="fund"><div class="ft">Fundamento legal · CBS ${pct(cbsA)} + IBS ${pct(ibsA)}</div>${FUND[a[2]]}<br>${BASE}</div>`;
 }
 
-function montaPDF(){
-  const r=R, d=new Date().toLocaleDateString('pt-BR'), up=r.dif>=0;
-  $('pdf').innerHTML=`
-   <div class="ph"><img src="logo_move.png"><div>Simulação tributária<br>${d}</div></div>
-   <h2>Simples Nacional × Simples Híbrido</h2>
-   <div class="meta">${r.nome?`<b>${r.nome}</b> · `:''}${r.atv} (${r.fr?'com':'sem'} Fator R) · Faturamento mensal ${brl(r.fat)}</div>
-   <table><tr><th>Tributo</th><th>Simples Nacional</th><th>Simples Híbrido</th></tr>
-    <tr><td>DAS (6%)</td><td>${brl(r.das)}</td><td>${brl(r.das)}</td></tr>
-    <tr><td>${r.fr?`INSS (11% s/ pró-labore ${brl(r.pro)})`:'INSS (não se aplica)'}</td><td>${brl(r.inss)}</td><td>${brl(r.inss)}</td></tr>
-    <tr><td>CBS (${pct(r.cbsA)})</td><td>—</td><td>${brl(r.cbs)}</td></tr>
-    <tr><td>IBS (${pct(r.ibsA)})</td><td>—</td><td>${brl(r.ibs)}</td></tr>
-    <tr class="t"><td>Total mensal</td><td>${brl(r.totA)}</td><td>${brl(r.totB)}</td></tr>
-    <tr><td>Total anual</td><td>${brl(r.totA*12)}</td><td>${brl(r.totB*12)}</td></tr></table>
-   <div class="ph2"><div><div class="l">${up?'Aumento':'Economia'} com o Simples Híbrido</div><div class="v">${up?'+':'−'} ${brl(Math.abs(r.dif))}/mês</div>
-     <div style="font-size:13px;opacity:.85">${brl(Math.abs(r.dif)*12)} por ano</div></div><div class="p">${up?'+':'−'}${pct(Math.abs(r.var_))}</div></div>
-   <div class="pn">Simulação estimada para 2027 com base na LC 123/2006 e LC 214/2025. DAS calculado pela alíquota nominal de 6% (não considera a alíquota efetiva do Simples Nacional). ${FUND[r.red].replace(/<\/?b>/g,'')} ${BASE} Não substitui a análise do contador.<br><b>Move Online Contabilidade Médica</b></div>`;
+// ── PDF A4 desenhado direto (texto real, não depende do tamanho da tela) ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+const s_=t=>t.replace(/\u2212/g,'-');
+function gerarPDF(){
+  const r=R, up=r.dif>=0, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Simples Nacional × Simples Híbrido',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} (${r.fr?'com':'sem'} Fator R) · Faturamento mensal ${brl(r.fat)}`,W-2*M),M,57);
+  // tabela
+  let y=66; const c2=140, c3=X2-4;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,10,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(255,255,255);
+  d.text('Tributo',M+4,y+6.5);d.text('Simples Nacional',c2,y+6.5,{align:'right'});d.text('Simples Híbrido',c3,y+6.5,{align:'right'});
+  y+=10;
+  const rows=[
+    ['DAS (6%)',brl(r.das),brl(r.das)],
+    [r.fr?`INSS (11% s/ pró-labore ${brl(r.pro)})`:'INSS (não se aplica)',brl(r.inss),brl(r.inss)],
+    [`CBS (${pct(r.cbsA)})`,'—',brl(r.cbs)],
+    [`IBS (${pct(r.ibsA)})`,'—',brl(r.ibs)],
+    ['Total mensal',brl(r.totA),brl(r.totB),1],
+    ['Total anual',brl(r.totA*12),brl(r.totB*12)]];
+  rows.forEach(([k,a,b,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,11,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?12:10);
+    d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+7.2);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+7.2,{align:'right'});d.text(b,c3,y+7.2,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+11,X2,y+11);y+=11});
+  // destaque
+  y+=8; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,32,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);
+  d.text((up?'AUMENTO':'ECONOMIA')+' COM O SIMPLES HÍBRIDO',M+7,y+9);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(`${up?'+':'-'} ${brl(Math.abs(r.dif))}/mês`,M+7,y+19.5);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.dif)*12)} por ano`,M+7,y+26.5);
+  d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...GREEN);d.text(`${up?'+':'-'}${pct(Math.abs(r.var_))}`,X2-7,y+19,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('em relação ao Simples Nacional',X2-7,y+25.5,{align:'right'});
+  // fundamento legal
+  y+=42;
+  d.setFont('helvetica','normal');d.setFontSize(9);
+  const fund=d.splitTextToSize(s_(FUND[r.red].replace(/<\/?b>/g,''))+' '+BASE,W-2*M-12);
+  const hF=10+fund.length*4.3;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('FUNDAMENTO LEGAL',M+6,y+6.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(15,30,46);d.text(fund,M+6,y+12);
+  // WhatsApp
+  y+=hF+8;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,15,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+9.5,{align:'center'});
+  d.link(M,y,W-2*M,15,{url:`https://wa.me/${WHATS_MOVE}`});
+  // rodapé
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,272,X2,272);
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize('Simulação estimada para 2027 (LC 123/2006 e LC 214/2025). DAS pela alíquota nominal de 6%, sem considerar a alíquota efetiva do Simples Nacional. Não substitui a análise do contador.',W-2*M),M,277);
+  d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,288);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,288,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
 }
 
 $('atv').addEventListener('change',()=>{proManual=false;calc()});
@@ -234,8 +262,7 @@ $('fat').addEventListener('input',()=>{calc()});
 $('nome').addEventListener('input',calc);
 $('pro').addEventListener('input',()=>{proManual=true;calc()});
 document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
-$('bpdf').onclick=()=>{if(!R)return;montaPDF();
-  html2pdf().set({margin:0,filename:`Simples x Hibrido - ${R.nome||R.atv}.pdf`,image:{type:'jpeg',quality:.96},html2canvas:{scale:2},jsPDF:{unit:'px',format:[760,1075],orientation:'portrait'}}).from($('pdf')).save()};
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Simples x Hibrido - ${R.nome||R.atv}.pdf`)};
 $('bzap').onclick=()=>{if(!R)return;const r=R,up=r.dif>=0;
   const t=`*Simulação Simples Nacional × Híbrido*${r.nome?'\n'+r.nome:''}\n${r.atv} · Faturamento ${brl(r.fat)}/mês\n\n• Simples Nacional: *${brl(r.totA)}*/mês\n• Simples Híbrido: *${brl(r.totB)}*/mês\n\n${up?'📈 Aumento':'✅ Economia'}: *${brl(Math.abs(r.dif))}/mês* (${up?'+':'−'}${pct(Math.abs(r.var_))})\n${brl(Math.abs(r.dif)*12)} por ano\n\n_Move Online Contabilidade Médica_`;
   window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
