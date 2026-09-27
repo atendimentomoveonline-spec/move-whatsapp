@@ -126,7 +126,7 @@
 
       <label>Valor cobrado pela abertura (outro contador)</label>
       <div class="money"><span>R$</span><input id="ab" class="big" inputmode="decimal" placeholder="1.000,00"></div>
-      <div class="hint">No mercado, a abertura costuma custar de R$ 600 a R$ 1.500.</div>
+      <div class="hint">No mercado, a abertura costuma custar de R$ 600 a R$ 1.800.</div>
     </div>
 
     <div class="card">
@@ -165,17 +165,17 @@ const ATV=['Médico','Dentista','Psicólogo','Fisioterapeuta','Fonoaudiólogo','
 ].sort((a,b)=>a.localeCompare(b,'pt-BR'));
 // [benefício, mercado (estimado), Move, detalhe Move]
 const BEN=[
- ['Abertura de empresa','R$ 600 - 1.500','Grátis','planos PRÓ, GROWTH e SCALE'],
+ ['Abertura de empresa','R$ 600 - 1.800','Grátis','planos PRÓ, GROWTH e SCALE'],
  ['Certificado digital A1','R$ 220/ano','R$ 75/ano',''],
  ['Emissão de notas / sistema fiscal','R$ 39 - 79/mês','Incluso','20 a 150 notas/mês'],
  ['Revisão fiscal básica','R$ 150/mês','Incluso','gestão fiscal completa'],
- ['Consultoria tributária','R$ 300/mês','Incluso','monitoramento tributário (GROWTH e SCALE)'],
- ['2ª via de impostos e guias','R$ 39/mês','Incluso','2 PGDAS/mês + app Move'],
- ['Suporte via chat e chamados','R$ 0 - 200','Incluso','WhatsApp básico ou dedicado'],
- ['Pró-labore','R$ 50 - 100/mês','Incluso','1 sócio (2 no SCALE)'],
- ['Endereço fiscal','R$ 50 - 150/mês','Incluso',''],
- ['Conta digital PJ','Tarifa mensal','Grátis',''],
- ['Arquivos (CNPJ, CCM, Alvará, Contrato)','Pago avulso','Grátis','na plataforma Move'],
+ ['Consultoria tributária','R$ 600/mês','Incluso','monitoramento tributário (GROWTH e SCALE)'],
+ ['2ª via de impostos e guias','R$ 9,90/mês','Incluso','2 PGDAS/mês + app Move'],
+ ['Suporte via chat e chamados','Incluso','Incluso','WhatsApp básico ou dedicado'],
+ ['Pró-labore','R$ 50/mês','Incluso','1 sócio (2 no SCALE)'],
+ ['Endereço fiscal','R$ 60/mês','Incluso',''],
+ ['Conta digital PJ','Tarifa R$ 9,90/mês','Grátis',''],
+ ['Arquivos (CNPJ, CCM, Alvará, Contrato)','Incluso','Grátis','na plataforma Move'],
  ['13ª mensalidade','Pago','Não cobra','']
 ];
 const $=id=>document.getElementById(id);
