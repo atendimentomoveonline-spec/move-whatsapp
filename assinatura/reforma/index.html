@@ -167,7 +167,7 @@
         </div>
         <div class="hero">
           <div><div class="lbl" id="hl"></div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
-          <div class="pill"><b id="hp"></b><span>em 2033 em relação a hoje</span></div>
+          <div class="pill"><b id="hp" style="font-size:26px"></b><span id="hps"></span></div>
         </div>
         <div class="bars" id="bars"></div>
         <div class="ytw"><table class="yt" id="yt"></table></div>
@@ -179,7 +179,7 @@
       </div>
     </div>
   </div>
-  <div class="foot">Simulação estimada com base na EC 132/2023 e na LC 214/2025. IRPJ, CSLL, INSS e IR não mudam com a reforma: no Presumido, IRPJ e CSLL aparecem fixos para mostrar a carga total; INSS e IR do sócio não entram.<br>Move Online Contabilidade Médica</div>
+  <div class="foot">Simulação estimada com base na EC 132/2023 e na LC 214/2025. IRPJ, CSLL, INSS e IR não mudam com a reforma e não entram na comparação.<br>Move Online Contabilidade Médica</div>
 </div>
 
 <script>
@@ -228,8 +228,8 @@ function ano(y,o){
   const cbsR=y.cbs==='r'?o.cbsRef:y.cbs==='r-0.1'?o.cbsRef-.001:0, ibsR=y.ibs===.001?.001:y.ibs*o.ibsRef;
   const red=1-o.red, cbs=o.F*cbsR*red, ibs=o.F*ibsR*red, credMax=o.C*(cbsR+ibsR);
   if(o.reg==='LP'){
-    const pc=y.pc?o.F*.0365:0, iss=o.F*o.iss*y.iss, cred=Math.min(credMax,cbs+ibs), irc=o.irc.tot;
-    return {irc,antigos:pc+iss,lab:y.pc?'PIS/COFINS + ISS':y.iss>0?`ISS${y.iss<1?' '+y.iss*100+'%':''}`:'—',cbs,ibs,cred,tot:irc+pc+iss+cbs+ibs-cred};
+    const pc=y.pc?o.F*.0365:0, iss=o.F*o.iss*y.iss, cred=Math.min(credMax,cbs+ibs);
+    return {antigos:pc+iss,lab:`${y.pc?'PIS/COFINS + ':''}ISS${y.iss<1&&y.iss>0?' '+y.iss*100+'%':''}`,cbs,ibs,cred,tot:pc+iss+cbs+ibs-cred};
   }
   const d=o.d, dasT=o.F*d.ef;
   if(o.reg==='SN'||y.a===2026){ // Simples puro: CBS/IBS ficam dentro do DAS, o valor do DAS não muda
@@ -248,18 +248,14 @@ function calc(){
   $('empty').style.display='none';$('res').style.display='';
   const RBT=num($('rbt').value)||F*12;
   const o={reg,F,C:num($('comp').value),iss:num($('iss').value)/100,red:a[1],cbsRef:num($('cbs').value)/100,ibsRef:num($('ibs').value)/100,d:das(+$('anx').value,RBT)};
-  // IRPJ e CSLL do Presumido (não mudam com a reforma): presunção 32%, +10% sobre receita acima de R$ 5 mi/ano (LC 224/2025)
-  const bP=F*.32+Math.max(0,F-5000000/12)*.032, irpj=bP*.15, adic=Math.max(0,bP-20000)*.10, csll=bP*.09;
-  o.irc={irpj,adic,csll,tot:irpj+adic+csll};
   const L=ANOS.map(y=>({y,...ano(y,o)})), h=L[0], f=L[7], y27=L[1];
   const dif=f.tot-h.tot, var_=h.tot?dif/h.tot:0, d27=y27.tot-h.tot;
   R={nome:$('nome').value.trim(),atv:a[0],red:a[1],reg,F,o,L,dif,var_,d27};
 
   const ln=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
   if(reg==='LP'){
-    const irc=[['IRPJ','15% s/ 32%',o.irc.irpj]].concat(o.irc.adic?[['Adicional IRPJ','10%',o.irc.adic]]:[]).concat([['CSLL','9% s/ 32%',o.irc.csll]]);
-    $('lA').innerHTML=ln(irc.concat([['PIS/COFINS','3,65%',h.antigos-o.F*o.iss],['ISS',pct(o.iss),o.F*o.iss]]));
-    $('lB').innerHTML=ln(irc.concat([['CBS',pct(o.cbsRef*(1-o.red)),f.cbs],['IBS',pct(o.ibsRef*(1-o.red)),f.ibs],['(−) Créditos das compras','',-f.cred]]));
+    $('lA').innerHTML=ln([['PIS/COFINS','3,65%',h.antigos-o.F*o.iss],['ISS',pct(o.iss),o.F*o.iss]]);
+    $('lB').innerHTML=ln([['CBS',pct(o.cbsRef*(1-o.red)),f.cbs],['IBS',pct(o.ibsRef*(1-o.red)),f.ibs],['(−) Créditos das compras','',-f.cred]]);
   }else if(reg==='SN'){
     $('lA').innerHTML=ln([['DAS',`efetiva ${pct(o.d.ef)}`,h.tot],['PIS/COFINS/ISS dentro do DAS','',h.embut]]);
     $('lB').innerHTML=ln([['DAS',`efetiva ${pct(o.d.ef)}`,f.tot],['CBS/IBS dentro do DAS','',f.embut]]);
@@ -274,17 +270,18 @@ function calc(){
   $('hl').textContent=eq?'Sem mudança no valor pago':up?'Aumento com a reforma completa (2033)':'Redução com a reforma completa (2033)';
   $('hv').textContent=eq?brl(0):`${up?'+ ':'− '}${brl(Math.abs(dif))}/mês`;$('hv').className='val '+(up?'up':'down');
   $('hs').textContent=eq?'O DAS continua igual; muda só a divisão interna dos tributos.':`${brl(Math.abs(dif)*12)} por ano · em 2027: ${d27>=0?'+':'−'} ${brl(Math.abs(d27))}/mês`;
-  $('hp').textContent=eq?'0%':`${up?'+':'−'}${pct(Math.abs(var_))}`;
+  const pp=(f.tot-h.tot)/F*100;
+  $('hp').textContent=`${pct(h.tot/F)} → ${pct(f.tot/F)}`;
+  $('hps').textContent=`do faturamento, hoje → 2033${eq?'':` (${pp>0?'+':'−'}${Math.abs(pp).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ponto)`}`;
   const mx=Math.max(...L.map(x=>x.tot))||1;
   $('bars').innerHTML=L.map(x=>`<div class="bar"><span>${x.y.a}</span><div class="trk"><div class="fil" style="width:${x.tot/mx*100}%;background:${x.y.a===2026?'#94a3b8':'var(--navy)'}"></div></div><b>${brl(x.tot)}</b></div>`).join('');
-  const lp=reg==='LP';
-  $('yt').innerHTML=`<tr><th>Ano</th>${lp?'<th>IRPJ + CSLL</th>':''}<th>${lp?'PIS/COFINS/ISS':'Tributos atuais'}</th><th>CBS</th><th>IBS</th><th>Créditos</th><th>Total/mês</th><th>x hoje</th></tr>`+
-    L.map(x=>{const v=x.tot-h.tot;return `<tr class="${x.y.a===2033?'hl':''}"><td>${x.y.a}${x.y.obs?`<small>${x.y.obs}</small>`:''}</td>${lp?`<td>${brl(x.irc)}<small>não muda</small></td>`:''}<td>${x.antigos?brl(x.antigos):'—'}<small>${x.lab}</small></td>
+  $('yt').innerHTML=`<tr><th>Ano</th><th>Tributos atuais</th><th>CBS</th><th>IBS</th><th>Créditos</th><th>Total/mês</th><th>x hoje</th></tr>`+
+    L.map(x=>{const v=x.tot-h.tot;return `<tr class="${x.y.a===2033?'hl':''}"><td>${x.y.a}${x.y.obs?`<small>${x.y.obs}</small>`:''}</td><td>${brl(x.antigos)}<small>${x.lab}</small></td>
       <td>${x.cbs?brl(x.cbs):'—'}</td><td>${x.ibs?brl(x.ibs):'—'}</td><td>${x.cred?'− '+brl(x.cred):'—'}</td><td><b>${brl(x.tot)}</b></td>
       <td class="${Math.abs(v)<.5?'eq':v>0?'up':'dn'}">${Math.abs(v)<.5?'—':(v>0?'+':'−')+' '+brl(Math.abs(v))}</td></tr>`}).join('');
   const tom=reg==='SN'?f.embut:f.cbs+f.ibs;
   $('nota').innerHTML=`<div class="fund"><div class="ft">Como ler</div>${
-    reg==='LP'?'No Lucro Presumido, PIS/COFINS (3,65%) acabam em 2027 e o ISS é substituído aos poucos pelo IBS entre 2029 e 2033. Em troca, a empresa passa a descontar créditos de CBS/IBS das compras. IRPJ (15% + adicional de 10% sobre a base acima de R$ 20 mil/mês) e CSLL (9%), sobre a presunção de 32%, não mudam com a reforma e aparecem fixos em todos os anos.':
+    reg==='LP'?'No Lucro Presumido, PIS/COFINS (3,65%) acabam em 2027 e o ISS é substituído aos poucos pelo IBS entre 2029 e 2033. Em troca, a empresa passa a descontar créditos de CBS/IBS das compras.':
     reg==='SN'?'No Simples Nacional o valor do DAS não muda com a reforma: a CBS e o IBS passam a fazer parte do DAS no lugar de PIS, COFINS e ISS. O cliente empresa (hospital, operadora) aproveita só o crédito embutido no DAS.':
     'No Híbrido (opção a partir de 2027, LC 214/2025, art. 41, §3º) a CBS/IBS é paga fora do DAS, com créditos das compras, e o cliente empresa aproveita o crédito integral. No Simples sem a opção híbrida o DAS não muda com a reforma (é a coluna de hoje). Esta é a projeção completa até 2033, com a alíquota efetiva do Simples; para a conta rápida de 2027 (DAS 6% + INSS), use a calculadora Simples × Híbrido.'}
     ${a[1]?` Alíquotas com redução de ${a[1]*100}% (LC 214/2025, art. ${a[1]===S?'130':'127'}).`:' Atividade sem redução de alíquota.'}
@@ -306,8 +303,8 @@ function gerarPDF(){
   d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...MUT);
   d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · ${NOME_REG[r.reg]} · Faturamento ${brl(r.F)}/mês · CBS ${pct(r.o.cbsRef)} e IBS ${pct(r.o.ibsRef)} de referência${r.red?`, redução de ${r.red*100}%`:''}`,W-2*M),M,56);
   // tabela ano a ano
-  const lp=r.reg==='LP', P={irc:55,ant:78,cbs:100,ibs:123,cr:145,tot:167};
-  let y=66; const cols=[[M+3,'Ano','left']].concat(lp?[[P.irc,'IRPJ+CSLL'],[P.ant,'PIS/COF/ISS']]:[[P.ant,'Tributos atuais']]).concat([[P.cbs,'CBS'],[P.ibs,'IBS'],[P.cr,'Créditos'],[P.tot,'Total/mês'],[X2-3,'x hoje']]);
+  const P={ant:78,cbs:100,ibs:123,cr:145,tot:167};
+  let y=66; const cols=[[M+3,'Ano','left'],[P.ant,'Tributos atuais'],[P.cbs,'CBS'],[P.ibs,'IBS'],[P.cr,'Créditos'],[P.tot,'Total/mês'],[X2-3,'x hoje']];
   d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,9,2,2,'F');
   d.setFont('helvetica','bold');d.setFontSize(8.8);d.setTextColor(255,255,255);
   cols.forEach(([x,t,al])=>d.text(t,x,y+6,{align:al||'right'}));
@@ -316,7 +313,7 @@ function gerarPDF(){
     if(x.y.a===2033){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,8.6,'F')}
     d.setFont('helvetica','bold');d.setFontSize(8.4);d.setTextColor(...NAVY);d.text(String(x.y.a),M+3,y+5.8);
     d.setFont('helvetica','normal');d.setTextColor(15,30,46);
-    (lp?[[P.irc,brl(x.irc)]]:[]).concat([[P.ant,x.antigos?brl(x.antigos):'—'],[P.cbs,x.cbs?brl(x.cbs):'—'],[P.ibs,x.ibs?brl(x.ibs):'—'],[P.cr,x.cred?'- '+brl(x.cred):'—']]).forEach(([cx,t])=>d.text(t,cx,y+5.8,{align:'right'}));
+    [[P.ant,x.antigos?brl(x.antigos):'—'],[P.cbs,x.cbs?brl(x.cbs):'—'],[P.ibs,x.ibs?brl(x.ibs):'—'],[P.cr,x.cred?'- '+brl(x.cred):'—']].forEach(([cx,t])=>d.text(t,cx,y+5.8,{align:'right'}));
     d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(brl(x.tot),P.tot,y+5.8,{align:'right'});
     d.setTextColor(...(Math.abs(v)<.5?MUT:v>0?[220,38,38]:[31,168,119]));d.text(Math.abs(v)<.5?'—':`${v>0?'+':'-'} ${brl(Math.abs(v))}`,X2-3,y+5.8,{align:'right'});
     d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+8.6,X2,y+8.6);y+=8.6});
@@ -327,8 +324,9 @@ function gerarPDF(){
   d.text(eq?'SEM MUDANÇA NO VALOR PAGO':up?'AUMENTO COM A REFORMA COMPLETA (2033)':'REDUÇÃO COM A REFORMA COMPLETA (2033)',M+7,y+9);
   d.setFontSize(22);d.setTextColor(255,255,255);d.text(eq?brl(0):`${up?'+':'-'} ${brl(Math.abs(r.dif))}/mês`,M+7,y+19.5);
   d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);
-  d.text(eq?'O DAS continua igual; muda só a divisão interna dos tributos.':`${brl(Math.abs(r.dif)*12)} por ano · hoje ${brl(h.tot)}/mês → 2033 ${brl(f.tot)}/mês`,M+7,y+25.5);
-  if(!eq){d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...(up?[255,138,138]:GREEN));d.text(`${up?'+':'-'}${pct(Math.abs(r.var_))}`,X2-7,y+19,{align:'right'})}
+  d.text(eq?'O DAS continua igual; muda só a divisão interna dos tributos.':`${brl(Math.abs(r.dif)*12)} por ano · hoje ${brl(h.tot)}/mês, em 2033 ${brl(f.tot)}/mês`,M+7,y+25.5);
+  d.setFont('helvetica','bold');d.setFontSize(16);d.setTextColor(...GREEN);d.text(`${pct(h.tot/r.F)} para ${pct(f.tot/r.F)}`,X2-7,y+17,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('do faturamento (hoje e 2033)',X2-7,y+23.5,{align:'right'});
   y+=38;
   const txt=$('nota').innerText.replace(/^Como ler\s*/,'').replace(/\s+/g,' ').replace(/−/g,'-');
   d.setFont('helvetica','normal');d.setFontSize(9);
@@ -337,7 +335,7 @@ function gerarPDF(){
   d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('COMO LER',M+6,y+6.5);
   d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(15,30,46);d.text(lines,M+6,y+12);
   y+=hF+5; d.setFontSize(7.8);d.setTextColor(...MUT);
-  const nt=d.splitTextToSize('Transição: 2026 teste (CBS 0,9% + IBS 0,1% compensáveis); 2027-2028 CBS de referência - 0,1 p.p. e IBS 0,1%; 2029 a 2032 ISS 90/80/70/60% e IBS 10/20/30/40%; 2033 IBS integral (EC 132/2023, ADCT). INSS e IR do sócio não mudam e não entram na comparação; no Presumido, IRPJ e CSLL aparecem fixos. Alíquotas de referência estimadas; as definitivas serão fixadas pelo Senado.',W-2*M);
+  const nt=d.splitTextToSize('Transição: 2026 teste (CBS 0,9% + IBS 0,1% compensáveis); 2027-2028 CBS de referência - 0,1 p.p. e IBS 0,1%; 2029 a 2032 ISS 90/80/70/60% e IBS 10/20/30/40%; 2033 IBS integral (EC 132/2023, ADCT). IRPJ, CSLL, INSS e IR não mudam e não entram na comparação. Alíquotas de referência estimadas; as definitivas serão fixadas pelo Senado.',W-2*M);
   d.text(nt,M,y);y+=nt.length*3.3+4;
   d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,12,4,4,'F');
   d.setFont('helvetica','bold');d.setFontSize(11.5);d.setTextColor(...NAVY);
