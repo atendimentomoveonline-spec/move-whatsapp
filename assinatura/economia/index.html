@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Economia com a Move — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Quanto você economiza <span>com a Move</span></h1>
+    <p>Compare o que paga hoje de contabilidade com os planos da Move Online.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Cliente (opcional)</label>
+      <input id="nome" placeholder="Nome do cliente ou empresa">
+
+      <label>Mensalidade atual do contador</label>
+      <div class="money"><span>R$</span><input id="men" class="big" inputmode="decimal" placeholder="500,00"></div>
+
+      <label>Quantidade de notas fiscais por mês</label>
+      <input id="nf" inputmode="numeric" placeholder="Ex.: 15">
+      <div class="hint" id="nfh"></div>
+
+      <label>O contador atual cobra 13ª mensalidade?</label>
+      <div class="seg" id="d13">
+        <button data-v="1">Sim</button>
+        <button data-v="0" class="on">Não</button>
+      </div>
+      <div class="hint">A Move não cobra 13ª mensalidade.</div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Digite a mensalidade atual e a quantidade de notas.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>Contador atual</h3><div id="lA"></div>
+            <div class="tot"><span>TOTAL / ANO</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt b"><h3 id="hB">Move Online</h3><div id="lB"></div>
+            <div class="tot"><span>TOTAL / ANO</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span>a menos por ano com a Move</span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="plans"><h4>Economia em cada plano</h4><div id="pls"></div></div>
+        <div class="inc" id="inc"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação com base nos valores informados e na tabela de planos vigente da Move Online.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const BASE_INC=['Gestão fiscal completa','Conta digital PJ grátis','Cobrança via boleto','Consulta Serasa','Endereço fiscal','Base de conhecimento','Plataforma e app Move'];
+// [nome, preço/mês, notas/mês, destaque, itens]
+const PLANOS=[
+ ['START',89,20,'Estrutura simples e eficiente para iniciar',['Pró-labore - 1 sócio incluso','WhatsApp - básico']],
+ ['BÁSICO',129,40,'Para profissionais da saúde com maior rotina de atendimentos',['Pró-labore - 1 sócio incluso','WhatsApp - básico','Suporte orientações e dúvidas']],
+ ['PRÓ',169,60,'Plano estratégico para profissionais da saúde em crescimento',['Abertura de empresa grátis','Pró-labore - 1 sócio incluso','WhatsApp - dedicado','Suporte orientações e dúvidas','Organização financeira']],
+ ['GROWTH',229,80,'Estrutura estratégica para operação intermediária',['Abertura de empresa grátis','Pró-labore - 1 sócio incluso','WhatsApp - dedicado','Suporte orientações e dúvidas','Organização financeira','Monitoramento tributário','Diagnóstico estratégico']],
+ ['SCALE',497,150,'Para profissionais da saúde e clínicas com operação avançada',['Abertura de empresa grátis','Pró-labore - 2 sócios inclusos','WhatsApp - dedicado','Suporte orientações e dúvidas','Organização financeira','Monitoramento tributário','Diagnóstico estratégico','Planejamento patrimonial']]
+];
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:1})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let d13=0, escolhido=null, R=null;
+
+// menor plano que comporta a quantidade de notas
+const planoIdeal=nf=>{const i=PLANOS.findIndex(p=>nf<=p[2]);return i<0?PLANOS.length-1:i};
+
+function calc(){
+  const men=num($('men').value), nf=Math.round(num($('nf').value));
+  const ideal=planoIdeal(nf||0);
+  $('nfh').textContent=nf?(nf>150?'Acima de 150 notas: plano SCALE (volume maior sob consulta).':`Plano indicado: ${PLANOS[ideal][0]} (até ${PLANOS[ideal][2]} notas/mês).`):'';
+  if(!men||!nf){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  if(escolhido===null||escolhido<ideal)escolhido=ideal;
+  const p=PLANOS[escolhido];
+  const anoA=men*(12+d13), anoB=p[1]*12;
+  const ecoM=men-p[1], ecoA=anoA-anoB, ecoP=anoA?ecoA/anoA:0;
+  R={nome:$('nome').value.trim(),men,nf,d13,p,anoA,anoB,ecoM,ecoA,ecoP,ideal};
+
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${v}</b></div>`).join('');
+  $('lA').innerHTML=L([['Mensalidade','',brl(men)],['12 mensalidades','',brl(men*12)],['13ª mensalidade',d13?'':'não cobra',d13?brl(men):'—']]);
+  $('hB').textContent=`Move · Plano ${p[0]}`;
+  $('lB').innerHTML=L([['Mensalidade','',brl(p[1])],['12 mensalidades','',brl(p[1]*12)],['13ª mensalidade','não cobra','—']]);
+  $('tA').textContent=brl(anoA);$('tB').textContent=brl(anoB);
+  $('pA').textContent=`${nf} notas/mês`;$('pB').textContent=`até ${p[2]} notas/mês`;
+  const up=ecoA>=0;
+  $('hl').textContent=up?'Economia com a Move':'Diferença a investir na Move';
+  $('hv').textContent=`${brl(Math.abs(ecoM))}/mês`;$('hv').className='val '+(up?'down':'up');
+  $('hs').textContent=`${brl(Math.abs(ecoA))} por ano${d13?' (inclui a 13ª mensalidade)':''}`;
+  $('hp').textContent=up?pct(ecoP):'—';
+  const mx=Math.max(anoA,anoB);
+  $('bars').innerHTML=[['Contador atual',anoA,'#94a3b8'],['Move · '+p[0],anoB,'var(--green)']].map(([k,v,c])=>
+    `<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${v/mx*100}%;background:${c}"></div></div><b>${brl(v)}</b></div>`).join('');
+  $('pls').innerHTML=PLANOS.map((q,i)=>{const off=i<ideal, e=anoA-q[1]*12;
+    return `<div class="pl ${i===escolhido?'on':''} ${off?'off':''}" data-i="${i}">
+      <div class="nm"><b>${q[0]}</b>${i===ideal?'<span class="tag">INDICADO</span>':''}<small>até ${q[2]} notas · ${brl(q[1])}/mês</small></div>
+      <div class="pr">${off?'não atende o volume':''}</div>
+      <div class="ec ${off?'':(e>=0?'pos':'neg')}">${off?'—':(e>=0?'+ ':'− ')+brl(Math.abs(e))+'/ano'}</div></div>`}).join('');
+  document.querySelectorAll('.pl').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(i<ideal)return;escolhido=i;calc()});
+  $('inc').innerHTML=`<div class="ft">O que está incluso no plano ${p[0]}</div><ul>${[`${p[2]} notas fiscais/mês`,'2 PGDAS/mês',...p[4],...BASE_INC].map(x=>`<li>${x}</li>`).join('')}</ul>`;
+}
+
+// ── PDF A4 desenhado direto (texto real, não depende do tamanho da tela) ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, p=r.p, up=r.ecoA>=0, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação de economia',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Quanto você economiza com a Move',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.nf} notas fiscais/mês · Plano indicado: ${p[0]}`,W-2*M),M,57);
+  let y=66; const c2=140, c3=X2-4;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,10,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(255,255,255);
+  d.text('Custo',M+4,y+6.5);d.text('Contador atual',c2,y+6.5,{align:'right'});d.text(`Move · ${p[0]}`,c3,y+6.5,{align:'right'});
+  y+=10;
+  [['Mensalidade',brl(r.men),brl(p[1])],
+   ['12 mensalidades',brl(r.men*12),brl(p[1]*12)],
+   ['13ª mensalidade',r.d13?brl(r.men):'não cobra','não cobra'],
+   ['Total anual',brl(r.anoA),brl(r.anoB),1]].forEach(([k,a,b,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,11,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?12:10);
+    d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+7.2);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+7.2,{align:'right'});d.text(b,c3,y+7.2,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+11,X2,y+11);y+=11});
+  y+=8; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,32,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);
+  d.text(up?'ECONOMIA COM A MOVE':'DIFERENÇA A INVESTIR NA MOVE',M+7,y+9);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(`${brl(Math.abs(r.ecoM))}/mês`,M+7,y+19.5);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.ecoA))} por ano${r.d13?' (inclui a 13ª mensalidade)':''}`,M+7,y+26.5);
+  if(up){d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...GREEN);d.text(pct(r.ecoP),X2-7,y+19,{align:'right'});
+    d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('a menos por ano',X2-7,y+25.5,{align:'right'})}
+  // economia por plano
+  y+=38; d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(...NAVY);d.text('ECONOMIA ANUAL EM CADA PLANO',M,y);y+=3;
+  PLANOS.forEach((q,i)=>{const off=i<r.ideal, e=r.anoA-q[1]*12;
+    if(q===p){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,7,'F')}
+    d.setFont('helvetica',q===p?'bold':'normal');d.setFontSize(9.5);d.setTextColor(...NAVY);d.text(q[0],M+4,y+4.9);
+    d.setTextColor(...MUT);d.text(`até ${q[2]} notas · ${brl(q[1])}/mês`,M+30,y+4.9);
+    d.setFont('helvetica','bold');d.setTextColor(...(off?MUT:(e>=0?[31,168,119]:[220,38,38])));
+    d.text(off?'não atende o volume':`${e>=0?'+':'-'} ${brl(Math.abs(e))}/ano`,c3,y+4.9,{align:'right'});
+    d.setDrawColor(...LINE);d.line(M,y+7,X2,y+7);y+=7});
+  // incluso
+  y+=6; const itens=[`${p[2]} notas fiscais/mês`,'2 PGDAS/mês',...p[4],...BASE_INC];
+  const half=Math.ceil(itens.length/2), hI=12+half*4.2;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hI,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hI,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text(`O QUE ESTÁ INCLUSO NO PLANO ${p[0]}`,M+6,y+6.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(15,30,46);
+  itens.forEach((t,i)=>d.text('• '+t,M+6+(i<half?0:(W-2*M)/2),y+12+(i%half)*4.2));
+  y+=hI+5;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});
+  d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,281,X2,281);
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);
+  d.text('Simulação com base nos valores informados e na tabela de planos vigente da Move Online.',M,285.5);
+  d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,290.5);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,290.5,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+$('men').addEventListener('input',calc);
+$('nf').addEventListener('input',()=>{escolhido=null;calc()});
+$('nome').addEventListener('input',calc);
+$('men').addEventListener('blur',()=>{const n=num($('men').value);$('men').value=n?fmt(n):''});
+document.querySelectorAll('#d13 button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#d13 button').forEach(x=>x.classList.remove('on'));b.classList.add('on');d13=+b.dataset.v;calc()});
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Economia Move - ${R.nome||'simulacao'}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R,up=r.ecoA>=0;
+  const t=`*Simulação de economia com a Move*${r.nome?'\n'+r.nome:''}\n${r.nf} notas/mês · Plano ${r.p[0]}\n\n• Contador atual: *${brl(r.men)}*/mês${r.d13?' + 13ª':''} = ${brl(r.anoA)}/ano\n• Move ${r.p[0]}: *${brl(r.p[1])}*/mês = ${brl(r.anoB)}/ano\n\n${up?'✅ Economia':'Diferença'}: *${brl(Math.abs(r.ecoM))}/mês* · *${brl(Math.abs(r.ecoA))}/ano*\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>
