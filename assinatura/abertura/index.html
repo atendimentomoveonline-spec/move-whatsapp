@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abertura de CNPJ — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+  .bt{width:100%;border-collapse:collapse;font-size:14px;margin-top:18px}
+  .bt th{padding:12px 10px;font-size:13px;text-align:center}
+  .bt th:first-child{background:var(--navy);color:#fff;text-align:left;border-radius:12px 0 0 0}
+  .bt th.mk{background:var(--green);color:var(--navy)}
+  .bt th.mv{background:#fff;border:1.5px solid var(--navy);border-bottom:none;border-radius:0 12px 0 0}
+  .bt th.mv img{height:26px;display:block;margin:0 auto}
+  .bt td{padding:11px 10px;border-bottom:1px solid var(--line)}
+  .bt td:first-child{font-weight:600;color:var(--navy)}
+  .bt td.mk{background:#e8faf3;color:var(--mut);text-align:center;font-size:13px}
+  .bt td.mv{background:#eef3f9;text-align:center;font-weight:800;color:var(--navy);font-size:13px}
+  .bt td.mv small{display:block;font-weight:600;color:var(--mut);font-size:11px}
+  .btw{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Abra seu CNPJ <span>com a Move</span></h1>
+    <p>Compare quanto você pagaria para abrir a empresa com outro contador e com a Move Online.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Nome</label>
+      <input id="nome" placeholder="Nome do cliente">
+
+      <label>Especialidade</label>
+      <select id="atv"></select>
+
+      <label>Valor cobrado pela abertura (outro contador)</label>
+      <div class="money"><span>R$</span><input id="ab" class="big" inputmode="decimal" placeholder="1.000,00"></div>
+      <div class="hint">No mercado, a abertura costuma custar de R$ 600 a R$ 1.500.</div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Escolha a especialidade e digite o valor da abertura.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>Outro contador</h3><div id="lA"></div>
+            <div class="tot"><span>TOTAL</span><b id="tA"></b></div></div>
+          <div class="opt b"><h3>Move Online</h3><div id="lB"></div>
+            <div class="tot"><span>TOTAL</span><b id="tB"></b></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl">Economia na abertura com a Move</div><div class="val down" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span>a menos na abertura</span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="btw"><table class="bt" id="bt"></table></div>
+        <div class="note" id="nota"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Valores de mercado estimados. Abertura grátis nos planos PRÓ, GROWTH e SCALE da Move Online.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const CERT_MERCADO=220, CERT_MOVE=75;
+const ATV=['Médico','Dentista','Psicólogo','Fisioterapeuta','Fonoaudiólogo','Terapeuta ocupacional','Nutricionista',
+ 'Professor de pilates (fisioterapeuta)','Professor de pilates (educador físico)','Personal trainer','Educador físico',
+ 'Musicoterapeuta','Acompanhante / atendente terapêutico','Psicopedagogo','Neuropsicopedagogo','Aplicador ABA','Psicanalista',
+ 'Psicomotricista','Arteterapeuta','Acupunturista','Massoterapeuta','Terapeuta integrativo / holístico','Instrutor de yoga','Doula'
+].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+// [benefício, mercado (estimado), Move, detalhe Move]
+const BEN=[
+ ['Abertura de empresa','R$ 600 - 1.500','Grátis','planos PRÓ, GROWTH e SCALE'],
+ ['Certificado digital A1','R$ 220/ano','R$ 75/ano',''],
+ ['Emissão de notas / sistema fiscal','R$ 39 - 79/mês','Incluso','20 a 150 notas/mês'],
+ ['Revisão fiscal básica','R$ 150/mês','Incluso','gestão fiscal completa'],
+ ['Consultoria tributária','R$ 300/mês','Incluso','monitoramento tributário (GROWTH e SCALE)'],
+ ['2ª via de impostos e guias','R$ 39/mês','Incluso','2 PGDAS/mês + app Move'],
+ ['Suporte via chat e chamados','R$ 0 - 200','Incluso','WhatsApp básico ou dedicado'],
+ ['Pró-labore','R$ 50 - 100/mês','Incluso','1 sócio (2 no SCALE)'],
+ ['Endereço fiscal','R$ 50 - 150/mês','Incluso',''],
+ ['Conta digital PJ','Tarifa mensal','Grátis',''],
+ ['Arquivos (CNPJ, CCM, Alvará, Contrato)','Pago avulso','Grátis','na plataforma Move'],
+ ['13ª mensalidade','Pago','Não cobra','']
+];
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:1})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null;
+$('atv').innerHTML='<option value="">Selecione…</option>'+ATV.map(a=>`<option>${a}</option>`).join('');
+$('bt').innerHTML=`<tr><th>Benefício</th><th class="mk">Mercado</th><th class="mv"><img src="logo_move.png" alt="Move Online"></th></tr>`+
+  BEN.map(([b,m,v,s])=>`<tr><td>${b}</td><td class="mk">${m}</td><td class="mv">${v}${s?`<small>${s}</small>`:''}</td></tr>`).join('');
+
+function calc(){
+  const atv=$('atv').value, ab=num($('ab').value);
+  if(!atv||!ab){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const totA=ab+CERT_MERCADO, totB=CERT_MOVE, eco=totA-totB, ecoP=eco/totA;
+  R={nome:$('nome').value.trim(),atv,ab,totA,totB,eco,ecoP};
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${v}</b></div>`).join('');
+  $('lA').innerHTML=L([['Abertura da empresa','',brl(ab)],['Certificado digital A1','1º ano',brl(CERT_MERCADO)]]);
+  $('lB').innerHTML=L([['Abertura da empresa','grátis',brl(0)],['Certificado digital A1','1º ano',brl(CERT_MOVE)]]);
+  $('tA').textContent=brl(totA);$('tB').textContent=brl(totB);
+  $('hv').textContent=brl(eco);
+  $('hs').textContent=`Abertura grátis + certificado digital por ${brl(CERT_MOVE)}`;
+  $('hp').textContent=pct(ecoP);
+  $('bars').innerHTML=[['Outro contador',totA,'#94a3b8'],['Move Online',totB,'var(--green)']].map(([k,v,c])=>
+    `<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${Math.max(v/totA*100,1.5)}%;background:${c}"></div></div><b>${brl(v)}</b></div>`).join('');
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Importante</div>Abertura grátis nos planos <b>PRÓ (R$ 169/mês), GROWTH (R$ 229/mês) e SCALE (R$ 497/mês)</b>. As taxas públicas do processo (Junta Comercial ou cartório, registro no conselho de classe e alvará/licenças da prefeitura) são cobradas pelos órgãos e têm o mesmo valor em qualquer contador. Valores de mercado estimados.</div>`;
+}
+
+// ── PDF A4 desenhado direto (texto real, não depende do tamanho da tela) ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação de abertura de CNPJ',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Abra seu CNPJ com a Move',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(`${r.nome?r.nome+' · ':''}${r.atv}`,M,57);
+  let y=64; const c2=140, c3=X2-4;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,10,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(255,255,255);
+  d.text('Custo',M+4,y+6.5);d.text('Outro contador',c2,y+6.5,{align:'right'});d.text('Move Online',c3,y+6.5,{align:'right'});
+  y+=10;
+  [['Abertura da empresa',brl(r.ab),'Grátis'],['Certificado digital A1 (1º ano)',brl(CERT_MERCADO),brl(CERT_MOVE)],['Total',brl(r.totA),brl(r.totB),1]].forEach(([k,a,b,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,10,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?12:10);
+    d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+6.7);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+6.7,{align:'right'});d.text(b,c3,y+6.7,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+10,X2,y+10);y+=10});
+  y+=6; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,28,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text('ECONOMIA NA ABERTURA COM A MOVE',M+7,y+8.5);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(brl(r.eco),M+7,y+18.5);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);d.text(`Abertura grátis + certificado digital por ${brl(CERT_MOVE)}`,M+7,y+24.5);
+  d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...GREEN);d.text(pct(r.ecoP),X2-7,y+17.5,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('a menos na abertura',X2-7,y+23.5,{align:'right'});
+  // tabela de benefícios
+  y+=34; const k2=118, k3=164;
+  d.setFillColor(...NAVY);d.rect(M,y,k2-M-12,9,'F');d.setFillColor(...GREEN);d.rect(k2-12,y,k3-k2-10+12,9,'F');
+  d.setFillColor(238,243,249);d.rect(k3-10,y,X2-k3+10,9,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(255,255,255);d.text('Benefício',M+4,y+6);
+  d.setTextColor(...NAVY);d.text('Mercado',(k2+k3-22)/2,y+6,{align:'center'});d.text('Move Online',(k3-10+X2)/2,y+6,{align:'center'});
+  y+=9;
+  BEN.forEach(([b,m,v,s])=>{
+    d.setFillColor(232,250,243);d.rect(k2-12,y,k3-k2-10+12,7.6,'F');d.setFillColor(238,243,249);d.rect(k3-10,y,X2-k3+10,7.6,'F');
+    d.setFont('helvetica','bold');d.setFontSize(8.8);d.setTextColor(...NAVY);d.text(b,M+4,y+5);
+    d.setFont('helvetica','normal');d.setTextColor(...MUT);d.text(m,(k2+k3-22)/2,y+5,{align:'center'});
+    d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(v,(k3-10+X2)/2,y+5,{align:'center'});
+    d.setDrawColor(...LINE);d.line(M,y+7.6,X2,y+7.6);y+=7.6});
+  y+=5; d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);
+  const nt=d.splitTextToSize('Abertura grátis nos planos PRÓ (R$ 169/mês), GROWTH (R$ 229/mês) e SCALE (R$ 497/mês). Taxas públicas do processo (Junta Comercial ou cartório, registro no conselho de classe e alvará/licenças) são cobradas pelos órgãos e têm o mesmo valor em qualquer contador. Valores de mercado estimados.',W-2*M);
+  d.text(nt,M,y);y+=nt.length*3.6+4;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});
+  d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,281,X2,281);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,287);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,287,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+$('atv').addEventListener('change',calc);
+$('ab').addEventListener('input',calc);
+$('nome').addEventListener('input',calc);
+$('ab').addEventListener('blur',()=>{const n=num($('ab').value);$('ab').value=n?fmt(n):''});
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Abertura CNPJ Move - ${R.nome||'simulacao'}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R;
+  const t=`*Simulação de abertura de CNPJ com a Move*${r.nome?'\n'+r.nome:''}\n${r.atv}\n\n• Outro contador: *${brl(r.totA)}* (abertura ${brl(r.ab)} + certificado ${brl(CERT_MERCADO)})\n• Move Online: *${brl(r.totB)}* (abertura grátis + certificado ${brl(CERT_MOVE)})\n\n✅ Economia na abertura: *${brl(r.eco)}*\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>

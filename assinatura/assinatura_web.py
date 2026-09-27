@@ -514,6 +514,20 @@ def economia_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora de economia na abertura de CNPJ ──
+ABRE_DIR = os.path.join(BASE, "abertura")
+
+@app.route("/abertura/")
+def abertura():
+    return send_file(os.path.join(ABRE_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/abertura/<nome>.png")
+def abertura_img(nome):
+    f = os.path.join(ABRE_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
