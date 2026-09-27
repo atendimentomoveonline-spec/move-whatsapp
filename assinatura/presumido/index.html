@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simples x Presumido — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+  .tabs{margin-top:22px}
+  .tabs h4{margin:18px 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .tb{width:100%;border-collapse:collapse;font-size:13px}
+  .tb th{background:var(--navy);color:#fff;padding:8px 10px;text-align:right;font-size:12px}
+  .tb th:first-child{text-align:left}
+  .tb td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .tb td:first-child{text-align:left}
+  .tb tr.on td{background:#e8faf3;font-weight:800;color:var(--navy)}
+  .tbw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  .tbn{font-size:12px;color:var(--mut);margin-top:6px;line-height:1.5}
+  .two{display:grid;grid-template-columns:1fr;gap:0 16px}
+  @media(min-width:700px){.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Simples Nacional <span>×</span> Lucro Presumido</h1>
+    <p>Compare os impostos no Simples Nacional (Fator R, Anexo III ou V) e no Lucro Presumido.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Nome</label>
+      <input id="nome" placeholder="Nome do cliente">
+
+      <label>Especialidade</label>
+      <select id="atv"></select>
+
+      <label>Faturamento mensal</label>
+      <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="30.000,00"></div>
+
+      <label>Faturamento últimos 12 meses (RBT12)</label>
+      <div class="money"><span>R$</span><input id="rbt" inputmode="decimal"></div>
+      <div class="hint">Em branco = faturamento do mês × 12.</div>
+
+      <label>Folha de funcionários CLT (salários/mês)</label>
+      <div class="money"><span>R$</span><input id="folha" inputmode="decimal" placeholder="0,00"></div>
+
+      <label>Pró-labore no Simples</label>
+      <div class="money"><span>R$</span><input id="proS" inputmode="decimal"></div>
+      <div class="hint" id="proSh">Sugerido: o necessário para o Fator R de 28%.</div>
+
+      <label>Pró-labore no Presumido</label>
+      <div class="money"><span>R$</span><input id="proP" inputmode="decimal"></div>
+      <div class="hint">Sugerido: 1 salário mínimo (no Presumido não existe Fator R).</div>
+
+      <label>ISS do município (%)</label>
+      <input id="iss" inputmode="decimal" value="2">
+      <div class="hint">Usado no Presumido (e no Simples acima do sublimite de R$ 3,6 milhões).</div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Escolha a especialidade e digite o faturamento.</div>
+      <div id="res" style="display:none">
+        <div id="fr"></div>
+        <div class="cmp" style="margin-top:12px">
+          <div class="opt a"><h3 id="hA">Simples Nacional</h3><div id="lA"></div>
+            <div class="tot"><span>IMPOSTOS / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt a"><h3>Lucro Presumido</h3><div id="lB"></div>
+            <div class="tot"><span>IMPOSTOS / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val down" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span id="hps"></span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="sec">Tabelas usadas no cálculo</div>
+        <div class="two">
+          <div><h4>Simples Nacional · Anexo III</h4><div class="tbw"><table class="tb" id="t3"></table></div></div>
+          <div><h4>Simples Nacional · Anexo V</h4><div class="tbw"><table class="tb" id="t5"></table></div></div>
+        </div>
+        <div class="tbn">Fator R = folha dos últimos 12 meses (pró-labore + salários) ÷ RBT12. Com 28% ou mais, a atividade vai para o Anexo III; abaixo disso, Anexo V (LC 123/2006, art. 18, §5º-J e §5º-M). Alíquota efetiva = (RBT12 × alíquota − dedução) ÷ RBT12.</div>
+        <h4>Imposto de Renda · tabela mensal 2026</h4>
+        <div class="tbw"><table class="tb" id="tir"></table></div>
+        <h4>Redutor do IR (Lei 15.270/2025)</h4>
+        <div class="tbw"><table class="tb" id="tred"></table></div>
+        <div class="tbn">Base do IR = rendimento − maior valor entre o INSS e o desconto simplificado de R$ 607,20. O redutor é calculado sobre o rendimento bruto e abatido do imposto da tabela.</div>
+        <h4>Lucro Presumido · serviços médicos e de saúde</h4>
+        <div class="tbw"><table class="tb" id="tlp"></table></div>
+        <div class="tbn">Presunção de 32% para serviços (Lei 9.249/1995). Clínicas com estrutura hospitalar podem ter presunção de 8%/12% e não estão consideradas aqui.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada. INSS e IRRF pelas tabelas de 2026. FGTS de funcionários é igual nos dois regimes e não entra na comparação.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const SAL_MIN=1621.00, TETO_INSS=8475.55, INSS_SOCIO=.11;
+// Simples Nacional: [receita bruta 12 meses até, alíquota nominal, dedução]
+const A3=[[180000,.06,0],[360000,.112,9360],[720000,.135,17640],[1800000,.16,35640],[3600000,.21,125640],[4800000,.33,648000]];
+const A5=[[180000,.155,0],[360000,.18,4500],[720000,.195,9900],[1800000,.205,17100],[3600000,.23,62100],[4800000,.305,540000]];
+// IRRF mensal 2026: [base até, alíquota, dedução] · desconto simplificado R$ 607,20
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IR_SIMPL=607.20;
+// Lucro Presumido (serviços): presunção 32%; IRPJ 15% + adicional 10% sobre base > R$ 20 mil/mês; CSLL 9%; PIS 0,65%; COFINS 3%
+const LP={pres:.32,irpj:.15,adic:.10,limAdic:20000,csll:.09,pis:.0065,cofins:.03,cppPro:.20,cppFolha:.268};
+const ATV=['Médico','Dentista','Psicólogo','Fisioterapeuta','Fonoaudiólogo','Terapeuta ocupacional','Nutricionista',
+ 'Professor de pilates (fisioterapeuta)','Professor de pilates (educador físico)','Personal trainer','Educador físico',
+ 'Musicoterapeuta','Acompanhante / atendente terapêutico','Psicopedagogo','Neuropsicopedagogo','Aplicador ABA','Psicanalista',
+ 'Psicomotricista','Arteterapeuta','Acupunturista','Massoterapeuta','Terapeuta integrativo / holístico','Instrutor de yoga','Doula'
+].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const pc1=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null, manS=false, manP=false;
+$('atv').innerHTML='<option value="">Selecione…</option>'+ATV.map(a=>`<option>${a}</option>`).join('');
+
+function irrf(bruto,inss){
+  const base=bruto-Math.max(inss,IR_SIMPL); if(base<=0)return {ir:0,base:0,tab:0,red:0,fx:0};
+  const fx=IR_TAB.findIndex(f=>base<=f[0]), [,a,d]=IR_TAB[fx]; const tab=Math.max(0,base*a-d);
+  let red=0; if(bruto<=5000)red=tab; else if(bruto<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*bruto));
+  return {ir:tab-red,base,tab,red,fx};
+}
+function simples(tab,rbt){let i=tab.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,nom,ded]=tab[i];return {fx:i,nom,ded,ef:rbt<=180000?nom:(rbt*nom-ded)/rbt}}
+
+function renderTabelas(fx3,fx5,anx,fxIR,red){
+  const lim=(t,i)=>i?`${brl(t[i-1][0]+.01)} a ${brl(t[i][0])}`:`até ${brl(t[0][0])}`;
+  const T=(t,fx,on)=>`<tr><th>Faixa (RBT12)</th><th>Alíquota</th><th>Dedução</th></tr>`+t.map((f,i)=>`<tr class="${on&&i===fx?'on':''}"><td>${i+1}ª · ${lim(t,i)}</td><td>${pc1(f[1])}</td><td>${brl(f[2])}</td></tr>`).join('');
+  $('t3').innerHTML=T(A3,fx3,anx===3);$('t5').innerHTML=T(A5,fx5,anx===5);
+  $('tir').innerHTML=`<tr><th>Base de cálculo mensal</th><th>Alíquota</th><th>Dedução</th></tr>`+IR_TAB.map((f,i)=>
+    `<tr class="${i===fxIR?'on':''}"><td>${i?`${brl(IR_TAB[i-1][0]+.01)} ${f[0]===Infinity?'em diante':'a '+brl(f[0])}`:`até ${brl(f[0])}`}</td><td>${f[1]?pc1(f[1]):'isento'}</td><td>${brl(f[2])}</td></tr>`).join('');
+  $('tred').innerHTML=`<tr><th>Rendimento bruto mensal</th><th>Redução do imposto</th></tr>
+    <tr class="${red===1?'on':''}"><td>até R$ 5.000,00</td><td>até R$ 312,89 (imposto zerado)</td></tr>
+    <tr class="${red===2?'on':''}"><td>R$ 5.000,01 a R$ 7.350,00</td><td>R$ 978,62 − 0,133145 × rendimento</td></tr>
+    <tr class="${red===3?'on':''}"><td>acima de R$ 7.350,00</td><td>sem redução</td></tr>`;
+  $('tlp').innerHTML=`<tr><th>Tributo</th><th>Base</th><th>Alíquota</th><th>Sobre o faturamento</th></tr>
+    <tr><td>IRPJ</td><td>32%</td><td>15%</td><td>4,80%</td></tr>
+    <tr><td>Adicional de IRPJ</td><td>base acima de R$ 20 mil/mês</td><td>10%</td><td>variável</td></tr>
+    <tr><td>CSLL</td><td>32%</td><td>9%</td><td>2,88%</td></tr>
+    <tr><td>PIS (cumulativo)</td><td>100%</td><td>0,65%</td><td>0,65%</td></tr>
+    <tr><td>COFINS (cumulativo)</td><td>100%</td><td>3%</td><td>3,00%</td></tr>
+    <tr><td>ISS</td><td>100%</td><td>municipal</td><td>${pc1(num($('iss').value)/100)}</td></tr>
+    <tr><td>INSS patronal (CPP)</td><td>pró-labore / folha</td><td>20% / 26,8%*</td><td>—</td></tr>`;
+}
+
+function calc(){
+  const atv=$('atv').value, F=num($('fat').value), RBT=num($('rbt').value)||F*12, folha=num($('folha').value), iss=num($('iss').value)/100;
+  const s3=simples(A3,RBT||1), s5=simples(A5,RBT||1);
+  if(!manS)$('proS').value=F?fmt(Math.max(SAL_MIN,Math.ceil(((RBT/12)*.28-folha)*100)/100)):''; // mínimo para Fator R de 28%
+  if(!manP)$('proP').value=F?fmt(SAL_MIN):'';
+  const proS=num($('proS').value), proP=num($('proP').value);
+  const fr=RBT?((proS+folha)*12)/RBT:0, anx=fr>=.28?3:5, sN=anx===3?s3:s5;
+  if(!atv||!F){renderTabelas(s3.fx,s5.fx,0,-1,0);$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  if(RBT>4800000){$('fr').innerHTML='<span class="badge n">RBT12 acima de R$ 4,8 milhões: a empresa não pode ficar no Simples Nacional.</span>'}
+  else $('fr').innerHTML=`<span class="badge ${anx===3?'r':'n'}">Fator R: ${pct(fr)} → Anexo ${anx===3?'III':'V'} · ${sN.fx+1}ª faixa · alíquota efetiva ${pct(sN.ef)}</span>`;
+
+  // Simples Nacional
+  const das=F*sN.ef, issForaS=sN.fx===5?F*iss:0;           // 6ª faixa: ISS fora do DAS (sublimite)
+  const inssS=Math.min(proS,TETO_INSS)*INSS_SOCIO, irS=irrf(proS,inssS);
+  const totS=das+issForaS+inssS+irS.ir;
+  // Lucro Presumido
+  const lim5=5000000/12, base=F*LP.pres+Math.max(0,F-lim5)*LP.pres*.10; // LC 224/2025: +10% na presunção sobre receita acima de R$ 5 mi/ano
+  const irpj=base*LP.irpj, adic=Math.max(0,base-LP.limAdic)*LP.adic, csll=base*LP.csll;
+  const pis=F*LP.pis, cof=F*LP.cofins, issP=F*iss;
+  const cpp=proP*LP.cppPro+folha*LP.cppFolha;
+  const inssP=Math.min(proP,TETO_INSS)*INSS_SOCIO, irP=irrf(proP,inssP);
+  const totP=irpj+adic+csll+pis+cof+issP+cpp+inssP+irP.ir;
+  const dif=totP-totS, simplesMelhor=dif>=0;
+  R={nome:$('nome').value.trim(),atv,F,RBT,folha,iss,proS,proP,fr,anx,sN,das,issForaS,inssS,irS,totS,irpj,adic,csll,pis,cof,issP,cpp,inssP,irP,totP,dif,simplesMelhor};
+
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  $('hA').textContent=`Simples Nacional · Anexo ${anx===3?'III':'V'}`;
+  $('lA').innerHTML=L([['DAS',`efetiva ${pct(sN.ef)}`,das]].concat(issForaS?[['ISS fora do DAS',pc1(iss),issForaS]]:[]).concat([
+    ['INSS do sócio',`11% s/ ${brl(proS)}`,inssS],['IRRF do pró-labore',irS.red?`redutor ${brl(irS.red)}`:'',irS.ir]]));
+  $('lB').innerHTML=L([['IRPJ','15% s/ 32%',irpj]].concat(adic?[['Adicional IRPJ','10%',adic]]:[]).concat([
+    ['CSLL','9% s/ 32%',csll],['PIS','0,65%',pis],['COFINS','3%',cof],['ISS',pc1(iss),issP],
+    ['INSS patronal (CPP)',folha?'pró-labore + folha':'20% s/ pró-labore',cpp],['INSS do sócio',`11% s/ ${brl(proP)}`,inssP],['IRRF do pró-labore',irP.red?`redutor ${brl(irP.red)}`:'',irP.ir]]));
+  $('tA').textContent=brl(totS);$('tB').textContent=brl(totP);
+  $('pA').textContent=`${pct(totS/F)} do faturamento`;$('pB').textContent=`${pct(totP/F)} do faturamento`;
+  $('hl').textContent=`${simplesMelhor?'Simples Nacional':'Lucro Presumido'} é mais econômico`;
+  $('hv').textContent=`${brl(Math.abs(dif))}/mês`;
+  $('hs').textContent=`${brl(Math.abs(dif)*12)} por ano de diferença`;
+  $('hp').textContent=pct(Math.min(totS,totP)/F);$('hps').textContent=`carga total no ${simplesMelhor?'Simples':'Presumido'}`;
+  const mx=Math.max(totS,totP);
+  $('bars').innerHTML=[['Simples',totS],['Presumido',totP]].map(([k,v])=>
+    `<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${v/mx*100}%;background:${v===Math.min(totS,totP)?'var(--green)':'#94a3b8'}"></div></div><b>${brl(v)}</b></div>`).join('');
+  const redFx=proS<=5000?1:proS<=7350?2:3;
+  renderTabelas(s3.fx,s5.fx,anx,irS.fx,redFx);
+}
+
+// ── PDF A4 desenhado direto ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Simples Nacional × Lucro Presumido',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · Faturamento ${brl(r.F)}/mês · RBT12 ${brl(r.RBT)} · Fator R ${pct(r.fr)} (Anexo ${r.anx===3?'III':'V'}, ${r.sN.fx+1}ª faixa, efetiva ${pct(r.sN.ef)})`,W-2*M),M,56);
+  let y=66; const c2=140, c3=X2-4, v1=100, v2=146;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,9,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(255,255,255);
+  d.text('Tributo (mensal)',M+4,y+6);d.text('Simples Nacional',c2,y+6,{align:'right'});d.text('Lucro Presumido',c3,y+6,{align:'right'});
+  y+=9; const yT=y, z='—';
+  const rows=[
+    ['DAS',brl(r.das),z],
+    ...(r.issForaS?[['ISS fora do DAS (sublimite)',brl(r.issForaS),z]]:[]),
+    ['IRPJ (15% s/ 32%)',z,brl(r.irpj)],
+    ...(r.adic?[['Adicional de IRPJ (10%)',z,brl(r.adic)]]:[]),
+    ['CSLL (9% s/ 32%)',z,brl(r.csll)],['PIS (0,65%)',z,brl(r.pis)],['COFINS (3%)',z,brl(r.cof)],[`ISS (${pc1(r.iss)})`,z,brl(r.issP)],
+    ['INSS patronal (CPP)','no DAS',brl(r.cpp)],
+    [`Pró-labore considerado`,brl(r.proS),brl(r.proP)],
+    ['INSS do sócio (11%)',brl(r.inssS),brl(r.inssP)],
+    ['IRRF do pró-labore (com redutor)',brl(r.irS.ir),brl(r.irP.ir)],
+    ['Total de impostos no mês',brl(r.totS),brl(r.totP),1],
+    ['Carga sobre o faturamento',pct(r.totS/r.F),pct(r.totP/r.F)],
+    ['Total de impostos no ano',brl(r.totS*12),brl(r.totP*12),1]];
+  rows.forEach(([k,a,b,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,8.4,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?10.5:9.5);
+    d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+5.7);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+5.7,{align:'right'});d.text(b,c3,y+5.7,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+8.4,X2,y+8.4);y+=8.4});
+  d.setDrawColor(207,216,227);d.rect(M,yT,W-2*M,y-yT,'S');d.line(v1,yT,v1,y);d.line(v2,yT,v2,y);
+  y+=6; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,27,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);
+  d.text(`${r.simplesMelhor?'SIMPLES NACIONAL':'LUCRO PRESUMIDO'} É MAIS ECONÔMICO`,M+7,y+8.5);
+  d.setFontSize(21);d.setTextColor(255,255,255);d.text(`${brl(Math.abs(r.dif))}/mês`,M+7,y+18);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.dif)*12)} por ano de diferença`,M+7,y+23.5);
+  y+=33; d.setFont('helvetica','normal');d.setFontSize(7.8);d.setTextColor(...MUT);
+  const nt=d.splitTextToSize(`Simples: alíquota efetiva = (RBT12 × alíquota − dedução) ÷ RBT12; Fator R = (pró-labore + salários) × 12 ÷ RBT12, Anexo III com 28% ou mais, senão Anexo V (LC 123/2006). Presumido: presunção de 32% para serviços, IRPJ 15% + adicional de 10% sobre a base acima de R$ 20 mil/mês, CSLL 9%, PIS 0,65% e COFINS 3% cumulativos, ISS municipal, CPP de 20% sobre o pró-labore e 26,8% sobre a folha. IRRF pela tabela mensal de 2026 com o redutor da Lei 15.270/2025. FGTS de funcionários não entra por ser igual nos dois regimes. Simulação estimada; não substitui a análise do contador.`,W-2*M);
+  d.text(nt,M,y);y+=nt.length*3.3+4;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,12,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(11.5);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+7.9,{align:'center'});
+  d.link(M,y,W-2*M,12,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,283,X2,283);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,289);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,289,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+['fat','rbt','folha','iss','nome'].forEach(id=>$(id).addEventListener('input',calc));
+$('atv').addEventListener('change',calc);
+$('proS').addEventListener('input',()=>{manS=true;calc()});
+$('proP').addEventListener('input',()=>{manP=true;calc()});
+['fat','rbt','folha','proS','proP'].forEach(id=>$(id).addEventListener('blur',()=>{const n=num($(id).value);$(id).value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Simples x Presumido - ${R.nome||R.atv}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R;
+  const t=`*Simulação Simples Nacional × Lucro Presumido*${r.nome?'\n'+r.nome:''}\n${r.atv} · Faturamento ${brl(r.F)}/mês\nFator R ${pct(r.fr)} · Anexo ${r.anx===3?'III':'V'}\n\n• Simples Nacional: *${brl(r.totS)}*/mês (${pct(r.totS/r.F)})\n• Lucro Presumido: *${brl(r.totP)}*/mês (${pct(r.totP/r.F)})\n\n✅ *${r.simplesMelhor?'Simples Nacional':'Lucro Presumido'}* economiza ${brl(Math.abs(r.dif))}/mês (${brl(Math.abs(r.dif)*12)}/ano)\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>

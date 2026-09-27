@@ -542,6 +542,20 @@ def pjclt_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora Simples Nacional (Fator R) x Lucro Presumido ──
+PRES_DIR = os.path.join(BASE, "presumido")
+
+@app.route("/presumido/")
+def presumido():
+    return send_file(os.path.join(PRES_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/presumido/<nome>.png")
+def presumido_img(nome):
+    f = os.path.join(PRES_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
