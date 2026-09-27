@@ -121,10 +121,9 @@
       <div id="bdg"></div>
 
       <label>Regime tributário</label>
-      <div class="seg" id="reg" style="grid-template-columns:1fr 1fr 1fr">
-        <button data-v="LP" class="on">Presumido</button>
-        <button data-v="SN">Simples</button>
-        <button data-v="HB">Híbrido</button>
+      <div class="seg" id="reg">
+        <button data-v="LP" class="on">Lucro Presumido</button>
+        <button data-v="HB">Simples → Híbrido</button>
       </div>
 
       <label>Faturamento mensal</label>
@@ -282,7 +281,7 @@ function calc(){
   $('nota').innerHTML=`<div class="fund"><div class="ft">Como ler</div>${
     reg==='LP'?'No Lucro Presumido, PIS/COFINS (3,65%) acabam em 2027 e o ISS é substituído aos poucos pelo IBS entre 2029 e 2033. Em troca, a empresa passa a descontar créditos de CBS/IBS das compras.':
     reg==='SN'?'No Simples Nacional o valor do DAS não muda com a reforma: a CBS e o IBS passam a fazer parte do DAS no lugar de PIS, COFINS e ISS. O cliente empresa (hospital, operadora) aproveita só o crédito embutido no DAS.':
-    'No Híbrido (opção a partir de 2027, LC 214/2025, art. 41, §3º) a CBS/IBS é paga fora do DAS, com créditos das compras, e o cliente empresa aproveita o crédito integral.'}
+    'No Híbrido (opção a partir de 2027, LC 214/2025, art. 41, §3º) a CBS/IBS é paga fora do DAS, com créditos das compras, e o cliente empresa aproveita o crédito integral. No Simples sem a opção híbrida o DAS não muda com a reforma (é a coluna de hoje). Esta é a projeção completa até 2033, com a alíquota efetiva do Simples; para a conta rápida de 2027 (DAS 6% + INSS), use a calculadora Simples × Híbrido.'}
     ${a[1]?` Alíquotas com redução de ${a[1]*100}% (LC 214/2025, art. ${a[1]===S?'130':'127'}).`:' Atividade sem redução de alíquota.'}
     Crédito que um cliente empresa aproveita em 2033: <b>${brl(tom)}/mês</b>.</div>`;
 }
