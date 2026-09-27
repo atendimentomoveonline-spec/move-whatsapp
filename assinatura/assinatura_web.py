@@ -528,6 +528,20 @@ def abertura_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora PJ x CLT ──
+PJCLT_DIR = os.path.join(BASE, "pjclt")
+
+@app.route("/pjclt/")
+def pjclt():
+    return send_file(os.path.join(PJCLT_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/pjclt/<nome>.png")
+def pjclt_img(nome):
+    f = os.path.join(PJCLT_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

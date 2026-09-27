@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PJ x CLT — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>PJ <span>×</span> CLT</h1>
+    <p>Compare quanto sobra no bolso trabalhando como CLT ou como PJ com a Move Online.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Nome</label>
+      <input id="nome" placeholder="Nome do cliente">
+
+      <label>Especialidade</label>
+      <select id="atv"></select>
+      <div id="bdg"></div>
+
+      <label>Salário bruto CLT (mensal)</label>
+      <div class="money"><span>R$</span><input id="clt" class="big" inputmode="decimal" placeholder="10.000,00"></div>
+
+      <label>Valor mensal como PJ</label>
+      <div class="money"><span>R$</span><input id="pj" class="big" inputmode="decimal" placeholder="mesmo valor do CLT"></div>
+      <div class="hint">Em branco = mesmo valor do salário CLT.</div>
+
+      <label>Plano Move</label>
+      <select id="plano"></select>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Escolha a especialidade e digite o salário CLT.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>CLT</h3><div id="lA"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt b"><h3>PJ com a Move</h3><div id="lB"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span id="hps"></span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="note" id="nota"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com as tabelas de INSS e IRRF de 2026. PJ no Simples Nacional com DAS nominal de 6%.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const DAS=.06, FATOR_R=.28, INSS_PRO=.11, FGTS=.08;
+const SAL_MIN=1621.00, TETO_INSS=8475.55;
+// INSS CLT 2026 (progressivo): [até, alíquota]
+const INSS_TAB=[[1621.00,.075],[2902.84,.09],[4354.27,.12],[8475.55,.14]];
+// IRRF mensal 2026: [até, alíquota, dedução] · desconto simplificado R$ 607,20
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IR_SIMPL=607.20;
+// [especialidade, usa fator R]
+const ATV=[['Médico',1],['Dentista',1],['Psicólogo',1],['Fisioterapeuta',1],['Fonoaudiólogo',1],['Terapeuta ocupacional',1],['Nutricionista',1],
+ ['Professor de pilates (fisioterapeuta)',1],['Professor de pilates (educador físico)',0],['Personal trainer',0],['Educador físico',0],
+ ['Musicoterapeuta',0],['Acompanhante / atendente terapêutico',0],['Psicopedagogo',0],['Neuropsicopedagogo',0],['Aplicador ABA',0],['Psicanalista',0],
+ ['Psicomotricista',0],['Arteterapeuta',0],['Acupunturista',0],['Massoterapeuta',0],['Terapeuta integrativo / holístico',0],['Instrutor de yoga',0],['Doula',0]
+].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+const PLANOS=[['START',89],['BÁSICO',129],['PRÓ',169],['GROWTH',229],['SCALE',497]];
+
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:1})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null;
+$('atv').innerHTML='<option value="">Selecione…</option>'+ATV.map((a,i)=>`<option value="${i}">${a[0]}</option>`).join('');
+$('plano').innerHTML=PLANOS.map((p,i)=>`<option value="${i}">${p[0]} · ${brl(p[1])}/mês</option>`).join('');
+
+function inssCLT(b){let t=0,ant=0;for(const [lim,a] of INSS_TAB){if(b>ant)t+=(Math.min(b,lim)-ant)*a;ant=lim}return t}
+// IRRF 2026 com a redução da Lei 15.270/2025 (isenção efetiva até R$ 5.000)
+function irrf(bruto,inss){
+  const base=bruto-Math.max(inss,IR_SIMPL); if(base<=0)return 0;
+  const [,a,d]=IR_TAB.find(f=>base<=f[0]); let ir=Math.max(0,base*a-d);
+  if(bruto<=5000)ir=0; else if(bruto<=7350)ir=Math.max(0,ir-Math.max(0,978.62-0.133145*bruto));
+  return ir;
+}
+function cltMes(b){const inss=inssCLT(b), ir=irrf(b,inss);return {inss,ir,liq:b-inss-ir}}
+
+function pjMes(fat,fr,plano){
+  const das=fat*DAS, pro=fr?(fat<=5000?SAL_MIN:Math.max(fat*FATOR_R,SAL_MIN)):0;
+  const inss=Math.min(pro,TETO_INSS)*INSS_PRO, ir=pro?irrf(pro,inss):0;
+  const lucro=Math.max(0,fat-das-pro-plano);
+  const irDiv=lucro>50000?lucro*.10:0; // Lei 15.270/2025: dividendos acima de R$ 50 mil/mês
+  return {das,pro,inss,ir,plano,lucro,irDiv,liq:fat-das-plano-inss-ir-irDiv};
+}
+function pjAno(fat,fr,plano){return pjMes(fat,fr,plano).liq*12}
+// valor PJ que empata com o CLT no ano
+function empate(alvo,fr,plano){let lo=0,hi=alvo*2+10000;for(let i=0;i<60;i++){const m=(lo+hi)/2;pjAno(m,fr,plano)<alvo?lo=m:hi=m}return hi}
+
+function calc(){
+  const i=$('atv').value, a=i===''?null:ATV[i], S=num($('clt').value), F=num($('pj').value)||S;
+  $('bdg').innerHTML=a?(a[1]?'<span class="badge r">Com Fator R · pró-labore de 28%</span>':'<span class="badge n">Sem Fator R · sem INSS no PJ</span>'):'';
+  if(!a||!S){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const pl=PLANOS[+$('plano').value];
+  // CLT: 11 meses normais + mês de férias (salário + 1/3) + 13º + FGTS
+  const m=cltMes(S), fer=cltMes(S*4/3), d13=cltMes(S);
+  const fgts=S*(13+1/3)*FGTS;
+  const cltAno=m.liq*11+fer.liq+d13.liq+fgts;
+  const p=pjMes(F,a[1],pl[1]), pjA=p.liq*12;
+  const dif=pjA-cltAno, var_=cltAno?dif/cltAno:0, emp=empate(cltAno,a[1],pl[1]);
+  R={nome:$('nome').value.trim(),atv:a[0],fr:a[1],S,F,m,fer,d13,fgts,cltAno,p,pjA,dif,var_,emp,pl};
+
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${v}</b></div>`).join('');
+  $('lA').innerHTML=L([['Salário bruto','',brl(S)],['INSS','tabela 2026',brl(-m.inss)],['IRRF','',brl(-m.ir)],
+    ['13º + 1/3 de férias','líquido no ano',brl(d13.liq+fer.liq-m.liq)],['FGTS','8% no ano',brl(fgts)]]);
+  $('lB').innerHTML=L([['Faturamento','',brl(F)],['DAS','6%',brl(-p.das)],['INSS',p.pro?`11% s/ ${brl(p.pro)}`:'não se aplica',brl(-p.inss)],
+    ['IRRF pró-labore','',brl(-p.ir)],[`Contabilidade Move`,pl[0],brl(-p.plano)]].concat(p.irDiv?[['IR dividendos','10% acima de R$ 50 mil',brl(-p.irDiv)]]:[]));
+  $('tA').textContent=brl(m.liq);$('tB').textContent=brl(p.liq);
+  $('pA').textContent=`${brl(cltAno)}/ano com 13º, férias e FGTS`;$('pB').textContent=`${brl(pjA)}/ano`;
+  const up=dif>=0;
+  $('hl').textContent=up?'PJ rende mais por ano':'CLT rende mais por ano';
+  $('hv').textContent=brl(Math.abs(dif));$('hv').className='val '+(up?'down':'up');
+  $('hs').textContent=`${brl(Math.abs(dif)/12)} por mês em média`;
+  $('hp').textContent=(up?'+':'−')+pct(Math.abs(var_));$('hps').textContent=up?'a mais no bolso como PJ':'a menos no bolso como PJ';
+  const mx=Math.max(cltAno,pjA);
+  $('bars').innerHTML=[['CLT (ano)',cltAno,'#94a3b8'],['PJ (ano)',pjA,'var(--green)']].map(([k,v,c])=>
+    `<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${v/mx*100}%;background:${c}"></div></div><b>${brl(v)}</b></div>`).join('');
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Ponto de equilíbrio</div>Para valer a pena, o PJ precisa ser de pelo menos <b>${brl(emp)}/mês</b> para empatar com um CLT de ${brl(S)}.<br>
+    A comparação é anual e justa: no CLT entram 13º salário, 1/3 de férias e FGTS; no PJ não há esses benefícios. INSS e IRRF pelas tabelas de 2026, com a isenção de IR até R$ 5.000 (Lei 15.270/2025).</div>`;
+}
+
+// ── PDF A4 desenhado direto (texto real, não depende do tamanho da tela) ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, p=r.p, up=r.dif>=0, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação PJ x CLT',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('PJ × CLT',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(`${r.nome?r.nome+' · ':''}${r.atv} (${r.fr?'com':'sem'} Fator R) · Plano Move ${r.pl[0]}`,M,57);
+  let y=64; const c2=140, c3=X2-4;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,10,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(255,255,255);
+  d.text('Mensal',M+4,y+6.5);d.text('CLT',c2,y+6.5,{align:'right'});d.text('PJ com a Move',c3,y+6.5,{align:'right'});
+  y+=10;
+  const rows=[
+    ['Salário bruto / faturamento',brl(r.S),brl(r.F)],
+    ['INSS',brl(r.m.inss),p.pro?`${brl(p.inss)}`:'não se aplica'],
+    ['IRRF',brl(r.m.ir),brl(p.ir)],
+    ['DAS (6%)','—',brl(p.das)],
+    [`Contabilidade Move (${r.pl[0]})`,'—',brl(p.plano)]];
+  if(p.irDiv)rows.push(['IR dividendos (10%)','—',brl(p.irDiv)]);
+  rows.push(['Líquido mensal',brl(r.m.liq),brl(p.liq),1],
+    ['13º + 1/3 de férias (líquido, no ano)',brl(r.d13.liq+r.fer.liq-r.m.liq),'—'],
+    ['FGTS (no ano)',brl(r.fgts),'—'],
+    ['Total no ano',brl(r.cltAno),brl(r.pjA),1]);
+  rows.forEach(([k,a,b,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,10,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?11.5:10);
+    d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+6.7);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+6.7,{align:'right'});d.text(b,c3,y+6.7,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+10,X2,y+10);y+=10});
+  y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,30,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(up?'PJ RENDE MAIS POR ANO':'CLT RENDE MAIS POR ANO',M+7,y+9);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(brl(Math.abs(r.dif)),M+7,y+19.5);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.dif)/12)} por mês em média`,M+7,y+25.5);
+  d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...(up?GREEN:[255,138,138]));d.text(`${up?'+':'-'}${pct(Math.abs(r.var_))}`,X2-7,y+18,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text(up?'a mais no bolso como PJ':'a menos no bolso como PJ',X2-7,y+24.5,{align:'right'});
+  y+=38;
+  d.setFont('helvetica','normal');d.setFontSize(9);
+  const txt=d.splitTextToSize(`Ponto de equilíbrio: para valer a pena, o PJ precisa ser de pelo menos ${brl(r.emp)}/mês para empatar com um CLT de ${brl(r.S)}. A comparação é anual: no CLT entram 13º salário, 1/3 de férias e FGTS; no PJ não há esses benefícios. INSS e IRRF pelas tabelas de 2026, com a isenção de IR até R$ 5.000 (Lei 15.270/2025). PJ no Simples Nacional com DAS nominal de 6%.`,W-2*M-12);
+  const hF=10+txt.length*4.3;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('PONTO DE EQUILÍBRIO',M+6,y+6.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(15,30,46);d.text(txt,M+6,y+12);
+  y+=hF+7;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});
+  d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,281,X2,281);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,287);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,287,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+['clt','pj','nome'].forEach(id=>$(id).addEventListener('input',calc));
+['atv','plano'].forEach(id=>$(id).addEventListener('change',calc));
+['clt','pj'].forEach(id=>$(id).addEventListener('blur',()=>{const n=num($(id).value);$(id).value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`PJ x CLT - ${R.nome||R.atv}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R,up=r.dif>=0;
+  const t=`*Simulação PJ × CLT*${r.nome?'\n'+r.nome:''}\n${r.atv}\n\n• CLT ${brl(r.S)}: líquido *${brl(r.m.liq)}*/mês · ${brl(r.cltAno)}/ano (com 13º, férias e FGTS)\n• PJ ${brl(r.F)}: líquido *${brl(r.p.liq)}*/mês · ${brl(r.pjA)}/ano\n\n${up?'✅ PJ rende':'CLT rende'} *${brl(Math.abs(r.dif))}/ano* a mais\nPonto de equilíbrio: PJ de ${brl(r.emp)}/mês\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>
