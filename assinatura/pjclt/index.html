@@ -125,7 +125,7 @@
         <div class="cmp">
           <div class="opt a"><h3>CLT</h3><div id="lA"></div>
             <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
-          <div class="opt b"><h3>PJ com a Move</h3><div id="lB"></div>
+          <div class="opt a"><h3>PJ com a Move</h3><div id="lB"></div>
             <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
         </div>
         <div class="hero">
@@ -261,9 +261,8 @@ function gerarPDF(){
     d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+6.7);
     d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+6.7,{align:'right'});d.text(b,c3,y+6.7,{align:'right'});
     d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+10,X2,y+10);y+=10});
-  // grade: contorno da tabela, linha entre as colunas e destaque na coluna PJ
-  d.setDrawColor(207,216,227);d.setLineWidth(.3);d.rect(M,yT,W-2*M,y-yT,'S');d.line(v1,yT,v1,y);
-  d.setDrawColor(...NAVY);d.setLineWidth(.9);d.rect(v2,yT,X2-v2,y-yT,'S');d.setLineWidth(.3);
+  // grade neutra: contorno da tabela e linhas entre as colunas (sem destacar CLT nem PJ)
+  d.setDrawColor(207,216,227);d.setLineWidth(.3);d.rect(M,yT,W-2*M,y-yT,'S');d.line(v1,yT,v1,y);d.line(v2,yT,v2,y);
   y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,30,4,4,'F');
   d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(up?'PJ RENDE MAIS POR ANO':'CLT RENDE MAIS POR ANO',M+7,y+9);
   d.setFontSize(22);d.setTextColor(255,255,255);d.text(brl(Math.abs(r.dif)),M+7,y+19.5);
