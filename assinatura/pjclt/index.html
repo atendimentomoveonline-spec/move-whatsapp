@@ -254,12 +254,16 @@ function gerarPDF(){
     ['13º + 1/3 de férias (líquido, no ano)',brl(r.d13.liq+r.fer.liq-r.m.liq),'—'],
     ['FGTS (no ano)',brl(r.fgts),'—'],
     ['Total no ano',brl(r.cltAno),brl(r.pjA),1]);
+  const yT=y, v1=100, v2=146;
   rows.forEach(([k,a,b,t])=>{
     if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,10,'F')}
     d.setFont('helvetica',t?'bold':'normal');d.setFontSize(t?11.5:10);
     d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+6.7);
     d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c2,y+6.7,{align:'right'});d.text(b,c3,y+6.7,{align:'right'});
     d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+10,X2,y+10);y+=10});
+  // grade: contorno da tabela, linha entre as colunas e destaque na coluna PJ
+  d.setDrawColor(207,216,227);d.setLineWidth(.3);d.rect(M,yT,W-2*M,y-yT,'S');d.line(v1,yT,v1,y);
+  d.setDrawColor(...NAVY);d.setLineWidth(.9);d.rect(v2,yT,X2-v2,y-yT,'S');d.setLineWidth(.3);
   y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,30,4,4,'F');
   d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(up?'PJ RENDE MAIS POR ANO':'CLT RENDE MAIS POR ANO',M+7,y+9);
   d.setFontSize(22);d.setTextColor(255,255,255);d.text(brl(Math.abs(r.dif)),M+7,y+19.5);
