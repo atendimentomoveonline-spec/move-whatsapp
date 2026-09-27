@@ -556,6 +556,20 @@ def presumido_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora Reforma Tributária (antes x depois, 2026-2033) ──
+REF_DIR = os.path.join(BASE, "reforma")
+
+@app.route("/reforma/")
+def reforma():
+    return send_file(os.path.join(REF_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/reforma/<nome>.png")
+def reforma_img(nome):
+    f = os.path.join(REF_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

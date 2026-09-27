@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reforma Tributária — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+  .yt{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px}
+  .yt th{background:var(--navy);color:#fff;padding:9px 8px;text-align:right;font-size:12px;white-space:nowrap}
+  .yt th:first-child{text-align:left;border-radius:10px 0 0 0}.yt th:last-child{border-radius:0 10px 0 0}
+  .yt td{padding:8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .yt td:first-child{text-align:left;font-weight:800;color:var(--navy)}
+  .yt td small{display:block;color:var(--mut);font-size:10.5px;font-weight:600}
+  .yt tr.hl td{background:#f4f8fb}
+  .yt .up{color:var(--red);font-weight:800}.yt .dn{color:var(--green2);font-weight:800}.yt .eq{color:var(--mut)}
+  .ytw{overflow-x:auto}
+  details.adv{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  details.adv summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--navy)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Reforma Tributária <span>·</span> antes × depois</h1>
+    <p>Veja, ano a ano de 2026 a 2033, como ficam os impostos sobre o faturamento com a CBS e o IBS.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Nome</label>
+      <input id="nome" placeholder="Nome do cliente">
+
+      <label>Especialidade</label>
+      <select id="atv"></select>
+      <div id="bdg"></div>
+
+      <label>Regime tributário</label>
+      <div class="seg" id="reg" style="grid-template-columns:1fr 1fr 1fr">
+        <button data-v="LP" class="on">Presumido</button>
+        <button data-v="SN">Simples</button>
+        <button data-v="HB">Híbrido</button>
+      </div>
+
+      <label>Faturamento mensal</label>
+      <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="30.000,00"></div>
+
+      <div id="snf" style="display:none">
+        <label>Faturamento últimos 12 meses (RBT12)</label>
+        <div class="money"><span>R$</span><input id="rbt" inputmode="decimal"></div>
+        <div class="hint">Em branco = faturamento do mês × 12.</div>
+        <label>Anexo do Simples</label>
+        <select id="anx"><option value="3">Anexo III (com Fator R)</option><option value="5">Anexo V (sem Fator R)</option></select>
+      </div>
+
+      <div id="issf">
+        <label>ISS do município (%)</label>
+        <input id="iss" inputmode="decimal" value="2">
+      </div>
+
+      <label>Compras mensais que geram crédito</label>
+      <div class="money"><span>R$</span><input id="comp" inputmode="decimal" placeholder="0,00"></div>
+      <div class="hint">Aluguel, equipamentos, materiais, serviços de empresas. Só gera crédito no Presumido e no Híbrido.</div>
+
+      <details class="adv">
+        <summary>Alíquotas de referência</summary>
+        <div class="row2">
+          <div><label>CBS %</label><input id="cbs" inputmode="decimal" value="8,8"></div>
+          <div><label>IBS %</label><input id="ibs" inputmode="decimal" value="17,7"></div>
+        </div>
+        <div class="hint">Estimativas oficiais atuais. As alíquotas definitivas serão fixadas por resolução do Senado.</div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Escolha a especialidade e digite o faturamento.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3 id="hA">Hoje (2026)</h3><div id="lA"></div>
+            <div class="tot"><span>POR MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt a"><h3>Reforma completa (2033)</h3><div id="lB"></div>
+            <div class="tot"><span>POR MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span>em 2033 em relação a hoje</span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="ytw"><table class="yt" id="yt"></table></div>
+        <div class="note" id="nota"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com base na EC 132/2023 e na LC 214/2025. IRPJ, CSLL, INSS e IR não mudam com a reforma e não entram na comparação.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const S=.6, P=.3, N=0; // redução CBS/IBS: saúde (LC 214 art. 130) · profissão regulamentada (art. 127) · sem redução
+const ATV=[['Médico',S],['Dentista',S],['Psicólogo',S],['Fisioterapeuta',S],['Fonoaudiólogo',S],['Terapeuta ocupacional',S],['Nutricionista',S],
+ ['Professor de pilates (fisioterapeuta)',S],['Professor de pilates (educador físico)',P],['Personal trainer',P],['Educador físico',P],
+ ['Musicoterapeuta',N],['Acompanhante / atendente terapêutico',N],['Psicopedagogo',N],['Neuropsicopedagogo',N],['Aplicador ABA',N],['Psicanalista',N],
+ ['Psicomotricista',N],['Arteterapeuta',N],['Acupunturista',N],['Massoterapeuta',N],['Terapeuta integrativo / holístico',N],['Instrutor de yoga',N],['Doula',N]
+].sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+// Transição (EC 132/2023, ADCT arts. 125 a 133): pc = PIS/COFINS ativos · iss = fração do ISS · cbs/ibs = como calcular
+const ANOS=[
+ {a:2026,pc:1,iss:1,cbs:0,ibs:0,obs:'teste: CBS 0,9% + IBS 0,1% compensáveis'},
+ {a:2027,pc:0,iss:1,cbs:'r-0.1',ibs:.001,obs:'fim do PIS/COFINS, entra a CBS'},
+ {a:2028,pc:0,iss:1,cbs:'r-0.1',ibs:.001,obs:''},
+ {a:2029,pc:0,iss:.9,cbs:'r',ibs:.1,obs:'ISS 90% · IBS 10%'},
+ {a:2030,pc:0,iss:.8,cbs:'r',ibs:.2,obs:'ISS 80% · IBS 20%'},
+ {a:2031,pc:0,iss:.7,cbs:'r',ibs:.3,obs:'ISS 70% · IBS 30%'},
+ {a:2032,pc:0,iss:.6,cbs:'r',ibs:.4,obs:'ISS 60% · IBS 40%'},
+ {a:2033,pc:0,iss:0,cbs:'r',ibs:1,obs:'ISS extinto, IBS completo'}];
+// Simples: [limite, nominal, dedução, repartição: IRPJ, CSLL, COFINS, PIS, CPP, ISS]
+const ANEXO={
+ 3:[[180000,.06,0,[.04,.035,.1282,.0278,.434,.335]],[360000,.112,9360,[.04,.035,.1405,.0305,.434,.32]],[720000,.135,17640,[.04,.035,.1364,.0296,.434,.325]],
+    [1800000,.16,35640,[.04,.035,.1364,.0296,.434,.325]],[3600000,.21,125640,[.04,.035,.1282,.0278,.434,.335]],[4800000,.33,648000,[.35,.15,.1603,.0347,.305,0]]],
+ 5:[[180000,.155,0,[.25,.15,.141,.0305,.2885,.14]],[360000,.18,4500,[.23,.15,.141,.0305,.2785,.17]],[720000,.195,9900,[.24,.15,.1492,.0323,.2385,.19]],
+    [1800000,.205,17100,[.21,.15,.1574,.0341,.2385,.21]],[3600000,.23,62100,[.23,.125,.141,.0305,.2385,.235]],[4800000,.305,540000,[.35,.155,.1644,.0356,.295,0]]]};
+const NOME_REG={LP:'Lucro Presumido',SN:'Simples Nacional',HB:'Simples Híbrido'};
+
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let reg='LP', R=null;
+$('atv').innerHTML='<option value="">Selecione…</option>'+ATV.map((a,i)=>`<option value="${i}">${a[0]}</option>`).join('');
+
+function das(anexo,rbt){
+  const tab=ANEXO[anexo]; let i=tab.findIndex(f=>rbt<=f[0]); if(i<0)i=5;
+  const [,nom,ded,rep]=tab[i], ef=rbt<=180000?nom:(rbt*nom-ded)/rbt; let r=rep.slice();
+  const iss=ef*r[5]; if(iss>.05){const exc=(iss-.05)/ef, base=1-r[5];r=r.map((p,k)=>k===5?.05/ef:p+exc*p/base)} // ISS efetivo limitado a 5%
+  return {fx:i,ef,pc:r[2]+r[3],iss:r[5]};
+}
+
+// valores de um ano: base (tributos antigos), cbs, ibs, crédito, total
+function ano(y,o){
+  const cbsR=y.cbs==='r'?o.cbsRef:y.cbs==='r-0.1'?o.cbsRef-.001:0, ibsR=y.ibs===.001?.001:y.ibs*o.ibsRef;
+  const red=1-o.red, cbs=o.F*cbsR*red, ibs=o.F*ibsR*red, credMax=o.C*(cbsR+ibsR);
+  if(o.reg==='LP'){
+    const pc=y.pc?o.F*.0365:0, iss=o.F*o.iss*y.iss, cred=Math.min(credMax,cbs+ibs);
+    return {antigos:pc+iss,lab:`${y.pc?'PIS/COFINS + ':''}ISS${y.iss<1&&y.iss>0?' '+y.iss*100+'%':''}`,cbs,ibs,cred,tot:pc+iss+cbs+ibs-cred};
+  }
+  const d=o.d, dasT=o.F*d.ef;
+  if(o.reg==='SN'||y.a===2026){ // Simples puro: CBS/IBS ficam dentro do DAS, o valor do DAS não muda
+    return {antigos:dasT,lab:'DAS',cbs:0,ibs:0,cred:0,tot:dasT,embut:dasT*(d.pc+d.iss)};
+  }
+  // Híbrido: sai do DAS a parte de PIS/COFINS e a parte do ISS já substituída pelo IBS; CBS/IBS por fora com crédito
+  const dasH=dasT*(1-d.pc-d.iss*(1-y.iss)), cred=Math.min(credMax,cbs+ibs);
+  return {antigos:dasH,lab:'DAS sem PIS/COFINS'+(y.iss<1?' e ISS':''),cbs,ibs,cred,tot:dasH+cbs+ibs-cred};
+}
+
+function calc(){
+  const i=$('atv').value, a=i===''?null:ATV[i], F=num($('fat').value);
+  $('snf').style.display=reg==='LP'?'none':'';$('issf').style.display=reg==='LP'?'':'none';
+  $('bdg').innerHTML=a?`<span class="badge ${a[1]?'r':'n'}">CBS/IBS ${a[1]?'com redução de '+a[1]*100+'%':'sem redução'}</span>`:'';
+  if(!a||!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const RBT=num($('rbt').value)||F*12;
+  const o={reg,F,C:num($('comp').value),iss:num($('iss').value)/100,red:a[1],cbsRef:num($('cbs').value)/100,ibsRef:num($('ibs').value)/100,d:das(+$('anx').value,RBT)};
+  const L=ANOS.map(y=>({y,...ano(y,o)})), h=L[0], f=L[7], y27=L[1];
+  const dif=f.tot-h.tot, var_=h.tot?dif/h.tot:0, d27=y27.tot-h.tot;
+  R={nome:$('nome').value.trim(),atv:a[0],red:a[1],reg,F,o,L,dif,var_,d27};
+
+  const ln=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  if(reg==='LP'){
+    $('lA').innerHTML=ln([['PIS/COFINS','3,65%',h.antigos-o.F*o.iss],['ISS',pct(o.iss),o.F*o.iss]]);
+    $('lB').innerHTML=ln([['CBS',pct(o.cbsRef*(1-o.red)),f.cbs],['IBS',pct(o.ibsRef*(1-o.red)),f.ibs],['(−) Créditos das compras','',-f.cred]]);
+  }else if(reg==='SN'){
+    $('lA').innerHTML=ln([['DAS',`efetiva ${pct(o.d.ef)}`,h.tot],['PIS/COFINS/ISS dentro do DAS','',h.embut]]);
+    $('lB').innerHTML=ln([['DAS',`efetiva ${pct(o.d.ef)}`,f.tot],['CBS/IBS dentro do DAS','',f.embut]]);
+  }else{
+    $('lA').innerHTML=ln([['DAS (Simples, sem opção híbrida)',`efetiva ${pct(o.d.ef)}`,h.tot]]);
+    $('lB').innerHTML=ln([['DAS sem PIS/COFINS e ISS','',f.antigos],['CBS',pct(o.cbsRef*(1-o.red)),f.cbs],['IBS',pct(o.ibsRef*(1-o.red)),f.ibs],['(−) Créditos das compras','',-f.cred]]);
+  }
+  $('hA').textContent=`Hoje (2026) · ${reg==='HB'?'Simples Nacional':NOME_REG[reg]}`;
+  $('tA').textContent=brl(h.tot);$('tB').textContent=brl(f.tot);
+  $('pA').textContent=`${pct(h.tot/F)} do faturamento`;$('pB').textContent=`${pct(f.tot/F)} do faturamento`;
+  const up=dif>0.5, eq=Math.abs(dif)<=0.5;
+  $('hl').textContent=eq?'Sem mudança no valor pago':up?'Aumento com a reforma completa (2033)':'Redução com a reforma completa (2033)';
+  $('hv').textContent=eq?brl(0):`${up?'+ ':'− '}${brl(Math.abs(dif))}/mês`;$('hv').className='val '+(up?'up':'down');
+  $('hs').textContent=eq?'O DAS continua igual; muda só a divisão interna dos tributos.':`${brl(Math.abs(dif)*12)} por ano · em 2027: ${d27>=0?'+':'−'} ${brl(Math.abs(d27))}/mês`;
+  $('hp').textContent=eq?'0%':`${up?'+':'−'}${pct(Math.abs(var_))}`;
+  const mx=Math.max(...L.map(x=>x.tot))||1;
+  $('bars').innerHTML=L.map(x=>`<div class="bar"><span>${x.y.a}</span><div class="trk"><div class="fil" style="width:${x.tot/mx*100}%;background:${x.y.a===2026?'#94a3b8':'var(--navy)'}"></div></div><b>${brl(x.tot)}</b></div>`).join('');
+  $('yt').innerHTML=`<tr><th>Ano</th><th>Tributos atuais</th><th>CBS</th><th>IBS</th><th>Créditos</th><th>Total/mês</th><th>x hoje</th></tr>`+
+    L.map(x=>{const v=x.tot-h.tot;return `<tr class="${x.y.a===2033?'hl':''}"><td>${x.y.a}${x.y.obs?`<small>${x.y.obs}</small>`:''}</td><td>${brl(x.antigos)}<small>${x.lab}</small></td>
+      <td>${x.cbs?brl(x.cbs):'—'}</td><td>${x.ibs?brl(x.ibs):'—'}</td><td>${x.cred?'− '+brl(x.cred):'—'}</td><td><b>${brl(x.tot)}</b></td>
+      <td class="${Math.abs(v)<.5?'eq':v>0?'up':'dn'}">${Math.abs(v)<.5?'—':(v>0?'+':'−')+' '+brl(Math.abs(v))}</td></tr>`}).join('');
+  const tom=reg==='SN'?f.embut:f.cbs+f.ibs;
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Como ler</div>${
+    reg==='LP'?'No Lucro Presumido, PIS/COFINS (3,65%) acabam em 2027 e o ISS é substituído aos poucos pelo IBS entre 2029 e 2033. Em troca, a empresa passa a descontar créditos de CBS/IBS das compras.':
+    reg==='SN'?'No Simples Nacional o valor do DAS não muda com a reforma: a CBS e o IBS passam a fazer parte do DAS no lugar de PIS, COFINS e ISS. O cliente empresa (hospital, operadora) aproveita só o crédito embutido no DAS.':
+    'No Híbrido (opção a partir de 2027, LC 214/2025, art. 41, §3º) a CBS/IBS é paga fora do DAS, com créditos das compras, e o cliente empresa aproveita o crédito integral.'}
+    ${a[1]?` Alíquotas com redução de ${a[1]*100}% (LC 214/2025, art. ${a[1]===S?'130':'127'}).`:' Atividade sem redução de alíquota.'}
+    Crédito que um cliente empresa aproveita em 2033: <b>${brl(tom)}/mês</b>.</div>`;
+}
+
+// ── PDF A4 desenhado direto ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, X2=W-M, h=r.L[0], f=r.L[7], up=r.dif>0.5, eq=Math.abs(r.dif)<=0.5;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação da Reforma Tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Reforma Tributária · antes × depois',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · ${NOME_REG[r.reg]} · Faturamento ${brl(r.F)}/mês · CBS ${pct(r.o.cbsRef)} e IBS ${pct(r.o.ibsRef)} de referência${r.red?`, redução de ${r.red*100}%`:''}`,W-2*M),M,56);
+  // tabela ano a ano
+  let y=66; const cols=[[M+3,'Ano','left'],[76,'Tributos atuais'],[101,'CBS'],[124,'IBS'],[149,'Créditos'],[172,'Total/mês'],[X2-3,'x hoje']];
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,9,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.8);d.setTextColor(255,255,255);
+  cols.forEach(([x,t,al])=>d.text(t,x,y+6,{align:al||'right'}));
+  y+=9; const yT=y;
+  r.L.forEach(x=>{const v=x.tot-h.tot;
+    if(x.y.a===2033){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,8.6,'F')}
+    d.setFont('helvetica','bold');d.setFontSize(9.2);d.setTextColor(...NAVY);d.text(String(x.y.a),M+3,y+5.8);
+    d.setFont('helvetica','normal');d.setTextColor(15,30,46);
+    [[76,brl(x.antigos)],[101,x.cbs?brl(x.cbs):'—'],[124,x.ibs?brl(x.ibs):'—'],[149,x.cred?'- '+brl(x.cred):'—']].forEach(([cx,t])=>d.text(t,cx,y+5.8,{align:'right'}));
+    d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(brl(x.tot),172,y+5.8,{align:'right'});
+    d.setTextColor(...(Math.abs(v)<.5?MUT:v>0?[220,38,38]:[31,168,119]));d.text(Math.abs(v)<.5?'—':`${v>0?'+':'-'} ${brl(Math.abs(v))}`,X2-3,y+5.8,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+8.6,X2,y+8.6);y+=8.6});
+  d.setDrawColor(207,216,227);d.rect(M,yT,W-2*M,y-yT,'S');
+  // destaque
+  y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,30,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);
+  d.text(eq?'SEM MUDANÇA NO VALOR PAGO':up?'AUMENTO COM A REFORMA COMPLETA (2033)':'REDUÇÃO COM A REFORMA COMPLETA (2033)',M+7,y+9);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(eq?brl(0):`${up?'+':'-'} ${brl(Math.abs(r.dif))}/mês`,M+7,y+19.5);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);
+  d.text(eq?'O DAS continua igual; muda só a divisão interna dos tributos.':`${brl(Math.abs(r.dif)*12)} por ano · hoje ${brl(h.tot)}/mês → 2033 ${brl(f.tot)}/mês`,M+7,y+25.5);
+  if(!eq){d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...(up?[255,138,138]:GREEN));d.text(`${up?'+':'-'}${pct(Math.abs(r.var_))}`,X2-7,y+19,{align:'right'})}
+  y+=38;
+  const txt=$('nota').innerText.replace(/^Como ler\s*/,'').replace(/\s+/g,' ').replace(/−/g,'-');
+  d.setFont('helvetica','normal');d.setFontSize(9);
+  const lines=d.splitTextToSize(txt,W-2*M-12), hF=10+lines.length*4.3;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('COMO LER',M+6,y+6.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(15,30,46);d.text(lines,M+6,y+12);
+  y+=hF+5; d.setFontSize(7.8);d.setTextColor(...MUT);
+  const nt=d.splitTextToSize('Transição: 2026 teste (CBS 0,9% + IBS 0,1% compensáveis); 2027-2028 CBS de referência - 0,1 p.p. e IBS 0,1%; 2029 a 2032 ISS 90/80/70/60% e IBS 10/20/30/40%; 2033 IBS integral (EC 132/2023, ADCT). IRPJ, CSLL, INSS e IR não mudam e não entram na comparação. Alíquotas de referência estimadas; as definitivas serão fixadas pelo Senado.',W-2*M);
+  d.text(nt,M,y);y+=nt.length*3.3+4;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,12,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(11.5);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+7.9,{align:'center'});
+  d.link(M,y,W-2*M,12,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,283,X2,283);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,289);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,289,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+['fat','rbt','iss','comp','cbs','ibs','nome'].forEach(id=>$(id).addEventListener('input',calc));
+['atv','anx'].forEach(id=>$(id).addEventListener('change',calc));
+['fat','rbt','comp'].forEach(id=>$(id).addEventListener('blur',()=>{const n=num($(id).value);$(id).value=n?fmt(n):''}));
+document.querySelectorAll('#reg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#reg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');reg=b.dataset.v;calc()});
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Reforma Tributaria - ${R.nome||R.atv}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R,h=r.L[0],f=r.L[7],y27=r.L[1];
+  const t=`*Simulação da Reforma Tributária*${r.nome?'\n'+r.nome:''}\n${r.atv} · ${NOME_REG[r.reg]} · Faturamento ${brl(r.F)}/mês\n\n• Hoje (2026): *${brl(h.tot)}*/mês\n• 2027: *${brl(y27.tot)}*/mês\n• 2033 (reforma completa): *${brl(f.tot)}*/mês\n\nDiferença em 2033: *${r.dif>=0?'+':'−'} ${brl(Math.abs(r.dif))}/mês* (${brl(Math.abs(r.dif)*12)}/ano)\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>
