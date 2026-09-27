@@ -93,7 +93,7 @@
   .bt th:first-child{background:var(--navy);color:#fff;text-align:left;border-radius:12px 0 0 0}
   .bt th.mk{background:var(--green);color:var(--navy)}
   .bt{border-collapse:separate;border-spacing:0}
-  .bt th.mv{background:#fff;border:2.5px solid var(--navy);border-bottom:none;border-radius:12px 12px 0 0}
+  .bt th.mv{background:#fff;border:2.5px solid var(--navy);border-bottom:1.5px solid var(--navy);border-radius:12px 12px 0 0}
   .bt th.mv img{height:34px;display:block;margin:0 auto}
   .bt td{padding:11px 10px;border-bottom:1px solid var(--line)}
   .bt td.mk,.bt th.mk{border-left:1px solid #cfd8e3}
@@ -251,7 +251,7 @@ function gerarPDF(){
     d.setDrawColor(...LINE);d.line(M,y+7.6,X2,y+7.6);
     d.setDrawColor(207,216,227);d.setLineWidth(.3);d.line(k2-12,y,k2-12,y+7.6);
     y+=7.6});
-  d.setDrawColor(...NAVY);d.setLineWidth(.9);d.roundedRect(k3-10,yT,X2-k3+10,y-yT,2.5,2.5,'S');d.setLineWidth(.3);
+  d.setDrawColor(...NAVY);d.setLineWidth(.9);d.roundedRect(k3-10,yT,X2-k3+10,y-yT,2.5,2.5,'S');d.setLineWidth(.5);d.line(k3-10,yT+9,X2,yT+9);d.setLineWidth(.3);
   y+=5; d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);
   const nt=d.splitTextToSize('Abertura grátis nos planos PRÓ (R$ 169/mês), GROWTH (R$ 229/mês) e SCALE (R$ 497/mês). Taxas públicas do processo (Junta Comercial ou cartório, registro no conselho de classe e alvará/licenças) são cobradas pelos órgãos e têm o mesmo valor em qualquer contador. Valores de mercado estimados.',W-2*M);
   d.text(nt,M,y);y+=nt.length*3.6+4;
