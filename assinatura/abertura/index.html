@@ -92,16 +92,17 @@
   .bt th{padding:12px 10px;font-size:13px;text-align:center}
   .bt th:first-child{background:var(--navy);color:#fff;text-align:left;border-radius:12px 0 0 0}
   .bt th.mk{background:var(--green);color:var(--navy)}
-  .bt th.mv{background:#fff;border:1.5px solid var(--navy);border-bottom:none;border-radius:0 12px 0 0}
+  .bt{border-collapse:separate;border-spacing:0}
+  .bt th.mv{background:#fff;border:2.5px solid var(--navy);border-bottom:none;border-radius:12px 12px 0 0}
   .bt th.mv img{height:34px;display:block;margin:0 auto}
   .bt td{padding:11px 10px;border-bottom:1px solid var(--line)}
   .bt td.mk,.bt th.mk{border-left:1px solid #cfd8e3}
   .bt td.mk{white-space:nowrap}
-  .bt td.mv{border-left:2px solid var(--navy);border-right:1px solid #cfd8e3}
-  .bt tr:last-child td.mv{border-bottom:1px solid #cfd8e3}
+  .bt td.mv{border-left:2.5px solid var(--navy);border-right:2.5px solid var(--navy)}
+  .bt tr:last-child td.mv{border-bottom:2.5px solid var(--navy);border-radius:0 0 12px 12px}
   .bt td:first-child{font-weight:600;color:var(--navy)}
-  .bt td.mk{background:#e8faf3;color:var(--mut);text-align:center;font-size:13px}
-  .bt td.mv{background:#eef3f9;text-align:center;font-weight:800;color:var(--navy);font-size:13px}
+  .bt td.mk{background:#fff;color:var(--mut);text-align:center;font-size:13px}
+  .bt td.mv{background:#fff;text-align:center;font-weight:800;color:var(--navy);font-size:13px}
   .bt td.mv small{display:block;font-weight:600;color:var(--mut);font-size:11px}
   .btw{overflow-x:auto}
 </style>
@@ -239,18 +240,18 @@ function gerarPDF(){
   // tabela de benefícios
   y+=34; const k2=118, k3=164;
   d.setFillColor(...NAVY);d.rect(M,y,k2-M-12,9,'F');d.setFillColor(...GREEN);d.rect(k2-12,y,k3-k2-10+12,9,'F');
-  d.setFillColor(238,243,249);d.rect(k3-10,y,X2-k3+10,9,'F');
+  const yT=y;
   d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(255,255,255);d.text('Benefício',M+4,y+6);
   d.setTextColor(...NAVY);d.text('Mercado',(k2+k3-22)/2,y+6,{align:'center'});d.text('Move Online',(k3-10+X2)/2,y+6,{align:'center'});
   y+=9;
   BEN.forEach(([b,m,v,s])=>{
-    d.setFillColor(232,250,243);d.rect(k2-12,y,k3-k2-10+12,7.6,'F');d.setFillColor(238,243,249);d.rect(k3-10,y,X2-k3+10,7.6,'F');
     d.setFont('helvetica','bold');d.setFontSize(8.8);d.setTextColor(...NAVY);d.text(b,M+4,y+5);
     d.setFont('helvetica','normal');d.setTextColor(...MUT);d.text(m,(k2+k3-22)/2,y+5,{align:'center'});
     d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(v,(k3-10+X2)/2,y+5,{align:'center'});
     d.setDrawColor(...LINE);d.line(M,y+7.6,X2,y+7.6);
     d.setDrawColor(207,216,227);d.setLineWidth(.3);d.line(k2-12,y,k2-12,y+7.6);
-    d.setDrawColor(...NAVY);d.setLineWidth(.6);d.line(k3-10,y,k3-10,y+7.6);d.setLineWidth(.3);y+=7.6});
+    y+=7.6});
+  d.setDrawColor(...NAVY);d.setLineWidth(.9);d.roundedRect(k3-10,yT,X2-k3+10,y-yT,2.5,2.5,'S');d.setLineWidth(.3);
   y+=5; d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);
   const nt=d.splitTextToSize('Abertura grátis nos planos PRÓ (R$ 169/mês), GROWTH (R$ 229/mês) e SCALE (R$ 497/mês). Taxas públicas do processo (Junta Comercial ou cartório, registro no conselho de classe e alvará/licenças) são cobradas pelos órgãos e têm o mesmo valor em qualquer contador. Valores de mercado estimados.',W-2*M);
   d.text(nt,M,y);y+=nt.length*3.6+4;
