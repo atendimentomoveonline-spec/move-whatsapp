@@ -124,8 +124,15 @@
       <label>Regime tributário</label>
       <div class="seg" id="reg" style="grid-template-columns:1fr 1fr 1fr">
         <button data-v="LP" class="on">Lucro Presumido</button>
-        <button data-v="HB">Simples → Híbrido</button>
-        <button data-v="CMP">Simples × Híbrido</button>
+        <button data-v="SN">Simples</button>
+        <button data-v="CMP">Presumido × Simples</button>
+      </div>
+      <div id="cmpf" style="display:none">
+        <label>Comparar o Lucro Presumido com</label>
+        <div class="seg" id="cmpv">
+          <button data-v="SN" class="on">Simples Nacional</button>
+          <button data-v="HB">Simples Híbrido</button>
+        </div>
       </div>
 
       <label>Faturamento mensal</label>
@@ -208,7 +215,7 @@ const ANEXO={
     [1800000,.16,35640,[.04,.035,.1364,.0296,.434,.325]],[3600000,.21,125640,[.04,.035,.1282,.0278,.434,.335]],[4800000,.33,648000,[.35,.15,.1603,.0347,.305,0]]],
  5:[[180000,.155,0,[.25,.15,.141,.0305,.2885,.14]],[360000,.18,4500,[.23,.15,.141,.0305,.2785,.17]],[720000,.195,9900,[.24,.15,.1492,.0323,.2385,.19]],
     [1800000,.205,17100,[.21,.15,.1574,.0341,.2385,.21]],[3600000,.23,62100,[.23,.125,.141,.0305,.2385,.235]],[4800000,.305,540000,[.35,.155,.1644,.0356,.295,0]]]};
-const NOME_REG={LP:'Lucro Presumido',SN:'Simples Nacional',HB:'Simples Híbrido',CMP:'Simples Nacional × Simples Híbrido'};
+const NOME_REG={LP:'Lucro Presumido',SN:'Simples Nacional',HB:'Simples Híbrido',CMP:'Lucro Presumido × Simples'};
 
 const $=id=>document.getElementById(id);
 const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
@@ -244,7 +251,7 @@ function ano(y,o){
 
 function calc(){
   const i=$('atv').value, a=i===''?null:ATV[i], F=num($('fat').value);
-  $('snf').style.display=reg==='LP'?'none':'';$('issf').style.display=reg==='LP'?'':'none';
+  $('snf').style.display=reg==='LP'?'none':'';$('issf').style.display=reg==='SN'?'none':'';$('cmpf').style.display=reg==='CMP'?'':'none';
   $('bdg').innerHTML=a?`<span class="badge ${a[1]?'r':'n'}">CBS/IBS ${a[1]?'com redução de '+a[1]*100+'%':'sem redução'}</span>`:'';
   if(!a||!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
   $('empty').style.display='none';$('res').style.display='';
@@ -352,58 +359,67 @@ function gerarPDF(){
   return d;
 }
 
-// ── Comparativo: Simples Nacional × Simples Híbrido, ano a ano com a reforma ──
+// ── Comparativo: Lucro Presumido (carga completa) × Simples Nacional ou Simples Híbrido ──
+let cmpv='SN';
+const SAL_MIN_CMP=1621.00;
 function calcCmp(a,F,o){
-  const LS=ANOS.map(y=>({y,...ano(y,{...o,reg:'SN'})})), LH=ANOS.map(y=>({y,...ano(y,{...o,reg:'HB'})}));
-  const fS=LS[7], fH=LH[7], d33=fH.tot-fS.tot, d27=LH[1].tot-LS[1].tot;
-  const melhor=v=>Math.abs(v)<=.5?'Empate':v>0?'Simples Nacional':'Simples Híbrido';
-  R={cmp:true,nome:$('nome').value.trim(),atv:a[0],red:a[1],reg,F,o,LS,LH,d33,d27,melhor};
+  const oS={...o,reg:cmpv}, nS=cmpv==='SN'?'Simples Nacional':'Simples Híbrido';
+  // Presumido com carga completa: IRPJ (15% + adicional 10% > R$ 20 mil/mês) e CSLL 9% sobre a presunção de 32%
+  // (+10% na presunção acima de R$ 5 mi/ano, LC 224/2025) e INSS patronal de 20% sobre 1 salário mínimo de pró-labore
+  const bP=F*.32+Math.max(0,F-5000000/12)*.032, irpj=bP*.15, adic=Math.max(0,bP-20000)*.10, csll=bP*.09, cpp=SAL_MIN_CMP*.20, fixo=irpj+adic+csll+cpp;
+  const LP=ANOS.map(y=>{const x=ano(y,{...o,reg:'LP'});return {y,...x,fixo,tot:x.tot+fixo}});
+  const LS=ANOS.map(y=>({y,...ano(y,oS)}));
+  const fP=LP[7], fS=LS[7], d33=fS.tot-fP.tot, d27=LS[1].tot-LP[1].tot;
+  const melhor=v=>Math.abs(v)<=.5?'Empate':v>0?'Lucro Presumido':nS;
+  R={cmp:true,nome:$('nome').value.trim(),atv:a[0],red:a[1],reg,F,o,LP,LS,d33,d27,melhor,nS,irpj,adic,csll,cpp};
   const ln=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
-  $('hA').textContent='2033 · Simples Nacional';
-  $('lB').previousElementSibling.textContent='2033 · Simples Híbrido';
-  $('lA').innerHTML=ln([['DAS',`efetiva ${pct(o.d.ef)}`,fS.tot],['CBS/IBS dentro do DAS','',fS.embut]]);
-  $('lB').innerHTML=ln([['DAS sem PIS/COFINS e ISS','',fH.antigos],['CBS',pct(o.cbsRef*(1-o.red)),fH.cbs],['IBS',pct(o.ibsRef*(1-o.red)),fH.ibs],['(−) Créditos das compras','',-fH.cred]]);
-  $('tA').textContent=brl(fS.tot);$('tB').textContent=brl(fH.tot);
-  $('pA').textContent=`${pct(fS.tot/F)} do faturamento`;$('pB').textContent=`${pct(fH.tot/F)} do faturamento`;
+  $('hA').textContent='2033 · Lucro Presumido';
+  $('lB').previousElementSibling.textContent=`2033 · ${nS}`;
+  $('lA').innerHTML=ln([['IRPJ','15% s/ 32%',irpj]].concat(adic?[['Adicional IRPJ','10%',adic]]:[]).concat([['CSLL','9% s/ 32%',csll],
+    ['CBS',pct(o.cbsRef*(1-o.red)),fP.cbs],['IBS',pct(o.ibsRef*(1-o.red)),fP.ibs],['(−) Créditos das compras','',-fP.cred],['INSS patronal','20% s/ 1 sal. mínimo',cpp]]));
+  $('lB').innerHTML=cmpv==='SN'?ln([['DAS',`efetiva ${pct(o.d.ef)}`,fS.tot],['CBS/IBS dentro do DAS','',fS.embut]]):
+    ln([['DAS sem PIS/COFINS e ISS','',fS.antigos],['CBS',pct(o.cbsRef*(1-o.red)),fS.cbs],['IBS',pct(o.ibsRef*(1-o.red)),fS.ibs],['(−) Créditos das compras','',-fS.cred]]);
+  $('tA').textContent=brl(fP.tot);$('tB').textContent=brl(fS.tot);
+  $('pA').textContent=`${pct(fP.tot/F)} do faturamento`;$('pB').textContent=`${pct(fS.tot/F)} do faturamento`;
   const m=melhor(d33), m27=melhor(d27);
   $('hl').textContent=m==='Empate'?'Empate em 2033':`${m} é mais vantajoso em 2033`;
   $('hv').textContent=m==='Empate'?brl(0):`${brl(Math.abs(d33))}/mês`;$('hv').className='val down';
   $('hs').textContent=`${brl(Math.abs(d33)*12)} por ano de diferença · em 2027: ${m27==='Empate'?'empate':m27+' por '+brl(Math.abs(d27))+'/mês'}`;
-  $('hp').textContent=`${pct(fS.tot/F)} × ${pct(fH.tot/F)}`;
-  $('hps').textContent='do faturamento em 2033: Simples × Híbrido';
-  const bars=[['2027 Simples',LS[1].tot,'#94a3b8'],['2027 Híbrido',LH[1].tot,'var(--navy)'],['2033 Simples',fS.tot,'#94a3b8'],['2033 Híbrido',fH.tot,'var(--navy)']];
+  $('hp').textContent=`${pct(fP.tot/F)} × ${pct(fS.tot/F)}`;
+  $('hps').textContent=`do faturamento em 2033: Presumido × ${cmpv==='SN'?'Simples':'Híbrido'}`;
+  const bars=[['2027 Presumido',LP[1].tot,'#94a3b8'],[`2027 ${cmpv==='SN'?'Simples':'Híbrido'}`,LS[1].tot,'var(--navy)'],['2033 Presumido',fP.tot,'#94a3b8'],[`2033 ${cmpv==='SN'?'Simples':'Híbrido'}`,fS.tot,'var(--navy)']];
   const mx=Math.max(...bars.map(b=>b[1]))||1;
   $('bars').innerHTML=bars.map(([k,v,c])=>`<div class="bar"><span>${k}</span><div class="trk"><div class="fil" style="width:${v/mx*100}%;background:${c}"></div></div><b>${brl(v)}</b></div>`).join('');
-  $('yt').innerHTML=`<tr><th>Ano</th><th>Simples Nacional</th><th>Simples Híbrido</th><th>Diferença</th><th>Mais vantajoso</th></tr>`+
-    LS.map((x,i)=>{const hb=LH[i], v=hb.tot-x.tot, ini=x.y.a===2026;return `<tr class="${x.y.a===2033?'hl':''}"><td>${x.y.a}${x.y.obs?`<small>${x.y.obs}</small>`:''}</td>
-      <td><b>${brl(x.tot)}</b></td><td>${ini?'—<small>opção a partir de 2027</small>':`<b>${brl(hb.tot)}</b>`}</td>
-      <td class="${ini||Math.abs(v)<.5?'eq':'up'}">${ini||Math.abs(v)<.5?'—':brl(Math.abs(v))}</td>
-      <td class="${ini?'eq':'dn'}">${ini?'—':melhor(v)}</td></tr>`}).join('');
-  $('nota').innerHTML=`<div class="fund"><div class="ft">Como ler</div>Compara, ano a ano, o cliente que fica no Simples Nacional (o DAS não muda com a reforma) com o que opta pelo Simples Híbrido (CBS/IBS pagos fora do DAS, com créditos das compras; LC 214/2025, art. 41, §3º).
-    O Híbrido costuma compensar quando os clientes são empresas no regime normal (hospitais, clínicas) que aproveitam o crédito: em 2033 o cliente empresa aproveita <b>${brl(fS.embut)}/mês</b> no Simples e <b>${brl(fH.cbs+fH.ibs)}/mês</b> no Híbrido. Planos de saúde e pacientes pessoa física não aproveitam crédito.
-    ${a[1]?` Alíquotas com redução de ${a[1]*100}% (LC 214/2025, art. ${a[1]===S?'130':'127'}).`:' Atividade sem redução de alíquota.'}</div>`;
+  $('yt').innerHTML=`<tr><th>Ano</th><th>Lucro Presumido</th><th>${nS}</th><th>Diferença</th><th>Mais vantajoso</th></tr>`+
+    LP.map((x,i)=>{const s=LS[i], v=s.tot-x.tot, ini=cmpv==='HB'&&x.y.a===2026;return `<tr class="${x.y.a===2033?'hl':''}"><td>${x.y.a}${x.y.obs?`<small>${x.y.obs}</small>`:''}</td>
+      <td><b>${brl(x.tot)}</b></td><td><b>${brl(s.tot)}</b>${ini?'<small>Simples; Híbrido a partir de 2027</small>':''}</td>
+      <td class="${Math.abs(v)<.5?'eq':'up'}">${Math.abs(v)<.5?'—':brl(Math.abs(v))}</td>
+      <td class="dn">${melhor(v)}</td></tr>`}).join('');
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Como ler</div>Neste comparativo o Lucro Presumido entra com a carga completa, para ficar justo com o DAS (que já inclui IR, CSLL e INSS patronal): tributos sobre o faturamento (PIS/COFINS/ISS até a transição, depois CBS/IBS com créditos) + IRPJ ${brl(irpj+adic)} + CSLL ${brl(csll)} + INSS patronal de 20% sobre 1 salário mínimo de pró-labore (${brl(cpp)}) por mês.
+    INSS e IR do sócio não entram. Atenção: no Simples Anexo III o pró-labore precisa ser 28% do faturamento (Fator R), o que aumenta INSS e IR do sócio; para esse detalhe use a calculadora Simples × Lucro Presumido.
+    ${a[1]?` CBS/IBS com redução de ${a[1]*100}% (LC 214/2025, art. ${a[1]===S?'130':'127'}).`:' Atividade sem redução de CBS/IBS.'}</div>`;
 }
 function gerarPDFcmp(){
-  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M, fS=r.LS[7], fH=r.LH[7], m=r.melhor(r.d33);
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M, fP=r.LP[7], fS=r.LS[7], m=r.melhor(r.d33);
   if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
   d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
   d.text('Simulação da Reforma Tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
   d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
-  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Simples Nacional × Simples Híbrido',M,50);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text(`Lucro Presumido × ${r.nS}`,M,50);
   d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...MUT);
-  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · Faturamento ${brl(r.F)}/mês · Simples efetivo ${pct(r.o.d.ef)} · CBS ${pct(r.o.cbsRef)} e IBS ${pct(r.o.ibsRef)} de referência${r.red?`, redução de ${r.red*100}%`:''}`,W-2*M),M,56);
-  const P={s:92,h:128,df:158};
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · Faturamento ${brl(r.F)}/mês · ISS ${pct(r.o.iss)} · Simples efetivo ${pct(r.o.d.ef)} · CBS ${pct(r.o.cbsRef)} e IBS ${pct(r.o.ibsRef)} de referência${r.red?`, redução de ${r.red*100}%`:''}`,W-2*M),M,56);
+  const P={p:92,s:128,df:158};
   let y=66; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,9,2,2,'F');
   d.setFont('helvetica','bold');d.setFontSize(8.8);d.setTextColor(255,255,255);
-  [[M+3,'Ano','left'],[P.s,'Simples Nacional'],[P.h,'Simples Híbrido'],[P.df,'Diferença'],[X2-3,'Mais vantajoso']].forEach(([x,t,al])=>d.text(t,x,y+6,{align:al||'right'}));
+  [[M+3,'Ano','left'],[P.p,'Lucro Presumido'],[P.s,r.nS],[P.df,'Diferença'],[X2-3,'Mais vantajoso']].forEach(([x,t,al])=>d.text(t,x,y+6,{align:al||'right'}));
   y+=9; const yT=y;
-  r.LS.forEach((x,i)=>{const hb=r.LH[i], v=hb.tot-x.tot, ini=x.y.a===2026;
+  r.LP.forEach((x,i)=>{const s=r.LS[i], v=s.tot-x.tot;
     if(x.y.a===2033){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,8.6,'F')}
     d.setFont('helvetica','bold');d.setFontSize(8.6);d.setTextColor(...NAVY);d.text(String(x.y.a),M+3,y+5.8);
     d.setFont('helvetica','normal');d.setTextColor(15,30,46);
-    d.text(brl(x.tot),P.s,y+5.8,{align:'right'});d.text(ini?'a partir de 2027':brl(hb.tot),P.h,y+5.8,{align:'right'});
-    d.text(ini||Math.abs(v)<.5?'—':brl(Math.abs(v)),P.df,y+5.8,{align:'right'});
-    d.setFont('helvetica','bold');d.setTextColor(...(ini?MUT:[31,168,119]));d.text(ini?'—':r.melhor(v),X2-3,y+5.8,{align:'right'});
+    d.text(brl(x.tot),P.p,y+5.8,{align:'right'});d.text(brl(s.tot),P.s,y+5.8,{align:'right'});
+    d.text(Math.abs(v)<.5?'—':brl(Math.abs(v)),P.df,y+5.8,{align:'right'});
+    d.setFont('helvetica','bold');d.setTextColor(31,168,119);d.text(r.melhor(v),X2-3,y+5.8,{align:'right'});
     d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+8.6,X2,y+8.6);y+=8.6});
   d.setDrawColor(207,216,227);d.rect(M,yT,W-2*M,y-yT,'S');
   y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,30,4,4,'F');
@@ -411,8 +427,8 @@ function gerarPDFcmp(){
   d.text(m==='Empate'?'EMPATE EM 2033':`${m.toUpperCase()} É MAIS VANTAJOSO EM 2033`,M+7,y+9);
   d.setFontSize(22);d.setTextColor(255,255,255);d.text(m==='Empate'?brl(0):`${brl(Math.abs(r.d33))}/mês`,M+7,y+19.5);
   d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.d33)*12)} por ano de diferença`,M+7,y+25.5);
-  d.setFont('helvetica','bold');d.setFontSize(15);d.setTextColor(...GREEN);d.text(`${pct(fS.tot/r.F)} x ${pct(fH.tot/r.F)}`,X2-7,y+17,{align:'right'});
-  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('do faturamento em 2033 (Simples x Híbrido)',X2-7,y+23.5,{align:'right'});
+  d.setFont('helvetica','bold');d.setFontSize(15);d.setTextColor(...GREEN);d.text(`${pct(fP.tot/r.F)} x ${pct(fS.tot/r.F)}`,X2-7,y+17,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text(`do faturamento em 2033 (Presumido x ${r.nS.replace('Simples ','')})`,X2-7,y+23.5,{align:'right'});
   y+=38;
   const txt=$('nota').innerText.replace(/^Como ler\s*/,'').replace(/\s+/g,' ').replace(/−/g,'-');
   d.setFont('helvetica','normal');d.setFontSize(9);
@@ -432,13 +448,14 @@ function gerarPDFcmp(){
   d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,289,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
   return d;
 }
-function zapCmp(){const r=R,fS=r.LS[7],fH=r.LH[7],m=r.melhor(r.d33);
-  const t=`*Reforma Tributária: Simples Nacional × Simples Híbrido*${r.nome?'\n'+r.nome:''}\n${r.atv} · Faturamento ${brl(r.F)}/mês\n\n• 2027: Simples *${brl(r.LS[1].tot)}* · Híbrido *${brl(r.LH[1].tot)}*\n• 2033: Simples *${brl(fS.tot)}* · Híbrido *${brl(fH.tot)}*\n\n✅ ${m==='Empate'?'Empate em 2033':`*${m}* é mais vantajoso em 2033: ${brl(Math.abs(r.d33))}/mês (${brl(Math.abs(r.d33)*12)}/ano)`}\n\n_Move Online Contabilidade Médica_`;
+function zapCmp(){const r=R,fP=r.LP[7],fS=r.LS[7],m=r.melhor(r.d33);
+  const t=`*Reforma Tributária: Lucro Presumido × ${r.nS}*${r.nome?'\n'+r.nome:''}\n${r.atv} · Faturamento ${brl(r.F)}/mês\n\n• 2027: Presumido *${brl(r.LP[1].tot)}* · ${r.nS} *${brl(r.LS[1].tot)}*\n• 2033: Presumido *${brl(fP.tot)}* · ${r.nS} *${brl(fS.tot)}*\n\n✅ ${m==='Empate'?'Empate em 2033':`*${m}* é mais vantajoso em 2033: ${brl(Math.abs(r.d33))}/mês (${brl(Math.abs(r.d33)*12)}/ano)`}\n\n_Move Online Contabilidade Médica_`;
   window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')}
 
 ['fat','rbt','iss','comp','cbs','ibs','nome'].forEach(id=>$(id).addEventListener('input',calc));
 ['atv','anx'].forEach(id=>$(id).addEventListener('change',calc));
 ['fat','rbt','comp'].forEach(id=>$(id).addEventListener('blur',()=>{const n=num($(id).value);$(id).value=n?fmt(n):''}));
+document.querySelectorAll('#cmpv button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#cmpv button').forEach(x=>x.classList.remove('on'));b.classList.add('on');cmpv=b.dataset.v;calc()});
 document.querySelectorAll('#reg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#reg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');reg=b.dataset.v;calc()});
 $('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Reforma Tributaria - ${R.nome||R.atv}.pdf`)};
 $('bzap').onclick=()=>{if(!R)return;if(R.cmp)return zapCmp();const r=R,h=r.L[0],f=r.L[7],y27=r.L[1];
