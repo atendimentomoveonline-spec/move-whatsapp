@@ -111,6 +111,13 @@
   .src{font-size:10.5px;font-weight:700;color:var(--green2);background:#e8faf3;border-radius:6px;padding:2px 6px;white-space:nowrap}
   .ct tr.pj td{background:#fffaf2}.ct tr.no td{color:#94a3b8}.ct tr.tt td{font-weight:800;color:var(--navy);background:#f4f8fb;border-bottom:0}
   .ctw{overflow-x:auto}
+  .blk.pagar{border-color:var(--navy)}
+  .blk.pagar>summary{background:var(--navy)}
+  .blk.pagar>summary b{color:#fff;font-size:15px}
+  .blk.pagar>summary small{color:#c8d7e4}
+  .blk.pagar>summary .t{color:var(--green);font-size:22px}
+  .blk.pagar>summary .ar{background:rgba(255,255,255,.15);color:#fff}
+  .ct td.fo{white-space:nowrap}.ct td.fo .q{display:inline-grid;vertical-align:middle;margin-left:4px}
   .chk{display:flex;gap:9px;align-items:center;font-size:13px;margin-top:10px;cursor:pointer}
   .chk input{width:17px;height:17px;accent-color:var(--green)}
   .bar{grid-template-columns:150px 1fr 110px}
@@ -215,13 +222,13 @@ function render(){
     ${R.cred.map(d=>{const id='n'+Math.random().toString(36).slice(2,8);const off=!d.taxa;
       return `<tr class="${d.id==='pj'?'pj':off?'no':''}"><td>${d.id==='pj'?'<b>'+d.k+'</b>':d.k}${d.obs||off?`<small>${d.id==='pj'?(st.pj==='HB'?'médicos no Híbrido: crédito integral':'médicos no Simples: crédito ≈ zero'):off?'opção desligada':d.obs}</small>`:''}</td>
       <td>${mil(d.v)}</td><td>${off?'—':pct(d.taxa,d.taxa<0.1?2:1)}</td><td>${mil(d.credito)}</td>
-      <td><span class="src">${d.selo}</span> <button class="q" data-n="${id}">?</button></td></tr>
+      <td class="fo"><span class="src">${d.selo}</span><button class="q" data-n="${id}">?</button></td></tr>
       <tr><td colspan="5" style="padding:0;border:0"><div class="nt" id="${id}">${doc}, ${d.fonte}.${d.nota?' '+d.nota:''}</div></td></tr>`}).join('')}
     <tr class="no"><td>${E.sem_credito.map(s=>s.k).join(' · ')}<small>não geram crédito de CBS/IBS</small></td><td>${mil(E.sem_credito.reduce((s,x)=>s+x.v,0))}</td><td>—</td><td>0</td><td><span class="src">${E.sem_credito_selo}</span></td></tr>
     <tr class="tt"><td>Total de créditos</td><td></td><td></td><td>${mil(R.credT)}</td><td></td></tr></table>
   </div></div></details>
 
-  <details class="blk"><summary><span class="ar">›</span><span><b>= 2033 a pagar</b><small>débito − créditos</small></span><span class="t">${mi(R.novo)}</span></summary><div class="in">
+  <details class="blk pagar"><summary><span class="ar">›</span><span><b>= 2033 a pagar</b><small>débito − créditos · médicos PJ no ${st.pj==='HB'?'Híbrido':'Simples'}</small></span><span class="t">${mi(R.novo)}</span></summary><div class="in">
     ${it('Débito CBS/IBS','',mil(R.deb))}${it('(−) Créditos','',mil(-R.credT))}${it('= A pagar em 2033','',mil(R.novo),'Se os créditos superarem o débito, o saldo fica como crédito a compensar ou ressarcir.','sum')}
   </div></details>
 
