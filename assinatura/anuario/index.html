@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anuário Move da Reforma Tributária 2026</title>
+<link rel="icon" href="logo_move.png">
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+  .grid{grid-template-columns:1fr!important}.grid>.card{min-width:0}
+  .emp{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+  .emp h2{margin:0;font-size:22px;color:var(--navy)}
+  .emp .sub{font-size:13px;color:var(--mut);margin-top:4px;line-height:1.5}
+  .tagset{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;color:#fff}
+  .aviso{margin-top:12px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:8px;padding:9px 12px;font-size:12.5px;color:var(--mut);line-height:1.5}
+  .ctrl{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+  @media(min-width:760px){.ctrl{grid-template-columns:1.3fr 1fr 1fr 1fr}}
+  .ctrl label{margin:0 0 6px}
+  .sw{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:8px;cursor:pointer}
+  .sw input{width:18px;height:18px;accent-color:var(--green)}
+  .blk{border:1.5px solid var(--line);border-radius:14px;margin-top:14px;overflow:hidden}
+  .blk>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:14px 16px;background:#fff}
+  .blk>summary::-webkit-details-marker{display:none}
+  .blk>summary .ar{width:26px;height:26px;border-radius:50%;background:#eef3f9;color:var(--navy);display:grid;place-items:center;font-weight:900;transition:.2s}
+  .blk[open]>summary .ar{transform:rotate(90deg)}
+  .blk>summary b{font-size:15px;color:var(--navy)}
+  .blk>summary small{display:block;color:var(--mut);font-size:12px;font-weight:600}
+  .blk>summary .tot{font-size:20px;font-weight:800;color:var(--navy);text-align:right;white-space:nowrap}
+  .blk .in{border-top:1px solid var(--line);padding:4px 16px 12px}
+  .ln2{display:grid;grid-template-columns:1fr auto 26px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .ln2:last-child{border-bottom:none}
+  .ln2 .k{color:var(--ink)}.ln2 .k small{display:block;color:var(--mut);font-size:12px}
+  .ln2 .v{font-weight:700;text-align:right;white-space:nowrap}
+  .ln2.sum{font-weight:800}.ln2.sum .k{color:var(--navy);font-weight:800}
+  .q{width:22px;height:22px;border-radius:50%;border:1.5px solid #cfd8e3;background:#fff;color:var(--mut);font-weight:800;font-size:12px;cursor:pointer;display:grid;place-items:center;font-family:inherit}
+  .q.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .nota{grid-column:1/-1;background:#f4f8fb;border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--mut);line-height:1.5;display:none}
+  .nota.show{display:block}
+  .cmpt{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
+  .cmpt th{background:var(--navy);color:#fff;padding:9px 10px;text-align:right;font-size:12.5px}.cmpt th:first-child{text-align:left}
+  .cmpt td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.cmpt td:first-child{text-align:left}
+  .cmpt tr.t td{font-weight:800;color:var(--navy);background:#f4f8fb}
+  .cmpt .dn{color:var(--green2);font-weight:800}.cmpt .up{color:var(--red);font-weight:800}
+  .cmpw{overflow-x:auto}
+  .fontes{margin-top:18px;font-size:12.5px;color:var(--mut);line-height:1.6}
+  .fontes h4{margin:0 0 6px;font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .fontes ol{margin:0;padding-left:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Anuário Move <span>da Reforma Tributária</span> 2026</h1>
+    <p>Ficha da empresa · protótipo para validação</p>
+  </div>
+  <div class="grid"><div class="card" id="ficha"></div></div>
+  <div class="foot">Estudo independente da Move Online, sem relação com as empresas citadas. Estimativas com base em dados públicos.<br>Move Online Contabilidade Médica</div>
+</div>
+<script>
+const EMP={
+ "id": "mater-dei",
+ "nome": "Hospital Mater Dei",
+ "empresa_oficial": "Hospital Mater Dei S.A.",
+ "cnpj": "16.676.520/0001-59",
+ "setor": "Saúde",
+ "setor_desc": "Hospitais · PIS/COFINS cumulativo hoje",
+ "cor": "#2BCA92",
+ "doc_curto": "Hospital Mater Dei S.A., Demonstrações Financeiras 31/12/2025 (consolidado, R$ mil)",
+ "fontes": {"receita": "Nota Explicativa 22 – Receita de serviços hospitalares, p. 69", "custos": "Nota Explicativa 23 – Custos e despesas por natureza, p. 69–70", "arrend": "Demonstração dos Fluxos de Caixa, p. 15, e Nota Explicativa 25 – Resultado financeiro, p. 71", "capex": "Demonstração dos Fluxos de Caixa, p. 15"},
+ "receita_bruta": 2442297, "glosas": 106183, "cancelamentos": 10243,
+ "tributos": [
+  {"k": "ISS", "v": 61528, "sobre": "base", "info": "efetivo (média das prefeituras)"},
+  {"k": "PIS", "v": 15864, "sobre": "bruta", "info": "da receita bruta (cumulativo)"},
+  {"k": "COFINS", "v": 73194, "sobre": "bruta", "info": "da receita bruta (cumulativo)"}
+ ],
+ "credito_atual": 0,
+ "credito_atual_info": "hospital no regime cumulativo: sem crédito",
+ "credito_atual_nota": "Receitas de serviços hospitalares ficam no PIS/COFINS cumulativo (Lei 10.833/2003, art. 10, XIII). Confirmado no balanço: PIS = 0,65% e COFINS = 3,00% da receita bruta.",
+ "reducao_venda": 0.6,
+ "reducao_nota": "Serviços de saúde humana: redução de 60% nas alíquotas de CBS/IBS (LC 214/2025, art. 130 e Anexo III).",
+ "despesas": [
+  {"id": "mat", "k": "Materiais e medicamentos", "v": 579991, "regra": "saude", "fonte": "Nota Explicativa 23, p. 69", "nota": "Medicamentos e dispositivos médicos com redução de 60% (LC 214/2025, arts. 131 a 133)."},
+  {"id": "man", "k": "Manutenção e conservação", "v": 92464, "regra": "cheia", "fonte": "Nota Explicativa 23, p. 69"},
+  {"id": "ter", "k": "Serviços de terceiros (administrativo)", "v": 62820, "regra": "cheia", "fonte": "Nota Explicativa 23, p. 70"},
+  {"id": "out", "k": "Outros custos e outras despesas", "v": 89204, "regra": "cheia", "fonte": "Nota Explicativa 23, p. 69–70", "nota": "Outros custos 69.741 + outras despesas administrativas 19.463."},
+  {"id": "ali", "k": "Alimentação e refeição", "v": 29095, "regra": "saude", "fonte": "Nota Explicativa 23, p. 69", "obs": "alimentos com redução"},
+  {"id": "pro", "k": "Propaganda e publicidade", "v": 3858, "regra": "cheia", "fonte": "Nota Explicativa 23, p. 70"},
+  {"id": "aluguel", "k": "Aluguéis pagos", "v": 101090, "regra": "aluguel", "fonte": "Demonstração dos Fluxos de Caixa, p. 15, e Nota 25, p. 71", "obs": "locação de imóvel (redução de 70%)", "nota": "Pagamento de arrendamentos 24.822 + juros de arrendamento 76.268. Considera o locador contribuinte de CBS/IBS."},
+  {"id": "capex", "k": "Investimentos em imobilizado e intangível", "v": 60920, "regra": "cheia", "fonte": "Demonstração dos Fluxos de Caixa, p. 15", "nota": "Aquisição de imobilizado 47.569 + intangíveis 13.351. Na reforma o crédito é na compra do bem."},
+  {"id": "pj", "k": "Serviços médicos (médicos PJ)", "v": 231631, "regra": "pj", "fonte": "Nota Explicativa 23, p. 69", "obs": "depende do regime do médico", "nota": "Médico PJ no Simples: crédito quase zero (só a parcela de CBS/IBS do DAS; aqui considerado zero). No Simples Híbrido ou regime regular: crédito integral de 10,6%."}
+ ],
+ "sem_credito": [{"k": "Pessoal", "v": 600628}, {"k": "Depreciação e amortização", "v": 111105}],
+ "rodape": [
+  "Hospital Mater Dei S.A. — Demonstrações Financeiras de 31/12/2025, consolidado, com parecer dos auditores independentes. Documento CVM nº 155569 (rad.cvm.gov.br) e ri.materdei.com.br.",
+  "Receita, glosas, cancelamentos, ISS, PIS e COFINS: Nota Explicativa 22, p. 69. Receita líquida de R$ 2.175.285 mil confere com a DRE registrada na CVM.",
+  "Custos e despesas por natureza: Nota Explicativa 23, p. 69–70. Aluguéis: Demonstração dos Fluxos de Caixa, p. 15, e Nota 25, p. 71. Investimentos: Demonstração dos Fluxos de Caixa, p. 15.",
+  "Regras do regime atual: Lei 10.833/2003 (PIS/COFINS cumulativo para serviços hospitalares) e LC 116/2003 (ISS).",
+  "Regras de 2033: EC 132/2023 e LC 214/2025 — alíquota de referência estimada de 26,5% (CBS 8,8% + IBS 17,7%); saúde com redução de 60% (art. 130); locação de imóveis com redução de 70%."
+ ],
+ "aviso": "Estimativa elaborada pela Move Online com base em demonstrações financeiras públicas e na legislação vigente. Não representa informação da empresa citada nem previsão de resultado. As alíquotas definitivas serão fixadas pelo Senado Federal."
+}
+;
+const $=id=>document.getElementById(id);
+const mil=v=>{const r=Math.round(v);return (r===0?0:r).toLocaleString('pt-BR')};
+const mi=v=>'R$ '+(v/1000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' mi';
+const pct=(v,d=2)=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+let st={pj:'SN',aliq:26.5,aluguel:true,capex:false};
+
+function fonteTxt(f){return f?`${EMP.doc_curto}, ${f}.`:''}
+function linha(k,sub,v,nota,cls=''){
+  const id='n'+Math.random().toString(36).slice(2,8);
+  return `<div class="ln2 ${cls}"><span class="k">${k}${sub?`<small>${sub}</small>`:''}</span><span class="v">${v}</span>${nota?`<button class="q" data-n="${id}" title="Fonte">?</button><div class="nota" id="${id}">${nota}</div>`:'<span></span>'}</div>`;
+}
+function calc(){
+  const E=EMP, a=st.aliq/100, red=E.reducao_venda, aliqV=a*(1-red);
+  const base=E.receita_bruta-E.glosas-E.cancelamentos;
+  const atual=E.tributos.reduce((s,t)=>s+t.v,0)-E.credito_atual;
+  const deb=base*aliqV;
+  const cred=E.despesas.map(d=>{let r=d.regra==='cheia'?a:d.regra==='saude'?aliqV:d.regra==='aluguel'?a*0.3:0;
+      if(d.id==='aluguel'&&!st.aluguel)r=0; if(d.id==='capex'&&!st.capex)r=0; if(d.id==='pj')r=st.pj==='HB'?aliqV:0;
+      return {...d,taxa:r,credito:d.v*r}});
+  const credT=cred.reduce((s,d)=>s+d.credito,0);
+  const novo=Math.max(0,deb-credT);
+  return {base,atual,deb,cred,credT,novo,aliqV,dif:novo-atual};
+}
+function render(){
+  const E=EMP, R=calc();
+  const up=R.dif>0;
+  $('ficha').innerHTML=`
+  <div class="emp"><div><h2>${E.nome}</h2><div class="sub">${E.empresa_oficial} · CNPJ ${E.cnpj} · ${E.setor_desc}</div></div>
+    <span class="tagset" style="background:${E.cor}">${E.setor}</span></div>
+  <div class="hero" style="margin-top:14px">
+    <div><div class="lbl">${up?'Aumento':'Redução'} estimada com a reforma completa (2033)</div>
+      <div class="val ${up?'up':'down'}">${up?'+':'−'} ${mi(Math.abs(R.dif))}/ano</div>
+      <div class="sub">Hoje ${mi(R.atual)} → 2033 ${mi(R.novo)} · médicos PJ no ${st.pj==='HB'?'Híbrido':'Simples'}</div></div>
+    <div class="pill"><b style="font-size:26px">${pct(R.atual/R.base)} → ${pct(R.novo/R.base)}</b><span>carga sobre a receita (base)</span></div></div>
+  <div class="ctrl">
+    <div><label>Médicos PJ (${mi(E.despesas.find(d=>d.id==='pj').v)} em 2025)</label>
+      <div class="seg" id="pj"><button data-v="SN" class="${st.pj==='SN'?'on':''}">no Simples</button><button data-v="HB" class="${st.pj==='HB'?'on':''}">no Híbrido</button></div></div>
+    <div><label>Alíquota de referência (%)</label><input id="aliq" inputmode="decimal" value="${String(st.aliq).replace('.',',')}"></div>
+    <div><label class="sw"><input type="checkbox" id="alu" ${st.aluguel?'checked':''}> Crédito de aluguel</label><label class="sw"><input type="checkbox" id="cap" ${st.capex?'checked':''}> Crédito de investimentos</label></div>
+    <div class="aviso" style="margin:0">Estimativa. Os valores de 2025 são reais (balanço); 2033 aplica as regras da LC 214/2025.</div>
+  </div>
+
+  <details class="blk"><summary><span class="ar">›</span><span><b>A · Regime atual (2025)</b><small>dado real do balanço</small></span><span class="tot">${mi(R.atual)}</span></summary><div class="in">
+    ${linha('Receita bruta','',mil(E.receita_bruta),fonteTxt(E.fontes.receita))}
+    ${linha('(−) Glosas','valores não pagos pelos planos',mil(-E.glosas),fonteTxt(E.fontes.receita))}
+    ${linha('(−) Cancelamentos e outras deduções','',mil(-E.cancelamentos),fonteTxt(E.fontes.receita))}
+    ${linha('= Base de comparação','',mil(R.base),'Receita bruta − glosas − cancelamentos. É a base usada nos dois regimes.','sum')}
+    ${E.tributos.map(t=>linha(t.k,`${pct(t.v/(t.sobre==='bruta'?E.receita_bruta:R.base))} ${t.info}`,mil(t.v),fonteTxt(E.fontes.receita))).join('')}
+    ${linha('(−) Crédito do regime atual',E.credito_atual_info,mil(-E.credito_atual),E.credito_atual_nota)}
+    ${linha('= Tributos atuais líquidos','',mil(R.atual),'Soma dos tributos sobre a receita menos o crédito do regime atual.','sum')}
+  </div></details>
+
+  <details class="blk"><summary><span class="ar">›</span><span><b>B · Regime novo (2033)</b><small>estimativa pelas regras da reforma</small></span><span class="tot">${mi(R.novo)}</span></summary><div class="in">
+    ${linha('Débito CBS/IBS',`${mil(R.base)} × ${pct(R.aliqV,1)} (${String(st.aliq).replace('.',',')}% com redução de ${E.reducao_venda*100}%)`,mil(R.deb),E.reducao_nota)}
+    ${R.cred.map(d=>linha('(−) Crédito: '+d.k,`${mil(d.v)} × ${d.taxa?pct(d.taxa,2):'sem crédito'}${d.obs?' · '+d.obs:''}`,mil(-d.credito),fonteTxt(d.fonte)+(d.nota?' '+d.nota:''))).join('')}
+    ${linha('= CBS/IBS a pagar','',mil(R.novo),'Débito menos créditos. Se os créditos superarem o débito, o saldo fica como crédito a compensar ou ressarcir.','sum')}
+    ${linha('Não geram crédito',E.sem_credito.map(s=>`${s.k} ${mil(s.v)}`).join(' · '),'—',fonteTxt(E.fontes.custos)+' Folha de pagamento, provisões e depreciação não geram crédito de CBS/IBS.')}
+  </div></details>
+
+  <details class="blk" open><summary><span class="ar">›</span><span><b>C · Comparativo</b><small>atual × 2033 nos dois cenários de médicos PJ</small></span><span class="tot">${up?'+':'−'} ${mi(Math.abs(R.dif))}</span></summary><div class="in"><div class="cmpw">
+    ${(()=>{const s0=st.pj;st.pj='SN';const a=calc();st.pj='HB';const b=calc();st.pj=s0;
+      const c=v=>`<td class="${v>0?'up':'dn'}">${v>0?'+':'−'} ${mil(Math.abs(v))} (${v>0?'+':'−'}${pct(Math.abs(v/a.atual),0)})</td>`;
+      return `<table class="cmpt"><tr><th>R$ mil</th><th>Atual (2025)</th><th>2033 · PJ no Simples</th><th>2033 · PJ no Híbrido</th></tr>
+      <tr><td>Débito</td><td>${mil(a.atual+E.credito_atual)}</td><td>${mil(a.deb)}</td><td>${mil(b.deb)}</td></tr>
+      <tr><td>(−) Crédito</td><td>${mil(-E.credito_atual)}</td><td>${mil(-a.credT)}</td><td>${mil(-b.credT)}</td></tr>
+      <tr class="t"><td>= A pagar</td><td>${mil(a.atual)}</td><td>${mil(a.novo)}</td><td>${mil(b.novo)}</td></tr>
+      <tr><td>Variação</td><td>—</td>${c(a.novo-a.atual)}${c(b.novo-b.atual)}</tr>
+      <tr><td>Carga sobre a base</td><td>${pct(a.atual/a.base)}</td><td>${pct(a.novo/a.base)}</td><td>${pct(b.novo/b.base)}</td></tr></table>`})()}
+  </div></div></details>
+
+  <div class="fontes"><h4>Fontes e notas</h4><ol>${E.rodape.map(r=>`<li>${r}</li>`).join('')}</ol></div>
+  <div class="aviso">${E.aviso}</div>`;
+  document.querySelectorAll('.q').forEach(b=>b.onclick=e=>{e.preventDefault();const n=$(b.dataset.n);n.classList.toggle('show');b.classList.toggle('on')});
+  document.querySelectorAll('#pj button').forEach(b=>b.onclick=()=>{st.pj=b.dataset.v;keep()});
+  $('aliq').onchange=()=>{const v=parseFloat($('aliq').value.replace(',','.'));if(v>0&&v<60)st.aliq=v;keep()};
+  $('alu').onchange=()=>{st.aluguel=$('alu').checked;keep()};$('cap').onchange=()=>{st.capex=$('cap').checked;keep()};
+}
+function keep(){const abertos=[...document.querySelectorAll('.blk')].map(d=>d.open);render();document.querySelectorAll('.blk').forEach((d,i)=>d.open=abertos[i])}
+render();
+</script>
+</body>
+</html>

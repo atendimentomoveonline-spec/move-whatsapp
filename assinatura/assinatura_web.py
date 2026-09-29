@@ -598,6 +598,20 @@ def cnae_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Anuário Move da Reforma Tributária (protótipo) ──
+ANUARIO_DIR = os.path.join(BASE, "anuario")
+
+@app.route("/anuario/")
+def anuario():
+    return send_file(os.path.join(ANUARIO_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/anuario/<nome>.png")
+def anuario_img(nome):
+    f = os.path.join(ANUARIO_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
