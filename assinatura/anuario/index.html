@@ -164,8 +164,10 @@ const pct=(v,d=2)=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:d,maxim
 let st={i:0,pj:'HB',aliq:26.5,alu:true,cap:false,nd:false}, R=null;
 const NAOPUB={'Educação':'as notas explicativas não informam a receita isenta pelo ProUni'};
 const ATIVIDADES=['Saúde','Varejo','Alimentação e bebidas','Moda','Telecom','Energia e saneamento','Educação','Transporte e mobilidade','Indústria','Imóveis','Tecnologia','Planos de saúde'];
+ATIVIDADES.sort((x,y)=>x.localeCompare(y,'pt-BR'));
 $('ativ').innerHTML=ATIVIDADES.map(a=>{const n=EMPRESAS.filter(e=>e.setor===a).length;return `<option ${n?'':'disabled'}>${a}${n?` (${n})`:(NAOPUB[a]?' — não publicado: '+NAOPUB[a]:' — em breve')}</option>`}).join('');
-function listaEmp(){const a=$('ativ').value.replace(/ \(\d+\)$/,'');const idx=EMPRESAS.map((e,i)=>[e,i]).filter(([e])=>e.setor===a);
+$('ativ').selectedIndex=[...$('ativ').options].findIndex(o=>!o.disabled);
+function listaEmp(){const a=$('ativ').value.replace(/ \(\d+\)$/,'');const idx=EMPRESAS.map((e,i)=>[e,i]).filter(([e])=>e.setor===a).sort(([x],[y])=>x.nome.localeCompare(y.nome,'pt-BR'));
   $('emp').innerHTML=idx.map(([e,i])=>`<option value="${i}">${e.nome}</option>`).join('');st.i=idx.length?idx[0][1]:0}
 listaEmp();
 
