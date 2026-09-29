@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pesquisa de CNAE — Move Online</title>
 <link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
   *{box-sizing:border-box}
@@ -208,18 +209,64 @@ function mostra(b){
   if(!b)return; sel=b;
   document.querySelectorAll('#list .it').forEach(el=>el.classList.toggle('sel',el.dataset.c===b.c));
   const R=linhas(b);
-  const sim=b.ax==='FR'||b.ax==='III'?'presumido':'';
   $('det').innerHTML=`<div class="det"><div class="hd"><code>${b.c}</code><div>${cap(b.d)}</div><small>${cap(b.sd)} · ${cap(b.dv)}</small></div>
     <div class="rows">${R.map(([k,v,s])=>`<div class="rw"><span>${k}</span><div><b>${v}</b>${s?`<small>${s}</small>`:''}</div></div>`).join('')}</div>
     ${b.cf&&b.st!=='impeditivo'?'<div class="warn">⚠️ Enquadramento a confirmar: nesta atividade o Anexo depende de como a operação é feita (ex.: venda de produção própria, revenda ou serviço). Confirme com o contador.</div>':''}
-    <div class="acts">${sim&&b.st!=='impeditivo'?`<button class="btn" id="bsim">Simular impostos</button>`:''}<button class="btn o" id="bcop">Copiar resumo</button><button class="btn o" id="bzap">Enviar no WhatsApp da Move</button></div></div>`;
-  if($('bsim'))$('bsim').onclick=()=>window.open('/'+sim+'/','_blank');
+    <div class="acts"><button class="btn" id="bpdf">Baixar PDF</button><button class="btn o" id="bcop">Copiar resumo</button><button class="btn o" id="bzap">Enviar no WhatsApp da Move</button></div></div>`;
+  $('bpdf').onclick=()=>gerarPDF(b).save(`CNAE ${b.c.replace('/','-')} - Simples Nacional.pdf`);
   $('bcop').onclick=()=>navigator.clipboard.writeText(texto(b)).then(()=>toast('Resumo copiado'));
   $('bzap').onclick=()=>window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(texto(b))}`,'_blank');
   $('det').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function texto(b){
   return `*CNAE ${b.c}*\n${cap(b.d)}\n\n`+linhas(b).map(([k,v,s])=>`• ${k} ${v.replace(/^[✅❌⚠️]\s*/u,'')}`).join('\n')+`\n\n_Move Online Contabilidade Médica_`;
+}
+
+// ── PDF A4 do CNAE ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+const limpa=t=>t.replace(/[✅❌⚠️]\s*/gu,'').replace(/→/g,'->').replace(/−/g,'-');
+function gerarPDF(b){
+  const {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Pesquisa de CNAE · Simples Nacional',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  let y=44; d.setFillColor(...NAVY);
+  const ds=d.splitTextToSize(cap(b.d),W-2*M-12);
+  const hH=20+ds.length*5.2; d.roundedRect(M,y,W-2*M,hH,3,3,'F');
+  d.setFont('helvetica','bold');d.setFontSize(20);d.setTextColor(255,255,255);d.text(b.c,M+6,y+10);
+  d.setFont('helvetica','normal');d.setFontSize(11);d.text(ds,M+6,y+17);
+  d.setFontSize(8.5);d.setTextColor(200,215,228);d.text(`${cap(b.sd)} · ${cap(b.dv)}`.slice(0,120),M+6,y+hH-3.5);
+  y+=hH+4;
+  const L1=52, C2=M+L1, WV=X2-C2-2;
+  linhas(b).forEach(([k,v,sm])=>{
+    d.setFont('helvetica','bold');d.setFontSize(10);const vl=d.splitTextToSize(limpa(v),WV);
+    d.setFont('helvetica','normal');d.setFontSize(8.5);const sl=sm?d.splitTextToSize(limpa(sm),WV):[];
+    const h=Math.max(10,5+vl.length*4.6+sl.length*3.8+3);
+    d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(...MUT);d.text(k,M+2,y+6);
+    d.setFontSize(10);d.setTextColor(...NAVY);d.text(vl,C2,y+6);
+    if(sl.length){d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);d.text(sl,C2,y+6+vl.length*4.6)}
+    y+=h; d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y-1.5,X2,y-1.5);
+  });
+  if(b.cf&&b.st!=='impeditivo'){
+    y+=3;d.setFont('helvetica','normal');d.setFontSize(8.8);
+    const w=d.splitTextToSize('Enquadramento a confirmar: nesta atividade o Anexo depende de como a operação é feita (ex.: venda de produção própria, revenda ou serviço). Confirme com o contador.',W-2*M-10);
+    const hw=6+w.length*4.2; d.setFillColor(255,251,235);d.setDrawColor(253,230,138);d.roundedRect(M,y,W-2*M,hw,2,2,'FD');
+    d.setTextColor(146,64,14);d.text(w,M+5,y+5.5); y+=hw+3;
+  }
+  y+=4; d.setFont('helvetica','normal');d.setFontSize(7.6);d.setTextColor(...MUT);
+  const nt=d.splitTextToSize('Fontes: IBGE (CNAE 2.3), LC 123/2006 (art. 17 e 18), Resolução CGSN 140/2018 (Anexos VI, VII e XI) e LC 214/2025. Classificação de Anexo pela descrição do CNAE; a atividade efetivamente exercida pode mudar o enquadramento. A redução de CBS/IBS é estimativa: a lei usa o código NBS do serviço.',W-2*M);
+  d.text(nt,M,y); y+=nt.length*3.2+5;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,12,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(11.5);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+7.9,{align:'center'});
+  d.link(M,y,W-2*M,12,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,283,X2,283);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,289);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,289,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
 }
 function toast(m){$('toast').textContent=m;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1800)}
 $('q').addEventListener('input',busca);
