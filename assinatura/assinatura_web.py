@@ -570,6 +570,20 @@ def reforma_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Simulador de Imposto de Renda (mensal: salário CLT ou pró-labore) ──
+IR_DIR = os.path.join(BASE, "ir")
+
+@app.route("/ir/")
+def ir_simulador():
+    return send_file(os.path.join(IR_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/ir/<nome>.png")
+def ir_img(nome):
+    f = os.path.join(IR_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

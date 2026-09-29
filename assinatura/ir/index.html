@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de IR — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+  .seg button{border:none;background:none;padding:11px;border-radius:9px;font-weight:700;font-size:14px;color:var(--mut);cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,52,89,.12)}
+  .plans{margin-top:18px}
+  .plans h4{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:14px}
+  .pl:hover{border-color:var(--green)}
+  .pl.on{border-color:var(--navy);background:#f4f8fb}
+  .pl.off{opacity:.45;cursor:not-allowed}
+  .pl .nm b{color:var(--navy)}.pl .nm small{display:block;color:var(--mut);font-size:12px}
+  .pl .pr{color:var(--mut);font-size:13px;text-align:right}
+  .pl .ec{font-weight:800;text-align:right;min-width:110px}
+  .pl .ec.pos{color:var(--green2)}.pl .ec.neg{color:var(--red)}
+  .tag{display:inline-block;background:var(--green);color:var(--navy);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+  .inc{margin-top:16px;background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+  .inc .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .inc ul{margin:0;padding-left:18px;columns:2;column-gap:18px}
+  @media(max-width:520px){.inc ul{columns:1}}
+  .tabs{margin-top:22px}
+  .tabs h4{margin:18px 0 8px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy)}
+  .tb{width:100%;border-collapse:collapse;font-size:13px}
+  .tb th{background:var(--navy);color:#fff;padding:8px 10px;text-align:right;font-size:12px}
+  .tb th:first-child{text-align:left}
+  .tb td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+  .tb td:first-child{text-align:left}
+  .tb tr.on td{background:#e8faf3;font-weight:800;color:var(--navy)}
+  .tbw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  .tbn{font-size:12px;color:var(--mut);margin-top:6px;line-height:1.5}
+  .grid>.card{min-width:0}
+  .steps{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .steps .st{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px dashed var(--line);font-size:14px}
+  .steps .st:last-child{border-bottom:none;background:#f4f8fb;font-weight:800;color:var(--navy)}
+  .steps .n{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .steps small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Simulador de <span>Imposto de Renda</span></h1>
+    <p>IR mensal sobre salário CLT ou pró-labore, com a tabela de 2026 e o redutor da isenção até R$ 5 mil.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do cálculo</div>
+      <label>Nome</label>
+      <input id="nome" placeholder="Nome do cliente">
+
+      <label>Tipo de rendimento</label>
+      <div class="seg" id="tipo">
+        <button data-v="PRO" class="on">Pró-labore</button>
+        <button data-v="CLT">Salário CLT</button>
+      </div>
+
+      <label>Rendimento bruto mensal</label>
+      <div class="money"><span>R$</span><input id="bruto" class="big" inputmode="decimal" placeholder="7.000,00"></div>
+
+      <label>Dependentes</label>
+      <input id="dep" inputmode="numeric" value="0">
+      <div class="hint">R$ 189,59 de dedução por dependente.</div>
+
+      <label>Pensão alimentícia paga (judicial)</label>
+      <div class="money"><span>R$</span><input id="pensao" inputmode="decimal" placeholder="0,00"></div>
+
+      <label>Previdência privada / Funpresp descontada</label>
+      <div class="money"><span>R$</span><input id="prev" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Digite o rendimento bruto mensal.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>Imposto de Renda</h3><div id="lA"></div>
+            <div class="tot"><span>IR / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt a"><h3>Líquido</h3><div id="lB"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val down" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp" style="font-size:28px"></b><span>alíquota efetiva sobre o bruto</span></div>
+        </div>
+        <div class="steps" id="steps"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="sec">Tabelas usadas no cálculo</div>
+        <h4>Imposto de Renda · tabela mensal 2026</h4>
+        <div class="tbw"><table class="tb" id="tir"></table></div>
+        <h4>Redutor do IR (Lei 15.270/2025)</h4>
+        <div class="tbw"><table class="tb" id="tred"></table></div>
+        <div class="tbn">O redutor é calculado sobre o rendimento bruto tributável e abatido do imposto da tabela. Na prática, quem ganha até R$ 5.000 fica isento, e a redução diminui até acabar em R$ 7.350.</div>
+        <h4 id="tinssT">INSS</h4>
+        <div class="tbw"><table class="tb" id="tinss"></table></div>
+        <div class="tbn">Base do IR = rendimento − o maior valor entre as deduções legais (INSS, dependentes, pensão e previdência) e o desconto simplificado de R$ 607,20.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação do IR retido na fonte (mensal) com as tabelas de 2026. Não considera 13º salário, férias nem o ajuste da declaração anual.<br>Move Online Contabilidade Médica</div>
+</div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const TETO_INSS=8475.55, INSS_PRO=.11, DEP=189.59, SIMPL=607.20;
+// INSS CLT 2026 (progressivo): [até, alíquota]
+const INSS_TAB=[[1621.00,.075],[2902.84,.09],[4354.27,.12],[8475.55,.14]];
+// IRRF mensal 2026: [base até, alíquota, dedução]
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const pc1=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let tipo='PRO', R=null;
+
+const c2=v=>Math.round((v+1e-9)*100)/100; // arredonda em centavos
+function inssCLT(b){let t=0,ant=0;for(const [lim,a] of INSS_TAB){if(b>ant)t+=c2((Math.min(b,lim)-ant)*a);ant=lim}return c2(t)}
+
+function renderTabelas(fx,red,inssFx){
+  $('tir').innerHTML=`<tr><th>Base de cálculo mensal</th><th>Alíquota</th><th>Dedução</th></tr>`+IR_TAB.map((f,i)=>
+    `<tr class="${i===fx?'on':''}"><td>${i?`${brl(IR_TAB[i-1][0]+.01)} ${f[0]===Infinity?'em diante':'a '+brl(f[0])}`:`até ${brl(f[0])}`}</td><td>${f[1]?pc1(f[1]):'isento'}</td><td>${brl(f[2])}</td></tr>`).join('');
+  $('tred').innerHTML=`<tr><th>Rendimento bruto mensal</th><th>Redução do imposto</th></tr>
+    <tr class="${red===1?'on':''}"><td>até R$ 5.000,00</td><td>até R$ 312,89 (imposto zerado)</td></tr>
+    <tr class="${red===2?'on':''}"><td>R$ 5.000,01 a R$ 7.350,00</td><td>R$ 978,62 − 0,133145 × rendimento</td></tr>
+    <tr class="${red===3?'on':''}"><td>acima de R$ 7.350,00</td><td>sem redução</td></tr>`;
+  if(tipo==='CLT'){
+    $('tinssT').textContent='INSS do empregado CLT · tabela progressiva 2026';
+    $('tinss').innerHTML=`<tr><th>Faixa de salário</th><th>Alíquota</th></tr>`+INSS_TAB.map((f,i)=>
+      `<tr class="${i<=inssFx?'on':''}"><td>${i?`${brl(INSS_TAB[i-1][0]+.01)} a ${brl(f[0])}`:`até ${brl(f[0])}`}</td><td>${pc1(f[1])}</td></tr>`).join('');
+  }else{
+    $('tinssT').textContent='INSS do sócio (pró-labore)';
+    $('tinss').innerHTML=`<tr><th>Regra</th><th>Alíquota</th></tr><tr class="on"><td>11% sobre o pró-labore, limitado ao teto de ${brl(TETO_INSS)}</td><td>11%</td></tr>`;
+  }
+}
+
+function calc(){
+  const B=num($('bruto').value), dep=Math.max(0,Math.round(num($('dep').value))), pen=num($('pensao').value), prev=num($('prev').value);
+  const inss=tipo==='CLT'?inssCLT(B):c2(Math.min(B,TETO_INSS)*INSS_PRO);
+  const inssFx=INSS_TAB.findIndex(f=>B<=f[0]);
+  if(!B){renderTabelas(-1,0,-1);$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const legais=inss+dep*DEP+pen+prev, usaSimpl=SIMPL>legais, deducao=Math.max(legais,SIMPL);
+  const base=Math.max(0,B-deducao), fx=IR_TAB.findIndex(f=>base<=f[0]), [,al,dd]=IR_TAB[fx];
+  const tab=c2(Math.max(0,base*al-dd));
+  let red=0, redFx=3; if(B<=5000){red=tab;redFx=1}else if(B<=7350){red=Math.min(tab,c2(Math.max(0,978.62-0.133145*B)));redFx=2}
+  const ir=tab-red, liq=B-inss-ir-pen-prev;
+  R={nome:$('nome').value.trim(),tipo,B,dep,pen,prev,inss,legais,usaSimpl,deducao,base,fx,al,dd,tab,red,ir,liq};
+
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  $('lA').innerHTML=L([['Base de cálculo','',base],['Imposto da tabela',al?`${pc1(al)} − ${brl(dd)}`:'isento',tab],['(−) Redutor','Lei 15.270',-red]]);
+  $('lB').innerHTML=L([['Rendimento bruto','',B],['(−) INSS',tipo==='CLT'?'tabela progressiva':'11%',-inss],['(−) IR','',-ir]].concat(pen?[['(−) Pensão alimentícia','',-pen]]:[]).concat(prev?[['(−) Previdência privada','',-prev]]:[]));
+  $('tA').textContent=brl(ir);$('tB').textContent=brl(liq);
+  $('pA').textContent=`${brl(ir*12)} por ano (12 meses)`;$('pB').textContent=`${pct(liq/B)} do bruto`;
+  $('hl').textContent=red>0.005?'Economia com a isenção até R$ 5 mil':'Imposto de Renda do mês';
+  $('hv').textContent=red>0.005?`${brl(red)}/mês`:brl(ir);
+  $('hs').textContent=red>0.005?`${brl(red*12)} por ano · sem o redutor o IR seria ${brl(tab)}/mês`:`Acima de R$ 7.350 não há redutor · ${brl(ir*12)} por ano`;
+  $('hp').textContent=pct(ir/B);
+  const st=[
+    ['Rendimento bruto','',brl(B)],
+    [`(−) ${usaSimpl?'Desconto simplificado':'Deduções legais'}`,usaSimpl?`R$ 607,20 é maior que as deduções legais (${brl(legais)})`:`INSS ${brl(inss)}${dep?` + ${dep} dependente(s) ${brl(dep*DEP)}`:''}${pen?` + pensão ${brl(pen)}`:''}${prev?` + previdência ${brl(prev)}`:''}`,brl(-deducao)],
+    ['= Base de cálculo',`faixa ${fx+1} da tabela`,brl(base)],
+    ['Imposto da tabela',al?`${fmt(base)} × ${pc1(al)} − ${fmt(dd)}`:'base até R$ 2.428,80: isento',brl(tab)],
+    ['(−) Redutor',B<=5000?'rendimento até R$ 5.000: zera o imposto':B<=7350?`978,62 − 0,133145 × ${fmt(B)}`:'rendimento acima de R$ 7.350: sem redução',brl(-red)],
+    ['IR a pagar no mês','',brl(ir)]];
+  $('steps').innerHTML=st.map(([k,s,v],i)=>`<div class="st"><span class="n">${i+1}</span><span>${k}${s?`<small>${s}</small>`:''}</span><span>${v}</span></div>`).join('');
+  renderTabelas(fx,redFx,tipo==='CLT'?(inssFx<0?3:inssFx):0);
+}
+
+// ── PDF A4 desenhado direto ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação de Imposto de Renda',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Imposto de Renda mensal',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(`${r.nome?r.nome+' · ':''}${r.tipo==='CLT'?'Salário CLT':'Pró-labore'} · Rendimento bruto ${brl(r.B)}/mês${r.dep?` · ${r.dep} dependente(s)`:''}`,M,57);
+  let y=64; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,9,2,2,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(255,255,255);d.text('Memória de cálculo',M+4,y+6);d.text('Valor',X2-4,y+6,{align:'right'});
+  y+=9; const yT=y;
+  const rows=[
+    ['Rendimento bruto','',brl(r.B)],
+    [r.usaSimpl?'(-) Desconto simplificado':'(-) Deduções legais',r.usaSimpl?`maior que as deduções legais (${brl(r.legais)})`:`INSS ${brl(r.inss)}${r.dep?` + dependentes ${brl(r.dep*DEP)}`:''}${r.pen?` + pensão ${brl(r.pen)}`:''}${r.prev?` + previdência ${brl(r.prev)}`:''}`,'- '+brl(r.deducao)],
+    ['= Base de cálculo',`faixa ${r.fx+1} da tabela`,brl(r.base)],
+    ['Imposto da tabela',r.al?`${fmt(r.base)} x ${pc1(r.al)} - ${fmt(r.dd)}`:'isento',brl(r.tab)],
+    ['(-) Redutor (Lei 15.270/2025)',r.B<=5000?'até R$ 5.000: zera o imposto':r.B<=7350?`978,62 - 0,133145 x ${fmt(r.B)}`:'acima de R$ 7.350: sem redução','- '+brl(r.red)],
+    ['IR a pagar no mês','',brl(r.ir),1],
+    ['INSS',r.tipo==='CLT'?'tabela progressiva':'11% do pró-labore',brl(r.inss)],
+    ['Líquido no mês','',brl(r.liq),1]];
+  rows.forEach(([k,s,v,t])=>{
+    if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,11,'F')}
+    d.setFont('helvetica','bold');d.setFontSize(t?11:10);d.setTextColor(...NAVY);d.text(k,M+4,y+(s?5:7));
+    if(s){d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);d.text(s,M+4,y+9.2)}
+    d.setFont('helvetica','bold');d.setFontSize(t?11:10);d.setTextColor(...(t?NAVY:[15,30,46]));d.text(v,X2-4,y+7,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+11,X2,y+11);y+=11});
+  d.setDrawColor(207,216,227);d.rect(M,yT,W-2*M,y-yT,'S');
+  y+=7; d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,28,4,4,'F');
+  const eco=r.red>0.005;
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(eco?'ECONOMIA COM A ISENÇÃO ATÉ R$ 5 MIL':'IMPOSTO DE RENDA DO MÊS',M+7,y+8.5);
+  d.setFontSize(22);d.setTextColor(255,255,255);d.text(eco?`${brl(r.red)}/mês`:brl(r.ir),M+7,y+18.5);
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(200,215,228);
+  d.text(eco?`${brl(r.red*12)} por ano · sem o redutor o IR seria ${brl(r.tab)}/mês`:`${brl(r.ir*12)} por ano`,M+7,y+24.5);
+  d.setFont('helvetica','bold');d.setFontSize(20);d.setTextColor(...GREEN);d.text(pct(r.ir/r.B),X2-7,y+16,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('alíquota efetiva',X2-7,y+22.5,{align:'right'});
+  y+=36; d.setFont('helvetica','normal');d.setFontSize(7.8);d.setTextColor(...MUT);
+  const nt=d.splitTextToSize('Tabela mensal 2026: isento até R$ 2.428,80; 7,5% até R$ 2.826,65 (dedução R$ 182,16); 15% até R$ 3.751,05 (R$ 394,16); 22,5% até R$ 4.664,68 (R$ 675,49); 27,5% acima (R$ 908,73). Redutor da Lei 15.270/2025: até R$ 5.000 zera o imposto; de R$ 5.000,01 a R$ 7.350, redução de R$ 978,62 - 0,133145 x rendimento. Desconto simplificado mensal de R$ 607,20 no lugar das deduções legais, quando for maior. Simulação do IR retido na fonte; não considera 13º, férias nem o ajuste anual.',W-2*M);
+  d.text(nt,M,y);y+=nt.length*3.3+5;
+  d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,12,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(11.5);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+7.9,{align:'center'});
+  d.link(M,y,W-2*M,12,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,283,X2,283);
+  d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,289);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,289,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+
+['bruto','dep','pensao','prev','nome'].forEach(id=>$(id).addEventListener('input',calc));
+['bruto','pensao','prev'].forEach(id=>$(id).addEventListener('blur',()=>{const n=num($(id).value);$(id).value=n?fmt(n):''}));
+document.querySelectorAll('#tipo button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tipo button').forEach(x=>x.classList.remove('on'));b.classList.add('on');tipo=b.dataset.v;calc()});
+$('bpdf').onclick=()=>{if(!R)return;gerarPDF().save(`Simulacao IR - ${R.nome||'cliente'}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R;
+  const t=`*Simulação de Imposto de Renda*${r.nome?'\n'+r.nome:''}\n${r.tipo==='CLT'?'Salário CLT':'Pró-labore'} · Bruto ${brl(r.B)}/mês\n\n• INSS: ${brl(r.inss)}\n• Base de cálculo: ${brl(r.base)}\n• Imposto da tabela: ${brl(r.tab)}\n• Redutor: − ${brl(r.red)}\n• *IR a pagar: ${brl(r.ir)}/mês* (${pct(r.ir/r.B)})\n• Líquido: *${brl(r.liq)}*\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>
