@@ -584,6 +584,20 @@ def ir_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Pesquisa de CNAE no Simples Nacional (ferramenta de consulta) ──
+CNAE_DIR = os.path.join(BASE, "cnae")
+
+@app.route("/cnae/")
+def cnae_pesquisa():
+    return send_file(os.path.join(CNAE_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/cnae/<nome>.png")
+def cnae_img(nome):
+    f = os.path.join(CNAE_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
