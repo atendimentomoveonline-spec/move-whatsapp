@@ -738,6 +738,20 @@ def lucros_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Carnê-Leão e Receita Saúde: lançamentos e arquivo de importação (página estática) ──
+CARNE_DIR = os.path.join(BASE, "carne-leao")
+
+@app.route("/carne-leao/")
+def carne_leao():
+    return send_file(os.path.join(CARNE_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/carne-leao/<nome>.png")
+def carne_leao_img(nome):
+    f = os.path.join(CARNE_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

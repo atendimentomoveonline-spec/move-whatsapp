@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carnê-Leão e Receita Saúde — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .grid{align-items:start}
+  @media(min-width:880px){.grid{grid-template-columns:380px 1fr}}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sec2{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+  .tipos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .tipos button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px;font-size:13px;font-family:inherit;color:var(--ink);cursor:pointer;text-align:left}
+  .tipos button.on{border-color:var(--navy);background:#f4f8fb;color:var(--navy);font-weight:700}
+  .err{color:var(--red);font-size:12.5px;margin-top:6px;min-height:16px}
+  .mesbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .mesbar select{width:auto}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .kpi div{background:#f4f8fb;border-radius:12px;padding:10px 12px;font-size:12px;color:var(--mut)}
+  .kpi b{display:block;font-size:17px;color:var(--navy);margin-top:2px}
+  .kpi .dest{background:var(--navy);color:#c8d7e4}.kpi .dest b{color:#fff}
+  .lan{display:grid;grid-template-columns:70px 1fr auto 28px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .lan .dt{color:var(--mut);font-size:12.5px}
+  .lan .ds b{color:var(--navy)}.lan .ds small{display:block;color:#94a3b8;font-size:11.5px}
+  .lan .vl{font-weight:800;white-space:nowrap}.lan .vl.neg{color:var(--red)}
+  .lan .x{border:none;background:none;color:var(--mut);font-size:18px;cursor:pointer}
+  .st{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px}
+  .st.nv{background:#fff8e6;color:#9a6700}.st.ok{background:#e8faf3;color:var(--green2)}
+  .aviso{border:1.5px solid var(--line);background:#f8fafc;border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--mut);margin-top:12px;line-height:1.5}
+  .small{font-size:12px;color:var(--mut)}
+  .bk{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .bk button,.bk label{flex:1;min-width:130px;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;text-align:center;font-family:inherit;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Carnê-Leão <span>e Receita Saúde</span></h1>
+    <p>Lance seus atendimentos e despesas, veja o imposto do mês e gere o arquivo para importar no Carnê-Leão Web. Os recibos do Receita Saúde saem juntos.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Seus dados</div>
+      <div class="row2">
+        <div><label>Seu CPF</label><input id="cpf" inputmode="numeric" placeholder="000.000.000-00"></div>
+        <div><label>Profissão</label><select id="ocup">
+          <option value="225">Médico</option><option value="226">Dentista</option><option value="255">Psicólogo</option>
+          <option value="231">Fisioterapeuta</option><option value="230">Fonoaudiólogo</option><option value="232">Terapeuta ocupacional</option></select></div>
+      </div>
+      <label>Registro no conselho (opcional)</label>
+      <input id="reg" placeholder="CRM 123456 SP">
+      <div class="hint">Use o mesmo CPF do acesso ao Carnê-Leão. O registro só é necessário se você tiver mais de um.</div>
+
+      <div class="sec2"><div class="sec">Novo lançamento</div></div>
+      <div class="tipos" id="tipos">
+        <button type="button" data-t="pf" class="on">Atendimento a paciente (gera recibo)</button>
+        <button type="button" data-t="pj">Recebido de empresa</button>
+        <button type="button" data-t="ex">Recebido do exterior</button>
+        <button type="button" data-t="desp">Despesa do consultório</button>
+        <button type="button" data-t="inss">INSS pago (carnê)</button>
+      </div>
+      <div class="row2">
+        <div><label>Data do pagamento</label><input id="fdt" type="date"></div>
+        <div><label>Valor</label><div class="money"><span>R$</span><input id="fv" inputmode="decimal"></div></div>
+      </div>
+      <div id="fpf">
+        <label>CPF de quem pagou</label><input id="fcpf" inputmode="numeric" placeholder="000.000.000-00">
+        <label>CPF do paciente (se for outra pessoa)</label><input id="fben" inputmode="numeric" placeholder="Em branco: o mesmo de quem pagou">
+      </div>
+      <div id="fpj" style="display:none">
+        <label>CNPJ da empresa</label><input id="fcnpj" inputmode="numeric" placeholder="00.000.000/0000-00">
+        <label>IR retido pela empresa (se houve)</label><div class="money"><span>R$</span><input id="firrf" inputmode="decimal"></div>
+      </div>
+      <div id="fdesp" style="display:none">
+        <label>Tipo de despesa</label><select id="fcod"></select>
+      </div>
+      <div id="finss" style="display:none">
+        <label>Mês de competência</label><input id="fcomp" type="month">
+      </div>
+      <label>Descrição (opcional)</label><input id="fds" maxlength="200" placeholder="Consulta">
+      <div class="err" id="ferr"></div>
+      <button class="btn" id="badd" style="width:100%;margin-top:6px">Adicionar lançamento</button>
+
+      <div class="aviso"><b style="color:var(--navy)">Seus dados ficam só neste aparelho.</b> A Move não tem acesso aos lançamentos nem aos CPFs dos pacientes. Salve uma cópia de vez em quando para não perder nada se trocar de celular ou limpar o navegador.</div>
+      <div class="bk"><button type="button" id="bsave">Salvar cópia</button><label for="fload">Restaurar cópia<input type="file" id="fload" accept=".json" hidden></label></div>
+    </div>
+
+    <div class="card">
+      <div class="mesbar"><div class="sec" style="margin:0">Mês</div><select id="mes"></select><span class="small" id="qt"></span></div>
+      <div class="kpi" id="kpi"></div>
+      <div class="acts">
+        <button class="btn" id="brend">Arquivo de rendimentos e recibos</button>
+        <button class="btn o" id="bdesp">Arquivo de despesas</button>
+      </div>
+      <div class="hint" id="envh">Os arquivos saem só com os lançamentos novos do mês. Depois de baixar, eles ficam marcados como enviados.</div>
+      <div id="lista"></div>
+      <div class="note"><div class="fund"><div class="ft">Como importar</div>No e-CAC, abra o Carnê-Leão Web, vá em Escrituração, clique em Importar Escrituração e escolha o arquivo. Nos atendimentos a pacientes, o arquivo já leva o indicador de recibo, e a Receita gera os recibos do Receita Saúde na importação. O Carnê-Leão calcula o imposto e emite o DARF (código 0190), que vence no último dia útil do mês seguinte. Leiaute: Receita Federal, "Formato do arquivo de Escrituração" e modelos oficiais de importação (2025).</div></div>
+      <div class="acts"><button class="btn o" id="bpdf">Baixar resumo do mês</button><button class="btn o" id="bzap">Falar com a Move</button></div>
+    </div>
+  </div>
+  <div class="foot">Imposto estimado pela tabela mensal de 2026 com o redutor da Lei 15.270/2025. O valor oficial é o calculado pelo Carnê-Leão Web.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const $=id=>document.getElementById(id);
+const DESP=[['P10.01.00002','Aluguel do consultório'],['P10.01.00003','Condomínio do consultório'],['P10.01.00001','Água do consultório'],['P10.01.00007','Energia do consultório'],
+ ['P10.01.00014','Telefone do consultório'],['P10.01.00008','Gás do consultório'],['P10.01.00009','IPTU do consultório'],['P10.01.00010','ISS'],
+ ['P10.01.00013','Salário de secretária ou funcionário, com INSS e FGTS'],['P10.01.00011','Material de limpeza e conservação'],['P10.01.00012','Material de escritório'],
+ ['P10.01.00004','Anuidade do conselho profissional'],['P10.01.00005','Cópias e autenticações'],['P10.01.00006','Emolumentos pagos a terceiros']];
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const LBL={pf:'Atendimento',pj:'Recebido de empresa',ex:'Recebido do exterior',desp:'Despesa',inss:'INSS pago'};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const dig=s=>(s||'').replace(/\D/g,'');
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const v2=v=>v.toFixed(2).replace('.',',');                                         // formato da Receita: 99999,99
+const asc=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[;\r\n]/g,' ').slice(0,255);   // sem acentos e sem ponto e vírgula
+const dBR=iso=>{const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`};
+function cpfOk(c){c=dig(c);if(c.length!==11||/^(\d)\1+$/.test(c))return false;for(const n of [9,10]){let s=0;for(let i=0;i<n;i++)s+=+c[i]*(n+1-i);if(((s*10)%11)%10!==+c[n])return false}return true}
+function cnpjOk(c){c=dig(c);if(c.length!==14||/^(\d)\1+$/.test(c))return false;const calc=n=>{let s=0,p=n-7;for(let i=0;i<n;i++){s+=+c[i]*p--;if(p<2)p=9}const r=s%11;return r<2?0:11-r};return calc(12)===+c[12]&&calc(13)===+c[13]}
+const LS={get(k,d){try{const v=localStorage.getItem('mv_cl_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('mv_cl_'+k,JSON.stringify(v))}catch(e){}}};
+let L=LS.get('lanc',[]), tipo='pf';
+const perfil=LS.get('perfil',{});$('cpf').value=perfil.cpf||'';$('ocup').value=perfil.ocup||'225';$('reg').value=perfil.reg||'';
+['cpf','ocup','reg'].forEach(i=>$(i).addEventListener('input',()=>LS.set('perfil',{cpf:$('cpf').value,ocup:$('ocup').value,reg:$('reg').value})));
+$('ocup').addEventListener('change',()=>LS.set('perfil',{cpf:$('cpf').value,ocup:$('ocup').value,reg:$('reg').value}));
+$('fcod').innerHTML=DESP.map(([c,n])=>`<option value="${c}">${n}</option>`).join('');
+$('fdt').value=new Date().toISOString().slice(0,10);$('fcomp').value=new Date().toISOString().slice(0,7);
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
+
+document.querySelectorAll('#tipos button').forEach(b=>b.onclick=()=>{tipo=b.dataset.t;document.querySelectorAll('#tipos button').forEach(x=>x.classList.toggle('on',x===b));
+  $('fpf').style.display=tipo==='pf'?'':'none';$('fpj').style.display=tipo==='pj'?'':'none';$('fdesp').style.display=tipo==='desp'?'':'none';$('finss').style.display=tipo==='inss'?'':'none';$('ferr').textContent=''});
+document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
+
+$('badd').onclick=()=>{
+  const dt=$('fdt').value, v=num($('fv').value), e=m=>{$('ferr').textContent=m};
+  if(!dt)return e('Informe a data do pagamento.');
+  if(!(v>0))return e('Informe um valor maior que zero.');
+  const it={id:Date.now(),t:tipo,dt,v,ds:$('fds').value.trim(),env:false};
+  if(tipo==='pf'){if(!cpfOk($('fcpf').value))return e('CPF de quem pagou inválido.');if($('fben').value&&!cpfOk($('fben').value))return e('CPF do paciente inválido.');
+    if(!cpfOk($('cpf').value))return e('Informe o seu CPF (em Seus dados) para gerar o recibo.');it.cpf=dig($('fcpf').value);it.ben=dig($('fben').value)||it.cpf}
+  if(tipo==='pj'){if(!cnpjOk($('fcnpj').value))return e('CNPJ inválido.');it.cnpj=dig($('fcnpj').value);it.irrf=num($('firrf').value)}
+  if(tipo==='desp')it.cod=$('fcod').value;
+  if(tipo==='inss'){if(!$('fcomp').value)return e('Informe o mês de competência.');it.comp=$('fcomp').value}
+  e('');L.push(it);LS.set('lanc',L);['fv','fcpf','fben','fcnpj','firrf','fds'].forEach(i=>$(i).value='');
+  const m=dt.slice(0,7);montaMeses(m);render();toast('Lançamento adicionado.')};
+
+function montaMeses(sel){const ms=[...new Set(L.map(i=>i.dt.slice(0,7)).concat([new Date().toISOString().slice(0,7)]))].sort().reverse();
+  const cur=sel||$('mes').value||ms[0];$('mes').innerHTML=ms.map(m=>{const [y,mm]=m.split('-');return `<option value="${m}" ${m===cur?'selected':''}>${['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+mm-1]}/${y}</option>`}).join('')}
+function imposto(M){
+  const rend=M.filter(i=>['pf','ex'].includes(i.t)).reduce((s,i)=>s+i.v,0);          // carnê-leão: recebidos de pessoa física e do exterior
+  const pj=M.filter(i=>i.t==='pj').reduce((s,i)=>s+i.v,0), irrf=M.filter(i=>i.t==='pj').reduce((s,i)=>s+(i.irrf||0),0);
+  const desp=M.filter(i=>i.t==='desp').reduce((s,i)=>s+i.v,0), inss=M.filter(i=>i.t==='inss').reduce((s,i)=>s+i.v,0);
+  const livro=Math.min(desp,rend+pj);                                                  // livro caixa limitado aos rendimentos do trabalho
+  const ded=livro+Math.max(inss,rend?607.20:0);
+  const base=Math.max(0,rend-ded);
+  let ir=0;if(base>0){const [,a,d]=IR_TAB.find(f=>base<=f[0]);const tab=Math.max(0,base*a-d);let red=0;if(rend<=5000)red=tab;else if(rend<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*rend));ir=tab-red}
+  return {rend,pj,irrf,desp,inss,livro,base,ir};
+}
+function render(){
+  const m=$('mes').value, M=L.filter(i=>i.dt.slice(0,7)===m).sort((a,b)=>a.dt.localeCompare(b.dt)), I=imposto(M);
+  const novos=M.filter(i=>!i.env).length;$('qt').textContent=`${M.length} lançamentos · ${novos} novos`;
+  $('kpi').innerHTML=`<div>Pacientes e exterior<b>${brl(I.rend)}</b></div><div>Recebido de empresas<b>${brl(I.pj)}</b></div><div>Despesas do consultório<b>${brl(I.desp)}</b></div><div class="dest">Imposto estimado (DARF 0190)<b>${brl(I.ir)}</b></div>`;
+  const nm=c=>(DESP.find(d=>d[0]===c)||['',''])[1];
+  $('lista').innerHTML=M.length?M.map(i=>`<div class="lan"><div class="dt">${dBR(i.dt).slice(0,5)}</div><div class="ds"><b>${i.t==='desp'?nm(i.cod):LBL[i.t]}</b><span class="st ${i.env?'ok':'nv'}">${i.env?'enviado':'novo'}</span>
+    <small>${i.t==='pf'?'CPF '+i.cpf.slice(0,3)+'.***.***-'+i.cpf.slice(9)+' · gera recibo':i.t==='pj'?'CNPJ '+i.cnpj+(i.irrf?' · IR retido '+brl(i.irrf):''):i.t==='inss'?'competência '+i.comp.split('-').reverse().join('/'):''}${i.ds?' · '+i.ds.replace(/</g,'&lt;'):''}</small></div>
+    <div class="vl ${['desp','inss'].includes(i.t)?'neg':''}">${['desp','inss'].includes(i.t)?'− ':''}${brl(i.v)}</div><button class="x" data-id="${i.id}" aria-label="Excluir lançamento">×</button></div>`).join(''):'<div class="empty">Nenhum lançamento neste mês.</div>';
+  $('lista').querySelectorAll('.x').forEach(b=>b.onclick=()=>{L=L.filter(i=>i.id!=b.dataset.id);LS.set('lanc',L);render()});
+}
+function baixa(nome,txt){const blob=new Blob([txt],{type:'text/csv;charset=windows-1252'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();a.remove()}
+function gerar(qual){
+  const m=$('mes').value, cpf=dig($('cpf').value), oc=$('ocup').value, reg=asc($('reg').value).slice(0,15);
+  const N=L.filter(i=>i.dt.slice(0,7)===m&&!i.env&&(qual==='rend'?['pf','pj','ex'].includes(i.t):['desp','inss'].includes(i.t)));
+  if(!N.length)return toast('Não há lançamentos novos desse tipo neste mês.');
+  if(qual==='rend'&&N.some(i=>i.t==='pf')&&!cpfOk(cpf))return toast('Informe o seu CPF em Seus dados.');
+  const linhas=N.map(i=>{const d=dBR(i.dt), h=asc(i.ds||(i.t==='desp'?(DESP.find(x=>x[0]===i.cod)||['',''])[1]:LBL[i.t]));
+    if(i.t==='pf')return [d,'R01.001.001',oc,v2(i.v),'',h,'PF',i.cpf,i.ben,'','','','','S',cpf,reg].join(';');     // recibo do Receita Saúde
+    if(i.t==='pj')return [d,'R01.001.001',oc,v2(i.v),'',h,'PJ','','','',i.cnpj,i.irrf?'S':'N',i.irrf?v2(i.irrf):''].join(';');
+    if(i.t==='ex')return [d,'R01.001.001',oc,v2(i.v),'',h,'EX'].join(';');
+    if(i.t==='desp')return [d,i.cod,v2(i.v),h].join(';');
+    const [y,mm]=i.comp.split('-');return [d,'P20.01.00001',v2(i.v),h,'','',`${mm}/${y}`].join(';')});          // previdência oficial
+  baixa(`carne-leao-${qual==='rend'?'rendimentos-recibos':'despesas'}-${m}.csv`,linhas.join('\r\n')+'\r\n');
+  N.forEach(i=>i.env=true);LS.set('lanc',L);render();toast(`${N.length} lançamentos no arquivo e marcados como enviados.`);
+}
+$('brend').onclick=()=>gerar('rend');$('bdesp').onclick=()=>gerar('desp');
+$('mes').addEventListener('change',render);
+$('bsave').onclick=()=>{const blob=new Blob([JSON.stringify({perfil:LS.get('perfil',{}),lanc:L},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`carne-leao-copia-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();toast('Cópia salva.')};
+$('fload').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!Array.isArray(j.lanc))throw 0;
+  const ids=new Set(L.map(i=>i.id));j.lanc.forEach(i=>{if(!ids.has(i.id))L.push(i)});LS.set('lanc',L);if(j.perfil){LS.set('perfil',j.perfil);$('cpf').value=j.perfil.cpf||'';$('ocup').value=j.perfil.ocup||'225';$('reg').value=j.perfil.reg||''}
+  montaMeses();render();toast('Cópia restaurada.')}catch(x){toast('Arquivo de cópia inválido.')}};r.readAsText(f);e.target.value=''};
+
+// resumo do mês em PDF (sem CPFs de pacientes)
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+$('bpdf').onclick=()=>{const m=$('mes').value, M=L.filter(i=>i.dt.slice(0,7)===m), I=imposto(M), {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, X=16, X2=W-X;
+  if(LOGO)d.addImage(LOGO,'PNG',X,10,46,22.5);d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Resumo do Carnê-Leão',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(X,37,X2,37);d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text(`Carnê-Leão · ${$('mes').selectedOptions[0].text}`,X,49);
+  let y=60;[['Recebido de pacientes e do exterior',I.rend],['Recebido de empresas (fora do carnê-leão)',I.pj],['Despesas do livro caixa',-I.livro],['INSS pago',-I.inss],['Base de cálculo estimada',I.base],['Imposto estimado (DARF 0190)',I.ir]].forEach(([k,v],j)=>{
+    if(j===5){d.setFillColor(244,248,251);d.rect(X,y-6,W-2*X,10,'F')}d.setFont('helvetica',j===5?'bold':'normal');d.setFontSize(11);d.setTextColor(...(j===5?NAVY:MUT));d.text(k,X+3,y);d.setTextColor(...NAVY);d.text(brl(v),X2-3,y,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(X,y+4,X2,y+4);y+=10});
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text(d.splitTextToSize(`${M.length} lançamentos no mês. Estimativa pela tabela mensal de 2026 com o redutor da Lei 15.270/2025; o valor oficial é o calculado pelo Carnê-Leão Web. O DARF vence no último dia útil do mês seguinte.`,W-2*X),X,y+4);
+  y+=20;d.setFillColor(...GREEN);d.roundedRect(X,y,W-2*X,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(X,y,W-2*X,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.save(`Carne-leao - resumo ${m}.pdf`)};
+$('bzap').onclick=()=>{const m=$('mes').value,I=imposto(L.filter(i=>i.dt.slice(0,7)===m));
+  const t=`*Carnê-Leão · ${$('mes').selectedOptions[0].text}*\n• Recebido de pacientes e exterior: ${brl(I.rend)}\n• Despesas do consultório: ${brl(I.desp)}\n• Imposto estimado: *${brl(I.ir)}*\n\nQuero ajuda da Move com meu carnê-leão (ou para abrir um CNPJ e pagar menos).`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+montaMeses();render();
+</script>
+</body>
+</html>
