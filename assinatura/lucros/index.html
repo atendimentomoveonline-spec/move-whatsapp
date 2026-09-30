@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Distribuição de Lucros e IR Mínimo — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  @media(min-width:760px){.cmp.tres{grid-template-columns:1fr 1fr 1fr}}
+  .opt.best{border:2px solid var(--green)}
+  .opt .tag{display:inline-block;font-size:11px;font-weight:800;color:var(--green2);background:#e8faf3;border-radius:999px;padding:3px 9px;margin-top:6px}
+  .opt .sub2{font-size:12px;color:#94a3b8;margin-top:3px}
+  .opt .grp{font-size:10.5px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin-top:12px}
+  .sec2{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Distribuição de lucros <span>e IR mínimo</span></h1>
+    <p>Pró-labore ou lucros? Veja quanto sobra no mês e no ano com as regras de 2026 (Lei 15.270/2025).</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Sua empresa</div>
+      <label>Nome (opcional)</label>
+      <input id="nome" placeholder="Nome do sócio ou da empresa">
+      <label>Regime</label>
+      <select id="reg"><option value="SN">Simples Nacional (com Fator R)</option><option value="LP">Lucro Presumido</option></select>
+      <label>Faturamento mensal da empresa</label>
+      <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="100.000,00"></div>
+      <label>Despesas mensais da empresa</label>
+      <div class="money"><span>R$</span><input id="desp" inputmode="decimal" placeholder="0,00"></div>
+      <div class="hint">Aluguel, funcionários, materiais, contabilidade e demais custos (sem o pró-labore).</div>
+      <div class="row2">
+        <div><label>Sua participação</label><input id="part" inputmode="decimal" value="100"></div>
+        <div id="issbox"><label>ISS (%)</label><input id="iss" inputmode="decimal" value="2"></div>
+      </div>
+      <div class="hint">Percentual do lucro que é seu. O pró-labore abaixo é só o seu.</div>
+      <label>Seu pró-labore mensal</label>
+      <div class="money"><span>R$</span><input id="pro" inputmode="decimal"></div>
+      <div class="hint" id="proh"></div>
+
+      <div class="sec2"><div class="sec">Outras rendas no ano (opcional)</div></div>
+      <label>Outras rendas no ano (aluguéis, aplicações, outros lucros)</label>
+      <div class="money"><span>R$</span><input id="outras" inputmode="decimal"></div>
+      <label>IR já pago sobre essas rendas no ano</label>
+      <div class="money"><span>R$</span><input id="irout" inputmode="decimal"></div>
+      <label>Lucros de 2025 aprovados até 31/12/2025, recebidos neste ano</label>
+      <div class="money"><span>R$</span><input id="l25" inputmode="decimal"></div>
+      <div class="hint">Continuam isentos e ficam fora do IR mínimo, se pagos até 2028 nos termos aprovados.</div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Digite o faturamento mensal.</div>
+      <div id="res" style="display:none">
+        <div class="cmp tres" id="cmp"></div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val down" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span id="hps">de IR mínimo no ano, no melhor cenário</span></div>
+        </div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+        <div class="note" id="nota"></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com a Lei 15.270/2025, a LC 123/2006 e as tabelas de 2026. Não substitui a análise do contador.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const SAL_MIN=1621.00, TETO_INSS=8475.55, FR=.28;
+const A3=[[180000,.06,0],[360000,.112,9360],[720000,.135,17640],[1800000,.16,35640],[3600000,.21,125640],[4800000,.33,648000]];
+const A5=[[180000,.155,0],[360000,.18,4500],[720000,.195,9900],[1800000,.205,17100],[3600000,.23,62100],[4800000,.305,540000]];
+// parcela de IRPJ + CSLL dentro do DAS, por faixa (LC 123/2006, Anexos III e V) — usada só no redutor do art. 16-B
+const IRCS3=[.075,.075,.075,.075,.075,.50], IRCS5=[.40,.38,.39,.36,.355,.505];
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null;
+
+function irrf(b,inss){const base=b-Math.max(inss,607.2);if(base<=0)return 0;const [,a,d]=IR_TAB.find(f=>base<=f[0]);const tab=Math.max(0,base*a-d);
+  let red=0;if(b<=5000)red=tab;else if(b<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*b));return tab-red}
+function faixa(t,rbt){let i=t.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=t[i];return {i,ef:rbt<=180000?n:(rbt*n-d)/rbt}}
+function aliqMin(r){return r>=1200000?.10:r>600000?(r/60000-10)/100:0}
+
+function cenario(nome,pro,D){
+  const F=D.F, rbt=F*12;
+  let imp=0, ircs=0, patr=0, anexo='';
+  if(D.reg==='SN'){const f3=(pro>=F*FR-0.01); /* tolerância de centavos */const fx=faixa(f3?A3:A5,rbt);imp=F*fx.ef;ircs=imp*(f3?IRCS3:IRCS5)[fx.i];anexo=`Anexo ${f3?'III':'V'} · ${pct(fx.ef)}`}
+  else{const b=F*.32;const irpj=b*.15+Math.max(0,b-20000)*.10, csll=b*.09;imp=irpj+csll+F*.0365+F*D.iss;ircs=irpj+csll;patr=pro*.20;anexo='Presumido'}
+  const inss=Math.min(pro,TETO_INSS)*.11, ir=irrf(pro,inss);
+  const lucroEmp=Math.max(0,F-imp-pro-patr-D.desp), lucro=lucroEmp*D.part;
+  const ret=lucro>50000?lucro*.10:0;                               // art. 6º-A: 10% sobre o total quando passa de R$ 50 mil no mês
+  const liqMes=pro-inss-ir+lucro-ret;
+  // ano: tributação mínima (art. 16-A)
+  const rend=12*pro+12*lucro+D.outras, aliq=aliqMin(rend), bruto=aliq*rend;
+  const irPago=12*ir+D.irout;
+  // redutor (art. 16-B): carga efetiva da empresa + carga mínima sobre os lucros acima de 34%
+  const lucroCont=Math.max(1,F-pro-patr-D.desp), efPJ=ircs/lucroCont;
+  const semLucro=aliqMin(12*pro+D.outras)*(12*pro+D.outras), efPF=12*lucro?Math.max(0,bruto-semLucro)/(12*lucro):0;
+  const redutor=Math.max(0,(efPJ+efPF-.34))*12*lucro;
+  const devido=Math.max(0,bruto-irPago-redutor), saldo=devido-12*ret;   // positivo: paga; negativo: restitui
+  const liqAno=12*liqMes-Math.max(0,saldo)+Math.max(0,-saldo);
+  const totImp=12*(imp+patr+inss+ir)+Math.max(0,devido);
+  return {nome,pro,imp,patr,inss,ir,anexo,lucro,ret,liqMes,rend,aliq,bruto,irPago,redutor,devido,saldo,liqAno,totImp};
+}
+function calc(){
+  const reg=$('reg').value, F=num($('fat').value);
+  $('issbox').style.visibility=reg==='LP'?'visible':'hidden';
+  if(!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const D={reg,F,desp:num($('desp').value),part:Math.min(100,Math.max(1,num($('part').value)||100))/100,iss:num($('iss').value)/100,
+    outras:num($('outras').value),irout:num($('irout').value)};
+  D.outras=Math.max(0,D.outras-0); const l25=num($('l25').value);
+  const proFR=Math.max(SAL_MIN,Math.ceil(Math.round(F*FR*10000)/100)/100), proInf=num($('pro').value);
+  $('proh').textContent=reg==='SN'?`Para o Fator R de 28%: ${brl(proFR)}. Em branco, compara só os cenários padrão.`:'No Presumido o pró-labore paga 20% de INSS da empresa; em branco, compara só os cenários padrão.';
+  const C=[cenario('Pró-labore mínimo',SAL_MIN,D)];
+  if(reg==='SN')C.push(cenario('Pró-labore do Fator R',proFR,D));
+  if(proInf&&Math.abs(proInf-SAL_MIN)>1&&Math.abs(proInf-proFR)>1)C.push(cenario('Seu pró-labore',proInf,D));
+  const best=[...C].sort((a,b)=>b.liqAno-a.liqAno)[0];
+  R={nome:$('nome').value.trim(),D,C,best,l25};
+  const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  $('cmp').className='cmp'+(C.length===3?' tres':'');
+  $('cmp').innerHTML=C.map(c=>`<div class="opt ${c===best&&C.length>1?'best':''}"><h3>${c.nome}</h3><div class="sub2">${brl(c.pro)}/mês · ${c.anexo}</div>
+    <div class="grp">Por mês</div>${L([['Impostos da empresa',reg==='SN'?'DAS':'PIS, COFINS, ISS, IRPJ, CSLL',-c.imp]].concat(c.patr?[['INSS da empresa','20% do pró-labore',-c.patr]]:[]).concat([['Pró-labore líquido',`INSS ${brl(c.inss)} · IR ${brl(c.ir)}`,c.pro-c.inss-c.ir],['Lucros (sua parte)',c.ret?'':'isentos até R$ 50 mil',c.lucro]]).concat(c.ret?[['Retenção de 10%','lucros acima de R$ 50 mil',-c.ret]]:[]))}
+    <div class="tot"><span>NO BOLSO / MÊS</span><b>${brl(c.liqMes)}</b></div>
+    <div class="grp">No ano</div>${L([['Renda total','base do IR mínimo',c.rend],['IR mínimo',pct(c.aliq)+(c.redutor?` · redutor ${brl(c.redutor)}`:''),c.devido?-c.devido:0],[c.saldo>=0?'A pagar na declaração':'A restituir na declaração','IR mínimo − retenções',-c.saldo]])}
+    <div class="tot"><span>NO BOLSO / ANO</span><b>${brl(c.liqAno)}</b></div>${c===best&&C.length>1?'<span class="tag">Mais dinheiro no bolso</span>':''}</div>`).join('');
+  const outro=[...C].sort((a,b)=>b.liqAno-a.liqAno)[1];
+  $('hl').textContent=C.length>1?`${best.nome} rende mais no ano`:'Resultado no ano';
+  $('hv').textContent=C.length>1?'+ '+brl(best.liqAno-outro.liqAno)+'/ano':brl(best.liqAno);
+  $('hs').textContent=C.length>1?`em relação a ${outro.nome.toLowerCase()} · ${brl(best.liqAno)} no bolso no ano`:'no bolso no ano';
+  $('hp').textContent=brl(best.devido);
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Regras usadas</div>Lucros até R$ 50 mil por mês, pagos pela mesma empresa, continuam isentos; acima disso, retenção de 10% sobre o total do mês (Lei 9.250/1995, art. 6º-A, incluído pela Lei 15.270/2025). A retenção é antecipação: é descontada do IR mínimo na declaração e pode ser devolvida. IR mínimo (art. 16-A): para renda anual acima de R$ 600 mil, alíquota crescente até 10% a partir de R$ 1,2 milhão, sobre todos os rendimentos, descontado o IR já pago e o redutor do art. 16-B quando a carga da empresa somada à da pessoa física passa de 34%. Lucros de 2025 aprovados até 31/12/2025 ficam fora${l25?` (informado: ${brl(l25)}, não entrou na conta)`:''}. Pró-labore com INSS de 11% e IR pela tabela de 2026 com redutor. Simples: alíquota efetiva pelo faturamento de 12 meses, no Anexo III com Fator R de 28% ou no Anexo V. Presumido: presunção de 32%, IRPJ 15% + adicional de 10%, CSLL 9%, PIS/COFINS 3,65%, ISS informado e INSS de 20% da empresa sobre o pró-labore. Lucro distribuído = faturamento − impostos − pró-labore − despesas. Simulação com valores iguais em todos os meses.</div></div>`;
+}
+
+// ── PDF ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M, C=r.C;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Simulação tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Distribuição de lucros e IR mínimo',M,49);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês · despesas ${brl(r.D.desp)}/mês · participação ${pct(r.D.part)}`,W-2*M),M,56);
+  let y=64; const xs=C.length===3?[112,150,X2-3]:C.length===2?[140,X2-3]:[X2-3];
+  d.setFillColor(...NAVY);d.rect(M,y,W-2*M,10,'F');d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(255,255,255);
+  d.text('Por cenário',M+3,y+6.5);C.forEach((c,i)=>d.text(c.nome,xs[i],y+6.5,{align:'right'}));y+=10;
+  const rows=[['Pró-labore',c=>brl(c.pro)],['Impostos da empresa / mês',c=>brl(c.imp+c.patr)],['INSS + IR do pró-labore / mês',c=>brl(c.inss+c.ir)],['Lucros (sua parte) / mês',c=>brl(c.lucro)],
+    ['Retenção de 10% / mês',c=>c.ret?brl(c.ret):'-'],['No bolso / mês',c=>brl(c.liqMes),1],['Renda total no ano',c=>brl(c.rend)],['IR mínimo no ano',c=>c.devido?brl(c.devido):'-'],
+    ['Declaração: pagar (+) / restituir (-)',c=>(c.saldo>=0?'+ ':'- ')+brl(Math.abs(c.saldo))],['No bolso / ano',c=>brl(c.liqAno),1]];
+  rows.forEach(([k,f,t])=>{if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,9,'F')}d.setFont('helvetica',t?'bold':'normal');d.setFontSize(9.5);d.setTextColor(...(t?NAVY:MUT));d.text(k,M+3,y+6);
+    d.setTextColor(...(t?NAVY:[15,30,46]));C.forEach((c,i)=>d.text(f(c),xs[i],y+6,{align:'right'}));d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+9,X2,y+9);y+=9});
+  y+=6;const f=d.splitTextToSize(document.querySelector('#nota .fund').innerText.replace('Regras usadas','').trim(),W-2*M-12),hF=10+f.length*3.5;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('REGRAS USADAS',M+6,y+6.5);d.setFont('helvetica','normal');d.setFontSize(7.8);d.setTextColor(15,30,46);d.text(f,M+6,y+11.5);
+  y+=hF+7;if(y>268){d.addPage();y=20}d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+['fat','desp','part','iss','pro','outras','irout','l25','nome'].forEach(i=>$(i).addEventListener('input',calc));$('reg').addEventListener('change',calc);
+document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(R)gerarPDF().save(`Distribuicao de lucros - ${R.nome||'simulacao'}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R;
+  const t=`*Distribuição de lucros e IR mínimo*${r.nome?'\n'+r.nome:''}\n${r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês\n\n${r.C.map(c=>`• ${c.nome} (${brl(c.pro)}): *${brl(c.liqMes)}*/mês · ${brl(c.liqAno)}/ano`).join('\n')}\n\n✅ Melhor: *${r.best.nome}*\nIR mínimo no ano: ${brl(r.best.devido)}\n\nQuero planejar minhas retiradas com a Move.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>

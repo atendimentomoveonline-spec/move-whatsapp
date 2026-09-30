@@ -724,6 +724,20 @@ def credito_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Distribuição de lucros e IR mínimo (página estática) ──
+LUCROS_DIR = os.path.join(BASE, "lucros")
+
+@app.route("/lucros/")
+def lucros():
+    return send_file(os.path.join(LUCROS_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/lucros/<nome>.png")
+def lucros_img(nome):
+    f = os.path.join(LUCROS_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
