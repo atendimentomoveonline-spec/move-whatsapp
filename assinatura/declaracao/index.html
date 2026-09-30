@@ -79,7 +79,7 @@
   .meses label{margin:0 0 4px;font-size:12px}
   .meses .money input{padding:10px 10px 10px 38px;font-size:14px}
   .tot{display:flex;justify-content:space-between;margin-top:12px;font-size:14px;color:var(--mut)}.tot b{color:var(--navy)}
-  .paper{border:1px solid var(--line);border-radius:6px;padding:34px 34px 26px;background:#fff;color:#1f2937;font-size:13px;line-height:1.6}
+  .paper{border:1px solid #d6dde5;border-radius:10px;padding:34px 34px 26px;background:#fff;color:#1f2937;font-size:13px;line-height:1.6}
   .paper h2{text-align:center;letter-spacing:2px;color:var(--navy);font-size:17px;margin:14px 0 16px}
   .paper table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
   .paper td,.paper th{border:1px solid #d6dde5;padding:6px 10px}
@@ -103,10 +103,7 @@
     <div class="card">
       <div class="sec">Empresa</div>
       <label>Razão social</label><input id="razao" placeholder="Clínica Exemplo Ltda.">
-      <div class="row2">
-        <div><label>CNPJ</label><input id="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00"></div>
-        <div><label>Regime</label><select id="reg"><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option></select></div>
-      </div>
+      <label>CNPJ</label><input id="cnpj" inputmode="numeric" placeholder="00.000.000/0000-00">
       <label>Endereço (opcional)</label><input id="end" placeholder="Rua, número, cidade/UF">
 
       <div class="sec2"><div class="sec">Sócio que assina</div></div>
@@ -123,7 +120,6 @@
       </div>
       <div class="meses" id="meses"></div>
       <div class="tot"><span>Total do período</span><b id="tot"></b></div>
-      <div class="tot" style="margin-top:4px"><span>Média mensal</span><b id="med"></b></div>
 
       <div class="sec2"><div class="sec">Finalidade e assinatura</div></div>
       <label>Finalidade (opcional)</label><input id="fin" placeholder="comprovação de renda junto ao Banco Exemplo">
@@ -186,16 +182,16 @@ function desenhaMeses(){const L=periodo();$('meses').innerHTML=L.map(k=>`<div><l
   $('meses').querySelectorAll('input').forEach(i=>{i.oninput=()=>{V[i.dataset.k]=num(i.value);render()};i.onblur=()=>{i.value=V[i.dataset.k]?fmt(V[i.dataset.k]):''};
     i.addEventListener('paste',e=>{const t=(e.clipboardData||window.clipboardData).getData('text');const vals=t.split(/[\r\n\t;]+/).map(x=>x.trim()).filter(Boolean);if(vals.length>1){e.preventDefault();const ks=periodo(),ini=ks.indexOf(i.dataset.k);vals.forEach((x,j)=>{if(ks[ini+j])V[ks[ini+j]]=num(x.replace(/R\$\s?/,''))});desenhaMeses();render()}})})}
 function dados(){const L=periodo(),vals=L.map(k=>V[k]||0),tot=vals.reduce((s,x)=>s+x,0);
-  return {razao:$('razao').value.trim(),cnpj:$('cnpj').value.trim(),reg:$('reg').value,end:$('end').value.trim(),snome:$('snome').value.trim(),scpf:$('scpf').value.trim(),scargo:$('scargo').value.trim(),
+  return {razao:$('razao').value.trim(),cnpj:$('cnpj').value.trim(),end:$('end').value.trim(),snome:$('snome').value.trim(),scpf:$('scpf').value.trim(),scargo:$('scargo').value.trim(),
     L,vals,tot,med:tot/L.length,fin:$('fin').value.trim(),cid:$('cid').value.trim(),dt:$('dt').value,cnome:$('cnome').value.trim(),ccrc:$('ccrc').value.trim(),cesc:$('cesc').value.trim()}}
 const dataExt=iso=>{if(!iso)return '';const [y,m,d]=iso.split('-').map(Number);return `${d} de ${MES[m-1]} de ${y}`};
-function texto(D){return `Declaramos, para os devidos fins${D.fin?', especialmente '+D.fin:''}, que a empresa ${D.razao||'[razão social]'}, inscrita no CNPJ sob o nº ${D.cnpj||'[CNPJ]'}${D.end?', com sede em '+D.end:''}, optante pelo ${D.reg}, obteve no período de ${rot(D.L[0])} a ${rot(D.L[D.L.length-1])} o faturamento bruto abaixo discriminado, conforme os registros contábeis e as declarações fiscais apresentadas.`}
+function texto(D){return `Declaramos, para os devidos fins${D.fin?', especialmente '+D.fin:''}, que a empresa ${D.razao||'[razão social]'}, inscrita no CNPJ sob o nº ${D.cnpj||'[CNPJ]'}${D.end?', com sede em '+D.end:''}, obteve no período de ${rot(D.L[0])} a ${rot(D.L[D.L.length-1])} o faturamento bruto abaixo discriminado, conforme os registros contábeis e as declarações fiscais apresentadas.`}
 function render(){
   ['cnome','ccrc','cesc','cid'].forEach(k=>LS.set(k,$(k).value));
-  const D=dados();$('tot').textContent=brl(D.tot);$('med').textContent=brl(D.med);
+  const D=dados();$('tot').textContent=brl(D.tot);
   $('paper').innerHTML=`<img src="logo_move.png" alt="" style="height:34px"><h2>DECLARAÇÃO DE FATURAMENTO</h2><p>${esc(texto(D))}</p>
    <table><tr><th>Mês</th><th class="r">Faturamento bruto</th></tr>${D.L.map((k,i)=>`<tr><td>${rot(k)}</td><td class="r">${brl(D.vals[i])}</td></tr>`).join('')}
-   <tr><th>Total</th><th class="r">${brl(D.tot)}</th></tr><tr><td>Média mensal</td><td class="r">${brl(D.med)}</td></tr></table>
+   <tr><th>Total</th><th class="r">${brl(D.tot)}</th></tr></table>
    <p>Total do período: ${brl(D.tot)} (${esc(extenso(D.tot))}).</p><p>Por ser expressão da verdade, firmamos a presente declaração.</p>
    <p style="text-align:right">${esc(D.cid)}, ${dataExt(D.dt)}.</p>
    <div class="ass"><div>${esc(D.snome)||'Nome do sócio'}<br>${esc(D.scargo)}${D.scpf?'<br>CPF '+esc(D.scpf):''}<br>${esc(D.razao)}</div><div>${esc(D.cnome)||'Nome do contador'}<br>Contador · CRC ${esc(D.ccrc)||'—'}<br>${esc(D.cesc)}</div></div>`;
@@ -206,6 +202,7 @@ fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onl
 const NAVY=[0,52,89], INK=[31,41,55], LINE=[214,221,229];
 function gerarPDF(D){
   const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=22,X2=W-M;
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.roundedRect(10,10,W-20,277,2.5,2.5);   // contorno da página
   if(LOGO)d.addImage(LOGO,'PNG',M,14,38,18.6);
   d.setFont('helvetica','bold');d.setFontSize(14);d.setTextColor(...NAVY);d.text('DECLARAÇÃO DE FATURAMENTO',W/2,46,{align:'center',charSpace:.6});
   d.setFont('helvetica','normal');d.setFontSize(10.5);d.setTextColor(...INK);
@@ -215,8 +212,8 @@ function gerarPDF(D){
   d.setFont('helvetica','bold');d.setFontSize(9.5);d.setTextColor(...NAVY);d.text('Mês',M+4,y+lh-1.2);d.text('Faturamento bruto',c2,y+lh-1.2,{align:'right'});y+=lh+1;
   d.setFont('helvetica','normal');d.setTextColor(...INK);
   D.L.forEach((k,i)=>{d.rect(M,y,W-2*M,lh);d.text(rot(k),M+4,y+lh-1.8);d.text(brl(D.vals[i]),c2,y+lh-1.8,{align:'right'});y+=lh});
-  d.setFont('helvetica','bold');d.setFillColor(244,247,250);d.rect(M,y,W-2*M,lh+1,'FD');d.setTextColor(...NAVY);d.text('Total',M+4,y+lh-1.2);d.text(brl(D.tot),c2,y+lh-1.2,{align:'right'});y+=lh+1;
-  d.setFont('helvetica','normal');d.setTextColor(...INK);d.rect(M,y,W-2*M,lh);d.text('Média mensal',M+4,y+lh-1.8);d.text(brl(D.med),c2,y+lh-1.8,{align:'right'});y+=lh+7;
+  d.setFont('helvetica','bold');d.setFillColor(244,247,250);d.rect(M,y,W-2*M,lh+1,'FD');d.setTextColor(...NAVY);d.text('Total',M+4,y+lh-1.2);d.text(brl(D.tot),c2,y+lh-1.2,{align:'right'});y+=lh+8;
+  d.setFont('helvetica','normal');d.setTextColor(...INK);
   d.setFontSize(10.5);t=d.splitTextToSize(`Total do período: ${brl(D.tot)} (${extenso(D.tot)}).`,W-2*M);d.text(t,M,y);y+=t.length*5.4+2;
   d.text('Por ser expressão da verdade, firmamos a presente declaração.',M,y);y+=10;
   d.text(`${D.cid}, ${dataExt(D.dt)}.`,X2,y,{align:'right'});
@@ -230,7 +227,7 @@ $('bpdf').onclick=()=>{const D=render();const falta=[];if(!D.razao)falta.push('r
   $('err').textContent=falta.length?'Preencha: '+falta.join(', ')+'.':'';if(falta.length)return;
   gerarPDF(D).save(`Declaracao de faturamento - ${D.razao}.pdf`);toast('Declaração gerada.')};
 ['razao','cnpj','end','snome','scpf','scargo','fin','cid','dt','cnome','ccrc','cesc'].forEach(k=>$(k).addEventListener('input',render));
-$('reg').addEventListener('change',render);['fim','qtd'].forEach(k=>$(k).addEventListener('change',()=>{desenhaMeses();render()}));
+['fim','qtd'].forEach(k=>$(k).addEventListener('change',()=>{desenhaMeses();render()}));
 desenhaMeses();render();
 </script>
 </body>
