@@ -104,9 +104,14 @@
         <div id="issbox"><label>ISS (%)</label><input id="iss" inputmode="decimal" value="2"></div>
       </div>
       <div class="hint">Percentual do lucro que é seu. O pró-labore abaixo é só o seu.</div>
-      <label>Seu pró-labore mensal</label>
+      <div id="probox"><label>Seu pró-labore mensal</label>
       <div class="money"><span>R$</span><input id="pro" inputmode="decimal"></div>
-      <div class="hint" id="proh"></div>
+      <div class="hint" id="proh"></div></div>
+      <div id="cmpbox" class="row2">
+        <div><label>Pró-labore no Simples sem Fator R</label><div class="money"><span>R$</span><input id="proSN" inputmode="decimal" placeholder="1.621,00"></div></div>
+        <div><label>Pró-labore no Presumido</label><div class="money"><span>R$</span><input id="proLP" inputmode="decimal" placeholder="1.621,00"></div></div>
+      </div>
+      <div class="hint" id="cmph"></div>
 
       <div class="sec2"><div class="sec">Outras rendas no ano (opcional)</div></div>
       <label>Outras rendas no ano (aluguéis, aplicações, outros lucros)</label>
@@ -183,6 +188,7 @@ function cenario(nome,pro,D,reg){
 function calc(){
   const reg=$('reg').value, F=num($('fat').value);
   $('issbox').style.visibility=reg!=='SN'?'visible':'hidden';
+  $('probox').style.display=reg==='CMP'?'none':'';$('cmpbox').style.display=reg==='CMP'?'':'none';$('cmph').style.display=reg==='CMP'?'':'none';
   if(!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
   $('empty').style.display='none';$('res').style.display='';
   const D={reg,F,desp:num($('desp').value),part:Math.min(100,Math.max(1,num($('part').value)||100))/100,iss:num($('iss').value)/100,
@@ -191,8 +197,10 @@ function calc(){
   const proFR=Math.max(SAL_MIN,Math.ceil(Math.round(F*FR*10000)/100)/100), proInf=num($('pro').value);
   $('proh').textContent=reg==='CMP'?`No Simples sem Fator R usamos 1 salário mínimo e com Fator R ${brl(proFR)}. No Presumido, usamos o pró-labore informado (ou 1 salário mínimo).`:reg==='SN'?`Para o Fator R de 28%: ${brl(proFR)}. Em branco, compara só os cenários padrão.`:'No Presumido o pró-labore paga 20% de INSS da empresa; em branco, compara só os cenários padrão.';
   let C;
-  if(reg==='CMP'){const pLP=proInf||SAL_MIN;
-    C=[cenario('Simples sem Fator R',SAL_MIN,D,'SN'),cenario('Simples com Fator R',proFR,D,'SN'),cenario('Lucro Presumido',pLP,D,'LP')];}
+  if(reg==='CMP'){const pLP=num($('proLP').value)||SAL_MIN;
+    let pSN=num($('proSN').value)||SAL_MIN; if(pSN>=F*FR-0.01)pSN=Math.max(SAL_MIN,F*FR-0.02);   // sem Fator R: precisa ficar abaixo de 28%
+    $('cmph').textContent=`Em branco, os dois usam 1 salário mínimo. No Simples sem Fator R o pró-labore precisa ficar abaixo de ${brl(F*FR)} (28%); com Fator R usamos ${brl(proFR)}.`;
+    C=[cenario('Simples sem Fator R',pSN,D,'SN'),cenario('Simples com Fator R',proFR,D,'SN'),cenario('Lucro Presumido',pLP,D,'LP')];}
   else{C=[cenario('Pró-labore mínimo',SAL_MIN,D)];
     if(reg==='SN')C.push(cenario('Pró-labore do Fator R',proFR,D));
     if(proInf&&Math.abs(proInf-SAL_MIN)>1&&Math.abs(proInf-proFR)>1)C.push(cenario('Seu pró-labore',proInf,D));}
@@ -240,7 +248,7 @@ function gerarPDF(){
   d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
   return d;
 }
-['fat','desp','part','iss','pro','outras','irout','l25','nome'].forEach(i=>$(i).addEventListener('input',calc));$('reg').addEventListener('change',calc);
+['fat','desp','part','iss','pro','proSN','proLP','outras','irout','l25','nome'].forEach(i=>$(i).addEventListener('input',calc));$('reg').addEventListener('change',calc);
 document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
 $('bpdf').onclick=()=>{if(R)gerarPDF().save(`Distribuicao de lucros - ${R.nome||'simulacao'}.pdf`)};
 $('bzap').onclick=()=>{if(!R)return;const r=R;
