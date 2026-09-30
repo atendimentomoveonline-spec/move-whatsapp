@@ -86,31 +86,36 @@
   .ith{font-size:12px;color:#94a3b8;margin-top:6px}
   .add{margin-top:10px;width:100%;padding:11px;border:1.5px dashed var(--green);border-radius:12px;background:#fff;color:var(--green2);font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}
   .add:hover{background:#e8faf3}
-  /* pré-visualização: modelo minimalista */
-  .paper{border:1px solid var(--line);border-radius:6px;padding:40px 38px 22px;background:#fff;color:#374151;font-family:Poppins,'Segoe UI',sans-serif;font-weight:300;font-size:12px;line-height:1.6;min-height:560px;display:flex;flex-direction:column}
+  /* pré-visualização: caixas e faixas azuis, Poppins, traços finos */
+  .paper{border:1px solid var(--line);border-radius:6px;padding:40px 36px 22px;background:#fff;color:#374151;font-family:Poppins,'Segoe UI',sans-serif;font-weight:300;font-size:12px;line-height:1.6;min-height:560px;display:flex;flex-direction:column}
   .paper b{font-weight:500;color:var(--navy)}
   .ph{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-start}
-  .ph .nm{font-weight:500;color:var(--navy);font-size:14px}
-  .ph .iv{font-size:17px;letter-spacing:5px;color:var(--navy);font-weight:400;text-align:right}
-  .ph .sm{white-space:pre-line}
-  .rl{height:1px;background:var(--navy);margin:20px 0 16px}
-  .parts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .parts .k,.pnotes .k,.itb th{font-size:9.5px;letter-spacing:1.4px;color:#94a3b8;font-weight:400;text-transform:uppercase}
-  .parts .cn{font-weight:400;color:var(--navy);font-size:13px}
+  .ph .nm{font-weight:500;color:var(--navy);font-size:14.5px}
+  .ph .iv{font-size:21px;letter-spacing:5px;color:var(--navy);font-weight:400;text-align:right}
+  .ph .sm{white-space:pre-line;font-size:11.5px}
+  .rl{height:1.5px;background:var(--navy);margin:18px 0 18px}
+  .parts{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+  .parts .bx1{background:#f4f7fa;padding:12px 14px}
+  .parts .bx2{border:1px solid #d6dde5;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-content:start}
+  .parts .bx2 span:nth-child(odd){color:#94a3b8}
+  .parts .bx2 span:nth-child(even){text-align:right}
+  .parts .k,.pnotes .k{font-size:9.5px;letter-spacing:1.4px;color:#94a3b8;font-weight:400;text-transform:uppercase}
+  .parts .cn{font-weight:500;color:var(--navy);font-size:13px}
   .parts .ad{white-space:pre-line;word-break:break-word}
-  .parts .rt{text-align:right}
-  .parts .big{font-weight:500;color:var(--navy);font-size:17px}
-  .tbw{overflow-x:auto;margin-top:26px}
+  .parts .due{color:var(--navy)!important;font-weight:500;margin-top:6px}
+  .parts .dueV{color:var(--navy);font-weight:500;font-size:15px;margin-top:4px}
+  .tbw{overflow-x:auto;margin-top:22px}
   table.itb{width:100%;border-collapse:collapse;min-width:420px}
-  .itb th{text-align:left;padding:0 0 6px;border-bottom:1px solid var(--navy)}
-  .itb td{padding:8px 0;border-bottom:1px solid #e5e9ee;vertical-align:top}
-  .itb .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:12px}
+  .itb th{background:var(--navy);color:#fff;text-align:left;padding:7px 10px;font-size:9.5px;letter-spacing:1.2px;font-weight:400;text-transform:uppercase}
+  .itb td{padding:8px 10px;vertical-align:top}
+  .itb tr:nth-child(odd) td{background:#f4f7fa}
+  .itb .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
   .tots{margin-left:auto;margin-top:10px;width:min(300px,100%)}
-  .tots div{display:flex;justify-content:space-between;padding:5px 0}
-  .tots .g{border-top:1px solid var(--navy);font-weight:500;color:var(--navy);font-size:13.5px}
+  .tots div{display:flex;justify-content:space-between;padding:5px 10px}
+  .tots .g{background:var(--navy);color:#fff;font-weight:500;font-size:13px;padding:8px 10px;margin-top:4px}
   .pnotes{margin-top:22px;white-space:pre-line}
-  .pft{margin-top:auto;padding-top:26px;display:flex;justify-content:space-between;gap:10px;color:#b0bac6;font-size:9.5px}
-  @media(max-width:520px){.paper{padding:22px 16px}.parts{grid-template-columns:1fr}.parts .rt{text-align:left}.ph .iv{text-align:left}}
+  .pft{margin-top:auto;padding-top:26px;display:flex;justify-content:space-between;gap:10px;color:#b0bac6;font-size:9.5px;border-top:1px solid #eef1f4}
+  @media(max-width:520px){.paper{padding:22px 16px}.parts{grid-template-columns:1fr}.ph .iv{text-align:left}}
 </style>
 </head>
 <body>
@@ -201,13 +206,13 @@ function render(){
   const D=dados();
   EMISSOR.forEach(k=>LS.set(k,$(k).value));
   $('paper').innerHTML=`<div class="ph"><div><div class="nm">${esc(D.fNome)||'Your company name'}</div><div class="sm">${[D.fDoc?'CNPJ (Brazil) '+esc(D.fDoc):'',esc(D.fEnd),esc(D.fCont)].filter(Boolean).join('\n')}</div></div>
-   <div><div class="iv">INVOICE</div><div style="text-align:right">No. ${esc(D.num)||'—'}</div></div></div>
+   <div><div class="iv">INVOICE</div><div style="text-align:right">No. <b>${esc(D.num)||'—'}</b></div></div></div>
    <div class="rl"></div>
-   <div class="parts"><div><div class="k">Bill to</div><div class="cn">${esc(D.cNome)||'Client name'}</div><div class="ad">${[esc(D.cEnd),D.cDoc?'Tax ID: '+esc(D.cDoc):''].filter(Boolean).join('\n')}</div></div>
-   <div class="rt"><div class="k">Issue date · Due date</div><div>${dEN(D.dt)||'—'} · ${dEN(D.due)||'—'}</div><div class="k" style="margin-top:8px">Amount due</div><div class="big">${money(D.total,D.cur)}</div></div></div>
+   <div class="parts"><div class="bx1"><div class="k">Bill to</div><div class="cn">${esc(D.cNome)||'Client name'}</div><div class="ad">${[esc(D.cEnd),D.cDoc?'Tax ID: '+esc(D.cDoc):''].filter(Boolean).join('\n')}</div></div>
+   <div class="bx2"><span>Issue date</span><span>${dEN(D.dt)||'—'}</span><span>Due date</span><span>${dEN(D.due)||'—'}</span><span>Currency</span><span>${D.cur}</span><span class="due">Amount due</span><span class="dueV">${money(D.total,D.cur)}</span></div></div>
    <div class="tbw"><table class="itb"><tr><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr>
    ${(D.linhas.length?D.linhas:[{d:'Service description',q:1,v:0,t:0}]).map(it=>`<tr><td>${esc(it.d)||'—'}</td><td class="r">${it.q.toLocaleString('en-US')}</td><td class="r">${money(it.v,D.cur)}</td><td class="r">${money(it.t,D.cur)}</td></tr>`).join('')}</table></div>
-   <div class="tots"><div><span>Subtotal</span><span>${money(D.total,D.cur)}</span></div><div class="g"><span>Total (${D.cur})</span><span>${money(D.total,D.cur)}</span></div></div>
+   <div class="tots"><div><span>Subtotal</span><span>${money(D.total,D.cur)}</span></div><div class="g"><span>Total due (${D.cur})</span><span>${money(D.total,D.cur)}</span></div></div>
    ${D.obs?`<div class="pnotes"><div class="k">Notes</div>${esc(D.obs)}</div>`:''}
    <div class="pft"><span>Invoice ${esc(D.num)} · page 1 of 1</span><span>Invoice generated with Move Online</span></div>`;
   return D;
@@ -225,41 +230,51 @@ function gerarPDF(D,F){
   if(F)F.forEach(([p,f,b])=>{d.addFileToVFS(f,b);d.addFont(f,'Poppins',p)});
   const fam=F?'Poppins':'helvetica', fo=p=>d.setFont(fam,F?p:(p==='medium'?'bold':'normal'));
   const m=v=>money(v,D.cur).replace('€','EUR ').replace('£','GBP ');
+  const SOFT=[244,247,250], BOX=[214,221,229];
   // texto com espaçamento entre letras: o alinhamento à direita do jsPDF ignora o charSpace, então a posição é calculada aqui
   const esp=(t,x,y,cs,al)=>{const w=d.getTextWidth(t)+cs*(t.length-1);d.text(t,al==='right'?x-w:x,y,{charSpace:cs})};
-  const k=(t,x,y,al)=>{fo('normal');d.setFontSize(6.8);d.setTextColor(...MUT);esp(t.toUpperCase(),x,y,.35,al)};
+  const k=(t,x,y,al,cor)=>{fo('normal');d.setFontSize(6.6);d.setTextColor(...(cor||MUT));esp(t.toUpperCase(),x,y,.35,al)};
   // cabeçalho
-  fo('medium');d.setFontSize(11);d.setTextColor(...NAVY);const nm=d.splitTextToSize(D.fNome||'-',110);d.text(nm,M,26);
-  let yE=26+nm.length*4.6;fo('light');d.setFontSize(8.3);d.setTextColor(...INK);
-  const em=d.splitTextToSize([D.fDoc?'CNPJ (Brazil) '+D.fDoc:'',D.fEnd,D.fCont].filter(Boolean).join('\n'),110);d.text(em,M,yE);yE+=em.length*3.7;
-  fo('normal');d.setFontSize(13);d.setTextColor(...NAVY);esp('INVOICE',X2,26,1.6,'right');
-  fo('light');d.setFontSize(8.3);d.setTextColor(...INK);d.text('No. '+(D.num||'-'),X2,31.5,{align:'right'});
-  let y=Math.max(yE,34)+5;d.setDrawColor(...NAVY);d.setLineWidth(.2);d.line(M,y,X2,y);y+=9;
-  // cliente e valores
-  k('Bill to',M,y);k('Issue date · Due date',X2,y,'right');
-  fo('normal');d.setFontSize(9.8);d.setTextColor(...NAVY);const cn=d.splitTextToSize(D.cNome||'-',95);d.text(cn,M,y+5);
-  fo('light');d.setFontSize(8.3);d.setTextColor(...INK);const ca=d.splitTextToSize([D.cEnd,D.cDoc?'Tax ID: '+D.cDoc:''].filter(Boolean).join('\n'),95);d.text(ca,M,y+5+cn.length*4.2);
-  d.text(`${dEN(D.dt)||'-'} · ${dEN(D.due)||'-'}`,X2,y+5,{align:'right'});
-  k('Amount due',X2,y+12,'right');fo('medium');d.setFontSize(13);d.setTextColor(...NAVY);d.text(m(D.total),X2,y+18.5,{align:'right'});
-  y=Math.max(y+5+cn.length*4.2+ca.length*3.7,y+20)+12;
-  // tabela
-  const cQ=125,cU=155;
-  k('Description',M,y);k('Qty',cQ,y,'right');k('Unit price',cU,y,'right');k('Amount',X2,y,'right');
-  y+=2.5;d.setDrawColor(...NAVY);d.setLineWidth(.2);d.line(M,y,X2,y);
-  fo('light');d.setFontSize(8.8);
-  D.linhas.forEach(it=>{const t=d.splitTextToSize(it.d||'-',88), h=Math.max(8,t.length*4+4);
+  fo('medium');d.setFontSize(11.5);d.setTextColor(...NAVY);const nm=d.splitTextToSize(D.fNome||'-',112);d.text(nm,M,26);
+  let yE=26+nm.length*4.8;fo('light');d.setFontSize(8.2);d.setTextColor(...INK);
+  const em=d.splitTextToSize([D.fDoc?'CNPJ (Brazil) '+D.fDoc:'',D.fEnd,D.fCont].filter(Boolean).join('\n'),112);d.text(em,M,yE);yE+=em.length*3.7;
+  fo('normal');d.setFontSize(17);d.setTextColor(...NAVY);esp('INVOICE',X2,27,2,'right');
+  fo('light');d.setFontSize(8.2);d.setTextColor(...INK);const nn=D.num||'-';fo('medium');const wN=d.getTextWidth(nn);d.setTextColor(...NAVY);d.text(nn,X2,33,{align:'right'});
+  fo('light');d.setTextColor(...INK);d.text('No. ',X2-wN,33,{align:'right'});
+  let y=Math.max(yE,36)+5;d.setDrawColor(...NAVY);d.setLineWidth(.45);d.line(M,y,X2,y);y+=8;
+  // caixas: cliente (fundo claro) e datas/valor (contorno fino)
+  const wL=(W-2*M)*.54, xR=M+wL+6, wR=X2-xR;
+  fo('medium');d.setFontSize(9.8);const cn=d.splitTextToSize(D.cNome||'-',wL-12);
+  fo('light');d.setFontSize(8.2);const ca=d.splitTextToSize([D.cEnd,D.cDoc?'Tax ID: '+D.cDoc:''].filter(Boolean).join('\n'),wL-12);
+  const hB=Math.max(9+cn.length*4.4+ca.length*3.7+4,34);
+  d.setFillColor(...SOFT);d.rect(M,y,wL,hB,'F');
+  k('Bill to',M+6,y+7);fo('medium');d.setFontSize(9.8);d.setTextColor(...NAVY);d.text(cn,M+6,y+12.5);
+  fo('light');d.setFontSize(8.2);d.setTextColor(...INK);d.text(ca,M+6,y+12.5+cn.length*4.4);
+  d.setDrawColor(...BOX);d.setLineWidth(.2);d.rect(xR,y,wR,hB);
+  const lin=(a,b,yy)=>{fo('light');d.setFontSize(8.2);d.setTextColor(...MUT);d.text(a,xR+5,yy);d.setTextColor(...INK);d.text(b,X2-5,yy,{align:'right'})};
+  lin('Issue date',dEN(D.dt)||'-',y+8);lin('Due date',dEN(D.due)||'-',y+13);lin('Currency',D.cur,y+18);
+  fo('medium');d.setFontSize(8.6);d.setTextColor(...NAVY);d.text('Amount due',xR+5,y+hB-6);d.setFontSize(12);d.text(m(D.total),X2-5,y+hB-6,{align:'right'});
+  y+=hB+9;
+  // tabela: faixa azul e linhas alternadas
+  const cQ=125,cU=153;
+  d.setFillColor(...NAVY);d.rect(M,y,W-2*M,7.5,'F');
+  k('Description',M+4,y+4.9,null,[255,255,255]);k('Qty',cQ,y+4.9,'right',[255,255,255]);k('Unit price',cU,y+4.9,'right',[255,255,255]);k('Amount',X2-4,y+4.9,'right',[255,255,255]);
+  y+=7.5;fo('light');d.setFontSize(8.8);
+  D.linhas.forEach((it,i)=>{const t=d.splitTextToSize(it.d||'-',86), h=Math.max(8,t.length*4+4);
     if(y+h>262){d.addPage();y=24}
-    d.setTextColor(...INK);d.text(t,M,y+5.5);d.text(it.q.toLocaleString('en-US'),cQ,y+5.5,{align:'right'});d.text(m(it.v),cU,y+5.5,{align:'right'});d.text(m(it.t),X2,y+5.5,{align:'right'});
-    d.setDrawColor(...LINE);d.setLineWidth(.2);d.line(M,y+h,X2,y+h);y+=h});
+    if(i%2===1){d.setFillColor(...SOFT);d.rect(M,y,W-2*M,h,'F')}
+    fo('light');d.setFontSize(8.8);d.setTextColor(...INK);d.text(t,M+4,y+5.4);d.text(it.q.toLocaleString('en-US'),cQ,y+5.4,{align:'right'});d.text(m(it.v),cU,y+5.4,{align:'right'});d.text(m(it.t),X2-4,y+5.4,{align:'right'});
+    y+=h});
+  d.setDrawColor(...LINE);d.setLineWidth(.2);d.line(M,y,X2,y);
   // totais
-  const xT=X2-70;y+=6;fo('light');d.setFontSize(8.8);d.setTextColor(...INK);d.text('Subtotal',xT,y);d.text(m(D.total),X2,y,{align:'right'});
-  y+=3.5;d.setDrawColor(...NAVY);d.line(xT,y,X2,y);y+=5.5;
-  fo('medium');d.setFontSize(10);d.setTextColor(...NAVY);d.text(`Total (${D.cur})`,xT,y);d.text(m(D.total),X2,y,{align:'right'});y+=14;
-  if(D.obs){if(y>262){d.addPage();y=24}k('Notes',M,y);fo('light');d.setFontSize(8.5);d.setTextColor(...INK);const t=d.splitTextToSize(D.obs,W-2*M);d.text(t,M,y+5)}
+  const xT=X2-72;y+=6.5;fo('light');d.setFontSize(8.6);d.setTextColor(...MUT);d.text('Subtotal',xT+4,y);d.setTextColor(...INK);d.text(m(D.total),X2-4,y,{align:'right'});
+  y+=3.5;d.setFillColor(...NAVY);d.rect(xT,y,X2-xT,9,'F');fo('medium');d.setFontSize(9.4);d.setTextColor(255,255,255);
+  d.text(`Total due (${D.cur})`,xT+4,y+5.9);d.text(m(D.total),X2-4,y+5.9,{align:'right'});y+=20;
+  if(D.obs){if(y>262){d.addPage();y=24}k('Notes',M,y);fo('light');d.setFontSize(8.4);d.setTextColor(...INK);const t=d.splitTextToSize(D.obs,W-2*M);d.text(t,M,y+5)}
   // rodapé em todas as páginas
   const n=d.getNumberOfPages();
-  for(let p=1;p<=n;p++){d.setPage(p);fo('light');d.setFontSize(6.8);d.setTextColor(...FT);
-    d.text(`Invoice ${D.num||''} · page ${p} of ${n}`,M,287);d.text('Invoice generated with Move Online',X2,287,{align:'right'})}
+  for(let p=1;p<=n;p++){d.setPage(p);d.setDrawColor(...LINE);d.setLineWidth(.2);d.line(M,282,X2,282);fo('light');d.setFontSize(6.8);d.setTextColor(...FT);
+    d.text(`Invoice ${D.num||''} · page ${p} of ${n}`,M,286.5);d.text('Invoice generated with Move Online',X2,286.5,{align:'right'})}
   return d;
 }
 
