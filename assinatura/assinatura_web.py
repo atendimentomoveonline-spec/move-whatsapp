@@ -752,6 +752,20 @@ def carne_leao_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Declaração de faturamento, uso interno da equipe (página estática) ──
+DECL_DIR = os.path.join(BASE, "declaracao")
+
+@app.route("/declaracao/")
+def declaracao():
+    return send_file(os.path.join(DECL_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/declaracao/<nome>.png")
+def declaracao_img(nome):
+    f = os.path.join(DECL_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
