@@ -654,6 +654,20 @@ def plantao_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calendário de vencimentos (página estática) ──
+VENC_DIR = os.path.join(BASE, "vencimentos")
+
+@app.route("/vencimentos/")
+def vencimentos():
+    return send_file(os.path.join(VENC_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/vencimentos/<nome>.png")
+def vencimentos_img(nome):
+    f = os.path.join(VENC_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

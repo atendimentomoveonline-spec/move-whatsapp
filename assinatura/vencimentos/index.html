@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendário de Vencimentos — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .mes{margin-top:18px}
+  .mes h4{margin:0 0 6px;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--navy)}
+  .ev{display:grid;grid-template-columns:58px 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .ev .dia{background:#f4f8fb;border-radius:10px;text-align:center;padding:6px 0;color:var(--navy);font-weight:800;font-size:20px;line-height:1.1}
+  .ev .dia small{display:block;font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase}
+  .ev b{color:var(--navy);font-size:14px}
+  .ev .d{font-size:12.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+  .ev .aj{display:inline-block;font-size:11px;color:#9a6700;background:#fff8e6;border-radius:6px;padding:1px 6px;margin-top:4px}
+  .chk{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:14px;color:var(--ink);font-weight:600;cursor:pointer}
+  .chk input{width:20px;height:20px;accent-color:var(--green)}
+  .resumo{display:flex;gap:10px;flex-wrap:wrap}
+  .resumo span{background:#e8faf3;color:var(--green2);font-weight:700;font-size:12px;border-radius:999px;padding:5px 11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Calendário de <span>Vencimentos</span></h1>
+    <p>Todas as guias e prazos do seu CNPJ nos próximos 12 meses, com lembrete no seu calendário.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Seu perfil</div>
+      <label>Nome ou empresa (opcional)</label>
+      <input id="nome" placeholder="Clínica Exemplo Ltda.">
+
+      <label>Regime</label>
+      <select id="reg">
+        <option value="SN">Simples Nacional</option>
+        <option value="LP">Lucro Presumido</option>
+        <option value="PF">Pessoa física (carnê-leão)</option>
+      </select>
+
+      <div id="pjbox">
+      <label class="chk"><input type="checkbox" id="pro" checked> Tenho pró-labore</label>
+      <label class="chk"><input type="checkbox" id="func"> Tenho funcionários</label>
+      <div id="issbox">
+        <label>Dia de vencimento do ISS na sua cidade</label>
+        <input id="iss" inputmode="numeric" value="10">
+        <div class="hint">Em São Paulo, o ISS vence no dia 10 do mês seguinte.</div>
+      </div>
+      </div>
+
+      <label>Lembrete antes do vencimento</label>
+      <select id="av"><option value="1">1 dia antes</option><option value="3" selected>3 dias antes</option><option value="5">5 dias antes</option></select>
+    </div>
+
+    <div class="card">
+      <div class="resumo" id="resumo"></div>
+      <div class="acts" style="margin-top:14px">
+        <button class="btn" id="bics">Adicionar ao meu calendário</button>
+        <button class="btn o" id="bpdf">Baixar PDF</button>
+      </div>
+      <div class="hint" style="margin-top:8px">O botão baixa um arquivo que abre no Google Agenda, no calendário do iPhone ou no Outlook, com aviso antes de cada vencimento.</div>
+      <div id="lista"></div>
+      <div class="note"><div class="fund"><div class="ft">Como as datas são ajustadas</div>Quando o vencimento cai em fim de semana ou feriado: o DAS do Simples passa para o próximo dia útil; DARF, DCTFWeb (INSS e IR do pró-labore), PIS/COFINS e FGTS são antecipados para o dia útil anterior; IRPJ, CSLL e carnê-leão vencem no último dia útil do mês. Considera feriados nacionais e bancários (Carnaval, Sexta-feira Santa e Corpus Christi); feriados municipais não entram. As obrigações acessórias (eSocial, EFD, ECD, ECF) ficam com a contabilidade.</div></div>
+      <div class="acts"><button class="btn o" id="bzap">Enviar no WhatsApp da Move</button></div>
+    </div>
+  </div>
+  <div class="foot">Datas estimadas pelas regras de 2026. Confira sempre a data impressa na guia.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const $=id=>document.getElementById(id);
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const SEM=['dom','seg','ter','qua','qui','sex','sáb'];
+// feriados nacionais e bancários (sem feriados municipais); 31/12 sem expediente bancário ao público
+const FERIADOS=new Set(['2026-01-01','2026-02-16','2026-02-17','2026-04-03','2026-04-21','2026-05-01','2026-06-04','2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-11-20','2026-12-25','2026-12-31',
+ '2027-01-01','2027-02-08','2027-02-09','2027-03-26','2027-04-21','2027-05-01','2027-05-27','2027-09-07','2027-10-12','2027-11-02','2027-11-15','2027-11-20','2027-12-25','2027-12-31',
+ '2028-01-01','2028-02-28','2028-02-29','2028-04-14','2028-04-21','2028-05-01','2028-06-15','2028-09-07','2028-10-12','2028-11-02','2028-11-15','2028-11-20','2028-12-25']);
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const util=d=>d.getDay()!==0&&d.getDay()!==6&&!FERIADOS.has(iso(d));
+function ajusta(d,regra){const x=new Date(d);if(regra==='prox'){while(!util(x))x.setDate(x.getDate()+1)}else{while(!util(x))x.setDate(x.getDate()-1)}return x}
+function ultimoUtil(a,m){const x=new Date(a,m+1,0);while(!util(x))x.setDate(x.getDate()-1);return x}
+function diaMes(a,m,dia,regra){const ult=new Date(a,m+1,0).getDate();return ajusta(new Date(a,m,Math.min(dia,ult)),regra)}
+const compet=(a,m)=>`${MESES[(m+11)%12]}/${m===0?a-1:a}`;
+
+function gerar(){
+  const reg=$('reg').value, pro=$('pro').checked, func=$('func').checked, diss=Math.min(31,Math.max(1,parseInt($('iss').value)||10));
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const ini=new Date(hoje.getFullYear(),hoje.getMonth(),1), ev=[];
+  const add=(d,t,desc,onde,orig)=>{if(d>=hoje)ev.push({d,t,desc,onde,aj:orig&&iso(orig)!==iso(d)?orig:null})};
+  for(let k=0;k<12;k++){
+    const a=ini.getFullYear()+Math.floor((ini.getMonth()+k)/12), m=(ini.getMonth()+k)%12, c=compet(a,m);
+    const orig=dia=>new Date(a,m,dia);
+    if(reg==='SN'){
+      add(diaMes(a,m,20,'prox'),'DAS do Simples Nacional',`Competência ${c}. Guia única com os impostos da empresa.`,'PGDAS-D (Receita Federal)',orig(20));
+    }
+    if(reg==='LP'){
+      add(diaMes(a,m,25,'ant'),'PIS e COFINS',`Competência ${c}. DARF códigos 8109 e 2172.`,'DARF (Receita Federal)',orig(25));
+      add(diaMes(a,m,diss,'prox'),'ISS',`Competência ${c}. Imposto municipal sobre os serviços.`,'Guia da prefeitura',orig(diss));
+      if([0,3,6,9].includes(m)){const tri=['4º trimestre','1º trimestre','2º trimestre','3º trimestre'][[0,3,6,9].indexOf(m)];
+        add(ultimoUtil(a,m),'IRPJ e CSLL',`${tri} de ${m===0?a-1:a}. Cota única ou 1ª de 3 cotas.`,'DARF (Receita Federal)',null)}
+    }
+    if(reg!=='PF'&&(pro||func)){
+      add(diaMes(a,m,20,'ant'),'DCTFWeb: INSS e IR',`Competência ${c}. INSS${pro?' e IR do pró-labore':''}${func?' e da folha':''}.`,'DCTFWeb (e-CAC)',orig(20));
+    }
+    if(reg!=='PF'&&func){
+      add(diaMes(a,m,20,'ant'),'FGTS',`Competência ${c}. Depósito do FGTS dos funcionários.`,'FGTS Digital',orig(20));
+    }
+    if(reg==='PF'){
+      add(ultimoUtil(a,m),'Carnê-leão',`Rendimentos de ${c}. DARF código 0190.`,'Carnê-Leão Web (e-CAC)',null);
+    }
+    // anuais
+    if(reg==='SN'&&m===2)add(diaMes(a,m,31,'prox'),'DEFIS',`Declaração anual do Simples Nacional de ${a-1}.`,'Portal do Simples Nacional',orig(31));
+    if(m===4)add(ultimoUtil(a,m),'Declaração do Imposto de Renda (pessoa física)',`Ano-base ${a-1}. Prazo final da entrega (confira a data oficial do ano).`,'Receita Federal',null);
+  }
+  ev.sort((x,y)=>x.d-y.d);
+  return {reg,ev};
+}
+
+function render(){
+  const {reg,ev}=gerar();
+  $('pjbox').style.display=reg==='PF'?'none':'';$('issbox').style.display=reg==='LP'?'':'none';
+  const qt={};ev.forEach(e=>qt[e.t]=(qt[e.t]||0)+1);
+  $('resumo').innerHTML=`<span>${ev.length} vencimentos nos próximos 12 meses</span>`+Object.keys(qt).slice(0,4).map(t=>`<span>${t}</span>`).join('');
+  let html='',mes='';
+  ev.forEach(e=>{const mm=`${MESES[e.d.getMonth()]} de ${e.d.getFullYear()}`;
+    if(mm!==mes){html+=`${mes?'</div>':''}<div class="mes"><h4>${mm}</h4>`;mes=mm}
+    html+=`<div class="ev"><div class="dia">${e.d.getDate()}<small>${SEM[e.d.getDay()]}</small></div><div><b>${e.t}</b><div class="d">${e.desc} Onde: ${e.onde}.</div>${e.aj?`<span class="aj">Dia ${e.aj.getDate()} não é dia útil: data ajustada</span>`:''}</div></div>`});
+  $('lista').innerHTML=html+(mes?'</div>':'');
+  return {reg,ev};
+}
+
+// arquivo de calendário (.ics): evento no dia do vencimento e aviso às 9h, N dias antes
+function ics(ev,aviso,nome){
+  const f=d=>iso(d).replace(/-/g,''), esc=s=>s.replace(/[,;]/g,m=>'\\'+m);
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Move Online//Vencimentos//PT','CALSCALE:GREGORIAN','X-WR-CALNAME:Vencimentos'+(nome?' · '+esc(nome):'')];
+  ev.forEach((e,i)=>{const fim=new Date(e.d);fim.setDate(fim.getDate()+1);
+    L.push('BEGIN:VEVENT',`UID:mv-${f(e.d)}-${i}@moveonline`,`DTSTAMP:${f(new Date())}T000000Z`,`DTSTART;VALUE=DATE:${f(e.d)}`,`DTEND;VALUE=DATE:${f(fim)}`,
+      `SUMMARY:${esc('Vence: '+e.t)}`,`DESCRIPTION:${esc(e.desc+' Onde: '+e.onde+'. Dúvidas: Move Online (11) 97803-6539')}`,
+      'BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${esc(e.t)}`,(+aviso>1?`TRIGGER:-P${aviso-1}DT15H`:'TRIGGER:-PT15H'),'END:VALARM','END:VEVENT')});
+  L.push('END:VCALENDAR');return L.join('\r\n');
+}
+
+// ── PDF ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+const REG={SN:'Simples Nacional',LP:'Lucro Presumido',PF:'Pessoa física (carnê-leão)'};
+function gerarPDF(){
+  const {reg,ev}=gerar(), nome=$('nome').value.trim(), {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  const cab=()=>{if(LOGO)d.addImage(LOGO,'PNG',M,10,40,19.6);d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+    d.text('Calendário de vencimentos',X2,17,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,22,{align:'right'});d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,33,X2,33)};
+  cab();d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Vencimentos dos próximos 12 meses',M,44);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);d.text(`${nome?nome+' · ':''}${REG[reg]}`,M,50);
+  let y=58;
+  ev.forEach(e=>{if(y>266){d.addPage();cab();y=42}
+    d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(e.d.toLocaleDateString('pt-BR'),M,y);
+    d.text(e.t,M+26,y);d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);
+    const t=d.splitTextToSize(`${e.desc} Onde: ${e.onde}.`,X2-M-26);d.text(t,M+26,y+4.5);
+    y+=6+t.length*3.8;d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y-2.5,X2,y-2.5)});
+  if(y>250){d.addPage();cab();y=42}
+  d.setFontSize(8);d.setTextColor(...MUT);d.text(d.splitTextToSize('Datas estimadas pelas regras de 2026, com feriados nacionais e bancários; feriados municipais não entram. Confira sempre a data impressa na guia.',W-2*M),M,y+3);
+  y+=12;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
+['reg','av'].forEach(i=>$(i).addEventListener('change',render));['pro','func'].forEach(i=>$(i).addEventListener('change',render));['iss','nome'].forEach(i=>$(i).addEventListener('input',render));
+$('bics').onclick=()=>{const {ev}=gerar();const blob=new Blob([ics(ev,$('av').value,$('nome').value.trim())],{type:'text/calendar'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vencimentos-move.ics';document.body.appendChild(a);a.click();a.remove();
+  toast('Arquivo baixado. Abra para adicionar ao seu calendário.')};
+$('bpdf').onclick=()=>gerarPDF().save('Calendario de vencimentos - Move.pdf');
+$('bzap').onclick=()=>{const {reg,ev}=gerar();const prox=ev.slice(0,5).map(e=>`• ${e.d.toLocaleDateString('pt-BR')}: ${e.t}`).join('\n');
+  const t=`*Calendário de vencimentos*${$('nome').value.trim()?'\n'+$('nome').value.trim():''}\n${REG[reg]}\n\nPróximos vencimentos:\n${prox}\n\nQuero ajuda da Move com minhas guias.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+render();
+</script>
+</body>
+</html>
