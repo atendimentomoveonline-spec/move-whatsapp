@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plantão: PJ, RPA ou CLT — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  @media(min-width:760px){.cmp.tres{grid-template-columns:1fr 1fr 1fr}}
+  .opt.best{border:2px solid var(--green)}
+  .opt .tag{display:inline-block;font-size:11px;font-weight:800;color:var(--green2);background:#e8faf3;border-radius:999px;padding:3px 9px;margin-top:6px}
+  .opt .sub2{font-size:12px;color:#94a3b8;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Plantão: PJ <span>×</span> RPA <span>×</span> CLT</h1>
+    <p>Quanto sobra no bolso de cada plantão em cada forma de receber.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Dados do plantão</div>
+      <label>Nome (opcional)</label>
+      <input id="nome" placeholder="Nome do profissional">
+
+      <label>Profissão</label>
+      <select id="atv"></select>
+
+      <label>Valor de cada plantão</label>
+      <div class="money"><span>R$</span><input id="val" class="big" inputmode="decimal" placeholder="1.500,00"></div>
+
+      <label>Plantões por mês</label>
+      <input id="qtd" inputmode="numeric" value="8">
+
+      <label>Salário CLT oferecido (opcional)</label>
+      <div class="money"><span>R$</span><input id="clt" inputmode="decimal"></div>
+      <div class="hint" id="clth">Em branco, usa o mesmo valor mensal dos plantões.</div>
+
+      <label>Plano de contabilidade Move (para o PJ)</label>
+      <select id="plano"></select>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Digite o valor do plantão.</div>
+      <div id="res" style="display:none">
+        <div class="cmp tres">
+          <div class="opt" id="oA"><h3>PJ · Simples</h3><div class="sub2" id="xA"></div><div id="lA"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div><div id="gA"></div></div>
+          <div class="opt" id="oB"><h3>RPA · autônomo</h3><div class="sub2">Pessoa física, sem CNPJ</div><div id="lB"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div><div id="gB"></div></div>
+          <div class="opt" id="oC"><h3>CLT</h3><div class="sub2" id="xC"></div><div id="lC"></div>
+            <div class="tot"><span>LÍQUIDO / MÊS</span><b id="tC"></b></div><div class="pc" id="pC"></div><div id="gC"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val down" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span id="hps">valor de plantão PJ que empata com o CLT</span></div>
+        </div>
+        <div class="bars" id="bars"></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+        <div class="note" id="nota"></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com as tabelas de INSS e IR de 2026, a LC 123/2006 e a Lei 15.270/2025.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const SAL_MIN=1621.00, TETO_INSS=8475.55, INSS_11=.11, FATOR_R=.28, FGTS=.08;
+const INSS_TAB=[[1621.00,.075],[2902.84,.09],[4354.27,.12],[8475.55,.14]];
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IR_SIMPL=607.20;
+const A3=[[180000,.06,0],[360000,.112,9360],[720000,.135,17640],[1800000,.16,35640],[3600000,.21,125640],[4800000,.33,648000]];
+const ATV=['Médico','Dentista','Enfermeiro','Fisioterapeuta','Fonoaudiólogo','Nutricionista','Psicólogo'];
+const PLANOS=[['START',89],['BÁSICO',129],['PRÓ',169],['GROWTH',229],['SCALE',497]];
+const FUND='PJ: Simples Nacional com Fator R (pró-labore de 28% do faturamento, Anexo III, alíquota efetiva pelo faturamento de 12 meses), INSS de 11% e IR sobre o pró-labore; o restante sai como lucro, isento até R$ 50 mil por mês (Lei 15.270/2025). RPA: o contratante retém INSS de 11% (até o teto) e IR pela tabela mensal; o ISS de autônomo varia por município e não entra na conta. CLT: INSS e IR pela tabela de 2026; a comparação anual soma 13º salário, férias com 1/3 e FGTS de 8%. IR mensal de 2026 com o redutor da Lei 15.270/2025 (isenção até R$ 5.000).';
+
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null;
+$('atv').innerHTML=ATV.map(a=>`<option>${a}</option>`).join('');
+$('plano').innerHTML=PLANOS.map(([n,v],i)=>`<option value="${i}" ${n==='PRÓ'?'selected':''}>${n} · ${brl(v)}/mês</option>`).join('');
+
+function inssCLT(b){let t=0,ant=0;for(const [lim,a] of INSS_TAB){if(b>ant)t+=(Math.min(b,lim)-ant)*a;ant=lim}return t}
+function irrf(bruto,ded){
+  const base=bruto-Math.max(ded,IR_SIMPL); if(base<=0)return 0;
+  const [,a,d]=IR_TAB.find(f=>base<=f[0]); const tab=Math.max(0,base*a-d);
+  let red=0; if(bruto<=5000)red=tab; else if(bruto<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*bruto));
+  return tab-red;
+}
+function efetiva(rbt){let i=A3.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=A3[i];return rbt<=180000?n:(rbt*n-d)/rbt}
+function pj(F,plano){
+  const al=efetiva(F*12), das=F*al, pro=Math.max(SAL_MIN,Math.round(F*FATOR_R*100)/100);
+  const inss=Math.min(pro,TETO_INSS)*INSS_11, ir=irrf(pro,inss);
+  const lucro=Math.max(0,F-das-pro-plano), irDiv=lucro>50000?lucro*.10:0;
+  const liq=F-das-inss-ir-plano-irDiv;
+  return {F,al,das,pro,inss,ir,plano,irDiv,liq,ano:liq*12};
+}
+function rpa(F){const inss=Math.min(F,TETO_INSS)*INSS_11, ir=irrf(F,inss); return {F,inss,ir,liq:F-inss-ir,ano:(F-inss-ir)*12}}
+function clt(S){const m=(b)=>{const inss=inssCLT(b),ir=irrf(b,inss);return {inss,ir,liq:b-inss-ir}};
+  const a=m(S), fer=m(S*4/3), fgts=S*(13+1/3)*FGTS; return {S,inss:a.inss,ir:a.ir,liq:a.liq,fgts:S*FGTS,ano:a.liq*11+fer.liq+a.liq+fgts}}
+function empate(alvo,n,plano){let lo=0,hi=alvo;for(let i=0;i<60;i++){const m=(lo+hi)/2;pj(m*n,plano).ano<alvo?lo=m:hi=m}return hi}
+
+function calc(){
+  const v=num($('val').value), n=Math.max(1,Math.round(num($('qtd').value)||0)), F=v*n, S=num($('clt').value)||F, pl=PLANOS[+$('plano').value];
+  $('clth').textContent=F&&!num($('clt').value)?`Em branco, usa o mesmo valor mensal dos plantões (${brl(F)}).`:'Salário mensal da proposta CLT.';
+  if(!v){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const P=pj(F,pl[1]), Q=rpa(F), C=clt(S);
+  const opts=[['PJ',P.ano],['RPA',Q.ano],['CLT',C.ano]].sort((a,b)=>b[1]-a[1]);
+  const emp=empate(C.ano,n,pl[1]);
+  R={nome:$('nome').value.trim(),atv:$('atv').value,v,n,F,S,pl,P,Q,C,best:opts[0][0],second:opts[1],emp};
+  const L=r=>r.map(([k,s,x])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(x)}</b></div>`).join('');
+  $('xA').textContent=`${brl(F)}/mês · Anexo III ${pct(P.al)}`;
+  $('lA').innerHTML=L([['DAS',`efetiva ${pct(P.al)}`,-P.das],['INSS',`11% s/ pró-labore ${brl(P.pro)}`,-P.inss],['IR do pró-labore','',-P.ir],['Contabilidade',`plano ${pl[0]}`,-P.plano]].concat(P.irDiv?[['IR sobre lucros','10% acima de R$ 50 mil',-P.irDiv]]:[]));
+  $('lB').innerHTML=L([['Bruto',`${n} plantões`,Q.F],['INSS retido','11% até o teto',-Q.inss],['IR retido','tabela 2026',-Q.ir]]);
+  $('xC').textContent=`salário ${brl(S)}/mês`;
+  $('lC').innerHTML=L([['INSS','tabela progressiva',-C.inss],['IR','tabela 2026',-C.ir],['FGTS (depósito)','8% · não entra no líquido',C.fgts]]);
+  [['A',P],['B',Q],['C',C]].forEach(([k,x])=>{$('t'+k).textContent=brl(x.liq);$('p'+k).textContent=`${brl(x.liq/n)} por plantão · ${brl(x.ano)}/ano`});
+  $('pC').textContent=`${brl(C.liq/n)} por plantão · ${brl(C.ano)}/ano com 13º, férias e FGTS`;
+  const ids={PJ:'A',RPA:'B',CLT:'C'};
+  ['A','B','C'].forEach(k=>{$('o'+k).classList.toggle('best',ids[R.best]===k);$('g'+k).innerHTML=ids[R.best]===k?'<span class="tag">Maior líquido no ano</span>':''});
+  const dif=opts[0][1]-opts[1][1];
+  $('hl').textContent=`${R.best} rende mais no ano`;
+  $('hv').textContent=`+ ${brl(dif)}/ano`;
+  $('hs').textContent=`em relação ao ${opts[1][0]} · ${brl(dif/12)} por mês`;
+  $('hp').textContent=brl(emp);
+  const mx=Math.max(P.ano,Q.ano,C.ano);
+  $('bars').innerHTML=[['PJ',P.ano,'var(--navy)'],['RPA',Q.ano,'#94a3b8'],['CLT',C.ano,'#0f6fa3']].map(([k,x,c])=>
+    `<div class="bar"><span>${k} · ano</span><div class="trk"><div class="fil" style="width:${x/mx*100}%;background:${c}"></div></div><b>${brl(x)}</b></div>`).join('');
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Para negociar</div>Para empatar com a proposta CLT de ${brl(S)}, cada plantão como PJ precisa ser de pelo menos <b>${brl(emp)}</b>. No RPA, o hospital também paga 20% de INSS patronal sobre o valor (${brl(F*.2)}/mês); no CLT, os encargos do hospital passam de 60% do salário. Esses custos que o hospital deixa de ter no PJ podem entrar na negociação.</div><div class="fund" style="margin-top:10px"><div class="ft">Como calculamos</div>${FUND}</div>`;
+}
+
+// ── PDF A4 ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);
+  d.text('Simulação de plantão',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(18);d.setTextColor(...NAVY);d.text('Plantão: PJ x RPA x CLT',M,50);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.atv} · ${r.n} plantões de ${brl(r.v)} = ${brl(r.F)}/mês · proposta CLT ${brl(r.S)}`,W-2*M),M,57);
+  let y=66; const c1=110,c2=150,c3=X2-4;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,10,2,2,'F');d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(255,255,255);
+  d.text('Por mês',M+4,y+6.5);d.text('PJ',c1,y+6.5,{align:'right'});d.text('RPA',c2,y+6.5,{align:'right'});d.text('CLT',c3,y+6.5,{align:'right'});y+=10;
+  const z=v=>v?brl(v):'-';
+  const rows=[['Bruto',z(r.F),z(r.F),z(r.S)],['DAS',z(r.P.das),'-','-'],['INSS',z(r.P.inss),z(r.Q.inss),z(r.C.inss)],['IR',z(r.P.ir+r.P.irDiv),z(r.Q.ir),z(r.C.ir)],
+    ['Contabilidade',z(r.P.plano),'-','-'],['Líquido por mês',brl(r.P.liq),brl(r.Q.liq),brl(r.C.liq),1],['Líquido por plantão',brl(r.P.liq/r.n),brl(r.Q.liq/r.n),brl(r.C.liq/r.n)],
+    ['Líquido no ano',brl(r.P.ano),brl(r.Q.ano),brl(r.C.ano),1]];
+  rows.forEach(([k,a,b,c,t])=>{if(t){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,10,'F')}
+    d.setFont('helvetica',t?'bold':'normal');d.setFontSize(10);d.setTextColor(...(t?NAVY:MUT));d.text(k,M+4,y+6.6);
+    d.setTextColor(...(t?NAVY:[15,30,46]));d.text(a,c1,y+6.6,{align:'right'});d.text(b,c2,y+6.6,{align:'right'});d.text(c,c3,y+6.6,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+10,X2,y+10);y+=10});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);d.text('CLT no ano: soma 13º salário, férias com 1/3 e FGTS de 8%.',M,y+5);
+  y+=11;d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,28,4,4,'F');
+  d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(`${r.best} RENDE MAIS NO ANO`,M+7,y+9);
+  d.setFontSize(20);d.setTextColor(255,255,255);d.text(`+ ${brl(r.second?(({PJ:r.P,RPA:r.Q,CLT:r.C})[r.best].ano-r.second[1]):0)}/ano`,M+7,y+19);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(200,215,228);d.text(`em relação ao ${r.second[0]}`,M+7,y+24.5);
+  d.setFont('helvetica','bold');d.setFontSize(15);d.setTextColor(...GREEN);d.text(brl(r.emp),X2-7,y+16,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('plantão PJ que empata com o CLT',X2-7,y+22,{align:'right'});
+  y+=36;d.setFont('helvetica','normal');d.setFontSize(8.5);
+  const fund=d.splitTextToSize(FUND,W-2*M-12), hF=10+fund.length*3.9;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text('COMO CALCULAMOS',M+6,y+6.5);d.setFont('helvetica','normal');d.setTextColor(15,30,46);d.text(fund,M+6,y+11.5);
+  y+=hF+7;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,14,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+9,{align:'center'});d.link(M,y,W-2*M,14,{url:`https://wa.me/${WHATS_MOVE}`});
+  d.setDrawColor(...LINE);d.line(M,280,X2,280);d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...NAVY);d.text('Move Online Contabilidade Médica',M,286);
+  d.setTextColor(...GREEN);d.textWithLink('wa.me/'+WHATS_MOVE,X2,286,{align:'right',url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+['val','qtd','clt','nome'].forEach(i=>$(i).addEventListener('input',calc));['atv','plano'].forEach(i=>$(i).addEventListener('change',calc));
+['val','clt'].forEach(i=>$(i).addEventListener('blur',()=>{const n=num($(i).value);$(i).value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(R)gerarPDF().save(`Plantao PJ RPA CLT - ${R.nome||R.atv}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R;
+  const t=`*Simulação de plantão: PJ × RPA × CLT*${r.nome?'\n'+r.nome:''}\n${r.atv} · ${r.n} plantões de ${brl(r.v)}\n\n• PJ: *${brl(r.P.liq)}*/mês (${brl(r.P.liq/r.n)} por plantão)\n• RPA: *${brl(r.Q.liq)}*/mês (${brl(r.Q.liq/r.n)} por plantão)\n• CLT ${brl(r.S)}: *${brl(r.C.liq)}*/mês · ${brl(r.C.ano)}/ano com 13º, férias e FGTS\n\n✅ Maior líquido no ano: *${r.best}*\nPlantão PJ que empata com o CLT: ${brl(r.emp)}\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>

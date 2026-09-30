@@ -640,6 +640,20 @@ def invoice_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora de plantão: PJ x RPA x CLT (página estática) ──
+PLANTAO_DIR = os.path.join(BASE, "plantao")
+
+@app.route("/plantao/")
+def plantao():
+    return send_file(os.path.join(PLANTAO_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/plantao/<nome>.png")
+def plantao_img(nome):
+    f = os.path.join(PLANTAO_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
