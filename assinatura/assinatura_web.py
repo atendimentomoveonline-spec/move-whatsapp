@@ -626,6 +626,20 @@ def fatorr_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Gerador de invoice para exportação de serviços (página estática) ──
+INVOICE_DIR = os.path.join(BASE, "invoice")
+
+@app.route("/invoice/")
+def invoice():
+    return send_file(os.path.join(INVOICE_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/invoice/<nome>.png")
+def invoice_img(nome):
+    f = os.path.join(INVOICE_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
