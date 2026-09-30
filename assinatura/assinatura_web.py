@@ -668,6 +668,20 @@ def vencimentos_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Simulador da sociedade uniprofissional na reforma (página estática) ──
+SUP_DIR = os.path.join(BASE, "uniprofissional")
+
+@app.route("/uniprofissional/")
+def uniprofissional():
+    return send_file(os.path.join(SUP_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/uniprofissional/<nome>.png")
+def uniprofissional_img(nome):
+    f = os.path.join(SUP_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

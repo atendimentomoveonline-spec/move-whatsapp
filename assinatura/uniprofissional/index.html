@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sociedade Uniprofissional na Reforma — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .tbw{overflow-x:auto;margin-top:18px}
+  table.ano{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+  .ano th{background:var(--navy);color:#fff;font-size:11px;letter-spacing:.3px;text-transform:uppercase;padding:8px 8px;text-align:right}
+  .ano th:first-child,.ano td:first-child{text-align:left}
+  .ano td{padding:8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ano tr.hj td{background:#f4f8fb;font-weight:700;color:var(--navy)}
+  .ano td.t{font-weight:800;color:var(--navy)}
+  .ano td.up{color:var(--red);font-weight:700}.ano td.dn{color:var(--green2);font-weight:700}
+  .sec2{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Sociedade uniprofissional <span>na reforma</span></h1>
+    <p>O ISS fixo por profissional acaba. Veja ano a ano quanto a sua sociedade passa a pagar até 2033.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Sua sociedade hoje</div>
+      <label>Nome (opcional)</label>
+      <input id="nome" placeholder="Clínica Exemplo Sociedade Simples">
+
+      <label>Atividade</label>
+      <select id="atv">
+        <option value="0.6">Saúde (médicos, dentistas, psicólogos...) · redução de 60%</option>
+        <option value="0.3">Outra profissão regulamentada · redução de 30%</option>
+      </select>
+
+      <label>Faturamento mensal</label>
+      <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="80.000,00"></div>
+
+      <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>Profissionais habilitados</label><input id="prof" inputmode="numeric" value="2"></div>
+        <div><label>ISS por profissional / trimestre</label><div class="money"><span>R$</span><input id="issv" inputmode="decimal" placeholder="0,00"></div></div>
+      </div>
+      <div class="hint">Valor que a sociedade paga de ISS fixo por profissional a cada trimestre (confira na guia da prefeitura).</div>
+
+      <div class="sec2"><div class="sec">Compras mensais que vão gerar crédito</div></div>
+      <label>Materiais e medicamentos</label>
+      <div class="money"><span>R$</span><input id="mat" inputmode="decimal"></div>
+      <label>Serviços, TI, marketing, energia e outros</label>
+      <div class="money"><span>R$</span><input id="ser" inputmode="decimal"></div>
+      <label>Aluguel do espaço</label>
+      <div class="money"><span>R$</span><input id="alu" inputmode="decimal"></div>
+      <div class="hint">Considera fornecedores no regime regular. Compras de fornecedores do Simples geram crédito bem menor.</div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Digite o faturamento mensal.</div>
+      <div id="res" style="display:none">
+        <div class="cmp">
+          <div class="opt a"><h3>Hoje · 2026</h3><div id="lA"></div><div class="tot"><span>POR MÊS</span><b id="tA"></b></div><div class="pc" id="pA"></div></div>
+          <div class="opt b"><h3>2033 · reforma completa</h3><div id="lB"></div><div class="tot"><span>POR MÊS</span><b id="tB"></b></div><div class="pc" id="pB"></div></div>
+        </div>
+        <div class="hero">
+          <div><div class="lbl" id="hl"></div><div class="val" id="hv"></div><div class="sub" id="hs"></div></div>
+          <div class="pill"><b id="hp"></b><span>de carga sobre o faturamento em 2033</span></div>
+        </div>
+        <div class="tbw"><table class="ano" id="tab"></table></div>
+        <div class="acts">
+          <button class="btn" id="bpdf">Baixar PDF</button>
+          <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+        </div>
+        <div class="note"><div class="fund"><div class="ft">Fundamento legal</div>O ISS fixo por profissional vem do Decreto-Lei 406/1968 (art. 9º, §§ 1º e 3º), revogado a partir de 1º/1/2033 pela LC 214/2025 (art. 543). O IBS, que substitui o ISS, é cobrado sobre o faturamento e não tem valor fixo. Transição (EC 132/2023): em 2027 e 2028, CBS de 8,7% e IBS de 0,1%, e o PIS/COFINS acaba; de 2029 a 2032, o ISS é reduzido para 90%, 80%, 70% e 60% e o IBS sobe para 10%, 20%, 30% e 40% da alíquota cheia; em 2033, CBS de 8,8% e IBS de 17,7%. Saúde tem redução de 60% (LC 214, art. 130) e profissões regulamentadas, de 30% (art. 127). Aluguel com redução de 70%. A redução do valor fixo do ISS entre 2029 e 2032 depende de lei municipal; aqui aplicamos o mesmo percentual das alíquotas. IRPJ e CSLL não mudam e ficaram fora da conta. O ano de 2026 é de teste (CBS 0,9% e IBS 0,1% compensáveis) e não muda o valor pago.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com base na EC 132/2023 e na LC 214/2025. Alíquotas de referência estimadas; as definitivas serão fixadas pelo Senado Federal.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const PISCOF=.0365;
+// ano: [CBS, IBS, fator do ISS fixo, PIS/COFINS?]
+const ANOS=[[2026,0,0,1,1],[2027,.087,.001,1,0],[2028,.087,.001,1,0],[2029,.088,.0177,.9,0],[2030,.088,.0354,.8,0],[2031,.088,.0531,.7,0],[2032,.088,.0708,.6,0],[2033,.088,.177,0,0]];
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+let R=null;
+
+function ano([a,cbs,ibs,fIss,pc],D){
+  const red=D.red, iva=(cbs+ibs);
+  const iss=D.issMes*fIss, pis=pc?D.F*PISCOF:0;
+  const deb=D.F*iva*(1-red);
+  const cred=D.mat*iva*.4+D.ser*iva+D.alu*iva*.3;       // materiais e medicamentos com 60% de redução; aluguel com 70%
+  const cbsib=Math.max(0,deb-cred);
+  return {a,iss,pis,deb,cred,cbsib,tot:iss+pis+cbsib};
+}
+function calc(){
+  const F=num($('fat').value), prof=Math.max(1,parseInt($('prof').value)||1), issv=num($('issv').value);
+  if(!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const D={F,red:+$('atv').value,issMes:prof*issv/3,mat:num($('mat').value),ser:num($('ser').value),alu:num($('alu').value)};
+  const L=ANOS.map(x=>ano(x,D)), h=L[0], f=L[L.length-1], dif=f.tot-h.tot;
+  R={nome:$('nome').value.trim(),D,prof,issv,L,h,f,dif};
+  const ln=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
+  $('lA').innerHTML=ln([['ISS fixo',`${prof} × ${brl(issv)} por trimestre`,h.iss],['PIS/COFINS','3,65% cumulativo',h.pis]]);
+  $('lB').innerHTML=ln([['CBS/IBS',`${pct(.265*(1-D.red))} sobre o faturamento`,f.deb],['(−) Créditos das compras','',-f.cred]]);
+  $('tA').textContent=brl(h.tot);$('tB').textContent=brl(f.tot);
+  $('pA').textContent=`${pct(h.tot/F)} do faturamento`;$('pB').textContent=`${pct(f.tot/F)} do faturamento`;
+  const up=dif>0;
+  $('hl').textContent=up?'Aumento com a reforma completa (2033)':'Redução com a reforma completa (2033)';
+  $('hv').textContent=(up?'+ ':'− ')+brl(Math.abs(dif))+'/mês';$('hv').className='val '+(up?'up':'down');
+  $('hs').textContent=`${brl(Math.abs(dif)*12)} por ano`;
+  $('hp').textContent=pct(f.tot/F);
+  $('tab').innerHTML=`<tr><th>Ano</th><th>ISS fixo</th><th>PIS/COFINS</th><th>CBS/IBS</th><th>(−) Créditos</th><th>Total/mês</th><th>vs. hoje</th></tr>`+
+    L.map((x,i)=>{const d=x.tot-h.tot;return `<tr class="${i?'':'hj'}"><td>${x.a}${i?'':' (hoje)'}</td><td>${brl(x.iss)}</td><td>${x.pis?brl(x.pis):'—'}</td><td>${x.deb?brl(x.deb):'—'}</td><td>${x.cred?'− '+brl(Math.min(x.cred,x.deb)):'—'}</td><td class="t">${brl(x.tot)}</td><td class="${i?(d>0?'up':'dn'):''}">${i?(d>0?'+ ':'− ')+brl(Math.abs(d)):'—'}</td></tr>`}).join('');
+}
+
+// ── PDF A4 ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+function gerarPDF(){
+  const r=R, up=r.dif>0, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Simulação tributária',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Sociedade uniprofissional na reforma',M,49);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}Faturamento ${brl(r.D.F)}/mês · ${r.prof} profissionais · ISS fixo ${brl(r.issv)} por profissional/trimestre`,W-2*M),M,56);
+  let y=64; const cs=[M+3,62,92,120,148,X2-3];
+  d.setFillColor(...NAVY);d.rect(M,y,W-2*M,9,'F');d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(255,255,255);
+  ['Ano','ISS fixo','PIS/COFINS','CBS/IBS','(-) Créditos','Total/mês'].forEach((t,i)=>d.text(t,cs[i],y+6,{align:i?'right':'left'}));y+=9;
+  r.L.forEach((x,i)=>{if(!i){d.setFillColor(244,248,251);d.rect(M,y,W-2*M,8,'F')}
+    d.setFont('helvetica',i?'normal':'bold');d.setFontSize(9);d.setTextColor(...(i?[15,30,46]:NAVY));
+    [String(x.a)+(i?'':' (hoje)'),brl(x.iss),x.pis?brl(x.pis):'-',x.deb?brl(x.deb):'-',x.cred?'- '+brl(Math.min(x.cred,x.deb)):'-',brl(x.tot)].forEach((t,j)=>d.text(t,cs[j],y+5.5,{align:j?'right':'left'}));
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+8,X2,y+8);y+=8});
+  y+=8;d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,28,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);
+  d.text(up?'AUMENTO EM 2033':'REDUÇÃO EM 2033',M+7,y+9);d.setFontSize(20);d.setTextColor(255,255,255);d.text(`${up?'+':'-'} ${brl(Math.abs(r.dif))}/mês`,M+7,y+19);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(200,215,228);d.text(`${brl(Math.abs(r.dif)*12)} por ano`,M+7,y+24.5);
+  d.setFont('helvetica','bold');d.setFontSize(20);d.setTextColor(...GREEN);d.text(pct(r.f.tot/r.D.F),X2-7,y+17,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('carga em 2033',X2-7,y+23,{align:'right'});
+  y+=36;const fund=d.splitTextToSize(document.querySelector('.fund').innerText.replace('Fundamento legal','').trim(),W-2*M-12), hF=10+fund.length*3.7;
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('FUNDAMENTO LEGAL',M+6,y+6.5);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(15,30,46);d.text(fund,M+6,y+11.5);
+  y+=hF+7;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+['fat','prof','issv','mat','ser','alu','nome'].forEach(i=>$(i).addEventListener('input',calc));$('atv').addEventListener('change',calc);
+document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
+$('bpdf').onclick=()=>{if(R)gerarPDF().save(`Sociedade uniprofissional na reforma - ${R.nome||'simulacao'}.pdf`)};
+$('bzap').onclick=()=>{if(!R)return;const r=R,up=r.dif>0;
+  const t=`*Sociedade uniprofissional na reforma*${r.nome?'\n'+r.nome:''}\nFaturamento ${brl(r.D.F)}/mês · ${r.prof} profissionais\n\n• Hoje: *${brl(r.h.tot)}*/mês (ISS fixo + PIS/COFINS)\n• 2033: *${brl(r.f.tot)}*/mês (CBS/IBS − créditos)\n\n${up?'📈 Aumento':'✅ Redução'}: *${brl(Math.abs(r.dif))}/mês* (${brl(Math.abs(r.dif)*12)}/ano)\n\nQuero entender como me preparar.\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+calc();
+</script>
+</body>
+</html>
