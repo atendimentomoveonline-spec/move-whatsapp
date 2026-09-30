@@ -170,6 +170,8 @@ let st={i:0,pj:'HB',aliq:26.5,alu:true,cap:false,nd:false}, R=null;
 const NAOPUB={"Educação": "as notas explicativas não informam a receita isenta pelo ProUni", "Alimentação e bebidas": "o balanço não informa o crédito de ICMS e de PIS/COFINS das compras", "Moda": "o balanço não informa o crédito de ICMS e de PIS/COFINS das compras", "Varejo": "o balanço não informa o crédito de ICMS e de PIS/COFINS das compras", "Indústria": "o balanço não informa o crédito de ICMS e de PIS/COFINS das compras", "Telecom": "o balanço não informa o crédito de ICMS e de PIS/COFINS das compras", "Energia e saneamento": "o balanço não informa o crédito de PIS/COFINS e de ICMS das compras", "Tecnologia": "o imposto vem num total só, misturado com a contribuição previdenciária sobre a receita", "Imóveis": "o desconto por unidade vendida (redutor social) não aparece no balanço"};
 const ATIVIDADES=['Transporte aéreo','Saúde','Varejo','Alimentação e bebidas','Moda','Telecom','Energia e saneamento','Educação','Transporte e mobilidade','Indústria','Imóveis','Tecnologia','Planos de saúde'];
 ATIVIDADES.sort((x,y)=>x.localeCompare(y,'pt-BR'));
+// mostra só as atividades publicadas (com empresas)
+ATIVIDADES.splice(0,ATIVIDADES.length,...ATIVIDADES.filter(a=>EMPRESAS.some(e=>e.setor===a)));
 $('ativ').innerHTML=ATIVIDADES.map(a=>{const n=EMPRESAS.filter(e=>e.setor===a).length;return `<option ${n?'':'disabled'}>${a}${n?` (${n})`:(NAOPUB[a]?' — não publicado: '+NAOPUB[a]:' — em breve')}</option>`}).join('');
 $('ativ').selectedIndex=[...$('ativ').options].findIndex(o=>!o.disabled);
 function listaEmp(){const a=$('ativ').value.replace(/ \(\d+\)$/,'');const idx=EMPRESAS.map((e,i)=>[e,i]).filter(([e])=>e.setor===a).sort(([x],[y])=>x.nome.localeCompare(y.nome,'pt-BR'));
