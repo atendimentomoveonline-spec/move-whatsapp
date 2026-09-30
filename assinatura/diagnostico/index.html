@@ -136,14 +136,14 @@ const RED={[S]:'60% (saúde, LC 214, art. 130)',[P]:'30% (profissão regulamenta
 const Q=[
  ['cnpj','Você já tem empresa (CNPJ)?','ops',[['s','Sim'],['n','Ainda não']]],
  ['atv','Qual a sua atividade?','sel'],
- ['fat','Quanto você fatura (ou recebe) por mês?','val'],
  ['reg','Qual o regime da empresa?','ops',[['SN','Simples Nacional'],['LP','Lucro Presumido'],['NS','Não sei']],A=>A.cnpj==='s'],
- ['pro','Quanto você tira de pró-labore por mês?','pro',null,A=>A.cnpj==='s'],
- ['anx','Em qual anexo sai o seu DAS?','ops',[['III','Anexo III'],['V','Anexo V'],['NS','Não sei']],A=>A.cnpj==='s'&&A.reg!=='LP'&&ATVsel(A)&&ATVsel(A)[1]],
- ['folha','Paga salários a funcionários? Quanto por mês?','folha',null,A=>A.cnpj==='s'],
+ ['fat','Quanto você fatura por mês, aproximadamente?','ops',[['12000','Até R$ 20 mil'],['35000','R$ 20 a 50 mil'],['75000','R$ 50 a 100 mil'],['200000','R$ 100 a 300 mil'],['350000','Acima de R$ 300 mil']]],
+ ['pro','Quanto você tira de pró-labore?','ops',[['min','Cerca de 1 salário mínimo'],['meio','Mais que isso, mas menos de 28% do faturamento'],['fr','28% do faturamento ou mais'],['zero','Não tiro pró-labore'],['ns','Não sei']],A=>A.cnpj==='s'],
  ['rec','Como você recebe hoje?','ops',[['pf','De pacientes (pessoa física)'],['pj','De hospitais e clínicas (RPA)'],['amb','Dos dois']],A=>A.cnpj==='n'],
+ ['func','Tem funcionários registrados?','ops',[['s','Sim'],['n','Não']]],
+ ['loc','Onde você atende?','ops',[['prop','Consultório ou clínica própria'],['terc','Hospitais e clínicas de terceiros'],['amb','Nos dois']]],
  ['proc','Faz procedimentos (cirurgias, exames, day clinic)?','ops',[['s','Sim'],['n','Não, só consultas']]],
- ['soc','Como é (ou seria) a sociedade?','ops',[['so','Só eu'],['mesma','Sócios da mesma profissão'],['mix','Sócios de profissões diferentes ou investidores']],A=>A.cnpj==='s'],
+ ['soc','Como é (ou seria) a sociedade?','ops',[['so','Só eu'],['mesma','Sócios da mesma profissão'],['mix','Sócios de profissões diferentes ou investidores']]],
  ['cli','De quem você mais recebe?','ops',[['pf','Pacientes pessoa física'],['pj','Hospitais, clínicas e convênios'],['ex','Clientes do exterior'],['mix','Um pouco de cada']]],
  ['lucro','Retira mais de R$ 50 mil de lucros em algum mês?','ops',[['s','Sim'],['n','Não']],A=>A.cnpj==='s'],
  ['rev','Quando seus impostos foram revisados pela última vez?','ops',[['nunca','Nunca'],['velho','Há mais de um ano'],['ok','No último ano']],A=>A.cnpj==='s'],
@@ -172,7 +172,7 @@ function desenha(){
   $('qs').querySelectorAll('input.big,input[data-k=pro],input[data-k=folha]').forEach(i=>{i.oninput=()=>{A[i.dataset.k]=num(i.value);render()};i.onblur=()=>{i.value=A[i.dataset.k]?fmt(A[i.dataset.k]):''}});
   const ns=$('qs').querySelector('input[data-k=proNS]');if(ns)ns.onchange=()=>{A.proNS=ns.checked;if(ns.checked)A.pro=0;desenha();render()};
 }
-function faltam(){return Q.filter(([k,t,tp,op,cond])=>(!cond||cond(A))&&(tp==='pro'?!(A.pro>0||A.proNS):tp==='folha'?false:tp==='val'?!(A[k]>0):A[k]===undefined||A[k]==='')).length}
+function faltam(){return Q.filter(([k,t,tp,op,cond])=>(!cond||cond(A))&&(A[k]===undefined||A[k]==='')).length}
 
 // ── contas ──
 function ef(t,rbt){let i=t.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=t[i];return rbt<=180000?n:(rbt*n-d)/rbt}
@@ -187,12 +187,13 @@ function pessoaFisica(F,rec){const aliq=rec==='pj'?.11:.20,inss=Math.min(F,TETO_
   return {rot:rec==='pj'?'Pessoa física (RPA)':'Pessoa física (carnê-leão)',itens:[[`INSS (${rec==='pj'?'11% retido':'20% no carnê'})`,inss],['Imposto de renda',ir]],tot:inss+ir}}
 
 function relatorio(){
-  const a=ATVsel(A),F=A.fat,fr=a[1],folha=A.folha||0,pro=A.proNS?0:(A.pro||0);
+  const a=ATVsel(A),F=+A.fat,fr=a[1],folha=0;
+  const pro={min:SAL_MIN,meio:Math.max(SAL_MIN,(SAL_MIN+F*FR)/2),fr:Math.max(SAL_MIN,F*FR),zero:0,ns:SAL_MIN}[A.pro]||0;
   let hoje,rec,obs='';
-  if(A.cnpj==='n'){hoje=pessoaFisica(F,A.rec==='amb'?'pf':A.rec);rec=melhorSimples(F,fr,folha);rec.rot='Com CNPJ no '+rec.rot}
+  if(A.cnpj==='n'){hoje=pessoaFisica(F,A.rec==='amb'?'pf':A.rec);rec=melhorSimples(F,fr,folha);rec.rot='Com CNPJ no '+rec.rot;obs='Cálculo com o valor médio da faixa de faturamento.'}
   else if(A.reg==='LP'){hoje=presumido(F,pro||SAL_MIN,false);const op=[presumido(F,SAL_MIN,false)];if(A.proc==='s')op.push(presumido(F,SAL_MIN,true));if(F*12<=4800000)op.push(melhorSimples(F,fr,folha));rec=op.sort((x,y)=>x.tot-y.tot)[0]}
-  else{const anexo=!fr?'III':A.anx==='III'||A.anx==='V'?A.anx:((pro+folha)>=F*FR-0.01?'III':'V');hoje=simples(F,pro,folha,anexo);rec=melhorSimples(F,fr,folha);
-    if(A.reg==='NS')obs='Como você não sabe o regime, consideramos o Simples Nacional, que é o mais comum.';
+  else{const anexo=!fr?'III':(A.pro==='fr'?'III':'V');hoje=simples(F,pro,folha,anexo);rec=melhorSimples(F,fr,folha);
+    obs='Cálculo com o valor médio da faixa de faturamento'+(A.pro==='ns'?' e pró-labore de 1 salário mínimo':'')+'.'+(A.reg==='NS'?' Como você não sabe o regime, consideramos o Simples Nacional, que é o mais comum.':'');
     if(rec.tot>hoje.tot){rec=hoje}}
   const eco=Math.max(0,hoje.tot-rec.tot);
   // pontos de atenção
