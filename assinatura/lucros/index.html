@@ -163,6 +163,10 @@ let R=null;
 function irrf(b,inss){const base=b-Math.max(inss,607.2);if(base<=0)return 0;const [,a,d]=IR_TAB.find(f=>base<=f[0]);const tab=Math.max(0,base*a-d);
   let red=0;if(b<=5000)red=tab;else if(b<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*b));return tab-red}
 function faixa(t,rbt){let i=t.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=t[i];return {i,ef:rbt<=180000?n:(rbt*n-d)/rbt}}
+// IR anual (declaração): tabela mensal × 12, desconto simplificado de 20% até R$ 17.640 (Lei 15.270/2025) e redutor anual (art. 11-A)
+const IR_ANO=[[29145.60,0,0],[33919.80,.075,2185.92],[45012.60,.15,4729.92],[55976.16,.225,8105.88],[Infinity,.275,10904.76]];
+function irAnual(rend,inss){if(rend<=0)return 0;const ded=Math.max(inss,Math.min(rend*.20,17640)),base=Math.max(0,rend-ded);
+  const [,a,d]=IR_ANO.find(f=>base<=f[0]);const tab=Math.max(0,base*a-d);let red=0;if(rend<=60000)red=tab;else if(rend<=88200)red=Math.min(tab,Math.max(0,8429.73-0.095575*rend));return tab-red}
 function aliqMin(r){return r>=1200000?.10:r>600000?(r/60000-10)/100:0}
 
 function cenario(nome,pro,D,reg){
@@ -177,15 +181,16 @@ function cenario(nome,pro,D,reg){
   const liqMes=pro-inss-ir+lucro-ret;
   // ano: tributação mínima (art. 16-A)
   const rend=12*pro+12*lucro+D.outras, aliq=aliqMin(rend), bruto=aliq*rend;
-  const irPago=12*ir+D.irout;
+  const irDevPro=irAnual(12*pro,12*inss), ajPro=irDevPro-12*ir;        // positivo: paga a diferença; negativo: restitui
+  const irPago=irDevPro+D.irout;                                     // art. 16-A, § 3º: IR devido na declaração
   // redutor (art. 16-B): carga efetiva da empresa + carga mínima sobre os lucros acima de 34%
   const lucroCont=Math.max(1,F-pro-patr-D.desp), efPJ=ircs/lucroCont;
   const semLucro=aliqMin(12*pro+D.outras)*(12*pro+D.outras), efPF=12*lucro?Math.max(0,bruto-semLucro)/(12*lucro):0;
   const redutor=Math.max(0,(efPJ+efPF-.34))*12*lucro;
-  const devido=Math.max(0,bruto-irPago-redutor), saldo=devido-12*ret;   // positivo: paga; negativo: restitui
-  const liqAno=12*liqMes-Math.max(0,saldo)+Math.max(0,-saldo);
+  const devido=Math.max(0,bruto-irPago-redutor), saldo=ajPro+devido-12*ret;   // positivo: paga; negativo: restitui
+  const liqAno=12*liqMes-saldo;
   const totImp=12*(imp+patr+inss+ir)+Math.max(0,devido);
-  return {nome,reg,pro,imp,patr,inss,ir,anexo,lucro,ret,liqMes,rend,aliq,bruto,irPago,redutor,devido,saldo,liqAno,totImp};
+  return {nome,reg,ajPro,retAno:12*ret,pro,imp,patr,inss,ir,anexo,lucro,ret,liqMes,rend,aliq,bruto,irPago,redutor,devido,saldo,liqAno,totImp};
 }
 function calc(){
   const reg=$('reg').value, F=num($('fat').value);
@@ -214,14 +219,14 @@ function calc(){
   $('cmp').innerHTML=C.map(c=>`<div class="opt ${c===best&&C.length>1?'best':''}"><h3>${c.nome}</h3><div class="sub2">${c.pro?brl(c.pro)+'/mês':'sem pró-labore'} · ${c.anexo}</div>
     <div class="grp">Por mês</div>${L([['Impostos da empresa',c.reg==='SN'?'DAS':'PIS, COFINS, ISS, IRPJ, CSLL',-c.imp]].concat(c.patr?[['INSS da empresa','20% do pró-labore',-c.patr]]:[]).concat([['Pró-labore líquido',`INSS ${brl(c.inss)} · IR ${brl(c.ir)}`,c.pro-c.inss-c.ir],['Lucros (sua parte)',c.ret?'':'isentos até R$ 50 mil',c.lucro]]).concat(c.ret?[['Retenção de 10%','lucros acima de R$ 50 mil',-c.ret]]:[]))}
     <div class="tot"><span>NO BOLSO / MÊS</span><b>${brl(c.liqMes)}</b></div>
-    <div class="grp">No ano</div>${L([['Renda total','base do IR mínimo',c.rend],['IR mínimo',pct(c.aliq)+(c.redutor?` · redutor ${brl(c.redutor)}`:''),c.devido?-c.devido:0],[c.saldo>=0?'A pagar na declaração':'A restituir na declaração','IR mínimo − retenções',-c.saldo]])}
+    <div class="grp">No ano</div>${L([['Renda total','base do IR mínimo',c.rend]].concat(c.pro?[['Ajuste do IR do pró-labore',c.ajPro<0?'restituição na declaração':'diferença a pagar',-c.ajPro]]:[]).concat([['IR mínimo',pct(c.aliq)+(c.redutor?` · redutor ${brl(c.redutor)}`:''),c.devido?-c.devido:0]]).concat(c.retAno?[['Retenção de 10% dos lucros','devolvida na declaração',c.retAno]]:[]).concat([[c.saldo>0?'= A pagar na declaração':'= A restituir na declaração','no ano seguinte',-c.saldo]]))}
     <div class="tot"><span>NO BOLSO / ANO</span><b>${brl(c.liqAno)}</b></div>${c===best&&C.length>1?'<span class="tag">Mais dinheiro no bolso</span>':''}</div>`).join('');
   const outro=[...C].sort((a,b)=>b.liqAno-a.liqAno)[1];
   $('hl').textContent=C.length>1?`${best.nome} rende mais no ano`:'Resultado no ano';
   $('hv').textContent=C.length>1?'+ '+brl(best.liqAno-outro.liqAno)+'/ano':brl(best.liqAno);
   $('hs').textContent=C.length>1?`em relação a ${outro.nome.toLowerCase()} · ${brl(best.liqAno)} no bolso no ano`:'no bolso no ano';
   $('hp').textContent=brl(best.devido);
-  $('nota').innerHTML=`<div class="fund"><div class="ft">Regras usadas</div>Lucros até R$ 50 mil por mês, pagos pela mesma empresa, continuam isentos; acima disso, retenção de 10% sobre o total do mês (Lei 9.250/1995, art. 6º-A, incluído pela Lei 15.270/2025). A retenção é antecipação: é descontada do IR mínimo na declaração, e o que passar do devido é restituído (art. 16-A, §§ 5º e 6º). A devolução só acontece na declaração do ano seguinte, e os detalhes ainda podem ser regulamentados pela Receita. IR mínimo (art. 16-A): para renda anual acima de R$ 600 mil, alíquota crescente até 10% a partir de R$ 1,2 milhão, sobre todos os rendimentos, descontado o IR já pago e o redutor do art. 16-B quando a carga da empresa somada à da pessoa física passa de 34%. Lucros de 2025 aprovados até 31/12/2025 ficam fora${l25?` (informado: ${brl(l25)}, não entrou na conta)`:''}. Pró-labore com INSS de 11% e IR pela tabela de 2026 com redutor. Simples: alíquota efetiva pelo faturamento de 12 meses, no Anexo III com Fator R de 28% ou no Anexo V. Presumido: presunção de 32%, IRPJ 15% + adicional de 10%, CSLL 9%, PIS/COFINS 3,65%, ISS informado e INSS de 20% da empresa sobre o pró-labore. Lucro distribuído = faturamento − impostos − pró-labore − despesas. Simulação com valores iguais em todos os meses.</div></div>`;
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Regras usadas</div>Lucros até R$ 50 mil por mês, pagos pela mesma empresa, continuam isentos; acima disso, retenção de 10% sobre o total do mês (Lei 9.250/1995, art. 6º-A, incluído pela Lei 15.270/2025). A retenção é antecipação: é descontada do IR mínimo na declaração, e o que passar do devido é restituído (art. 16-A, §§ 5º e 6º). Na declaração, o IR do pró-labore é recalculado pela tabela anual, com o melhor entre a dedução do INSS e o desconto simplificado de 20% (até R$ 17.640), e o IR mínimo abate esse IR devido (art. 16-A, § 3º). Não considera dependentes, saúde, educação e previdência privada, que aumentariam a restituição. A devolução só acontece na declaração do ano seguinte, e os detalhes ainda podem ser regulamentados pela Receita. IR mínimo (art. 16-A): para renda anual acima de R$ 600 mil, alíquota crescente até 10% a partir de R$ 1,2 milhão, sobre todos os rendimentos, descontado o IR já pago e o redutor do art. 16-B quando a carga da empresa somada à da pessoa física passa de 34%. Lucros de 2025 aprovados até 31/12/2025 ficam fora${l25?` (informado: ${brl(l25)}, não entrou na conta)`:''}. Pró-labore com INSS de 11% e IR pela tabela de 2026 com redutor. Simples: alíquota efetiva pelo faturamento de 12 meses, no Anexo III com Fator R de 28% ou no Anexo V. Presumido: presunção de 32%, IRPJ 15% + adicional de 10%, CSLL 9%, PIS/COFINS 3,65%, ISS informado e INSS de 20% da empresa sobre o pró-labore. Lucro distribuído = faturamento − impostos − pró-labore − despesas. Simulação com valores iguais em todos os meses.</div></div>`;
 }
 
 // ── PDF ──
