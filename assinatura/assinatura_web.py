@@ -612,6 +612,20 @@ def anuario_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Calculadora Fator R: sem x com Fator R (página estática) ──
+FATORR_DIR = os.path.join(BASE, "fatorr")
+
+@app.route("/fatorr/")
+def fatorr():
+    return send_file(os.path.join(FATORR_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/fatorr/<nome>.png")
+def fatorr_img(nome):
+    f = os.path.join(FATORR_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
