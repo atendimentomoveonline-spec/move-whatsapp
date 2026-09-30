@@ -93,7 +93,7 @@
       <label>Nome (opcional)</label>
       <input id="nome" placeholder="Nome do sócio ou da empresa">
       <label>Regime</label>
-      <select id="reg"><option value="SN">Simples Nacional (com Fator R)</option><option value="LP">Lucro Presumido</option></select>
+      <select id="reg"><option value="CMP">Comparar os 3: sem Fator R × com Fator R × Presumido</option><option value="SN">Simples Nacional (com Fator R)</option><option value="LP">Lucro Presumido</option></select>
       <label>Faturamento mensal da empresa</label>
       <div class="money"><span>R$</span><input id="fat" class="big" inputmode="decimal" placeholder="100.000,00"></div>
       <label>Despesas mensais da empresa</label>
@@ -158,10 +158,11 @@ function irrf(b,inss){const base=b-Math.max(inss,607.2);if(base<=0)return 0;cons
 function faixa(t,rbt){let i=t.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=t[i];return {i,ef:rbt<=180000?n:(rbt*n-d)/rbt}}
 function aliqMin(r){return r>=1200000?.10:r>600000?(r/60000-10)/100:0}
 
-function cenario(nome,pro,D){
+function cenario(nome,pro,D,reg){
+  reg=reg||D.reg;
   const F=D.F, rbt=F*12;
   let imp=0, ircs=0, patr=0, anexo='';
-  if(D.reg==='SN'){const f3=(pro>=F*FR-0.01); /* tolerância de centavos */const fx=faixa(f3?A3:A5,rbt);imp=F*fx.ef;ircs=imp*(f3?IRCS3:IRCS5)[fx.i];anexo=`Anexo ${f3?'III':'V'} · ${pct(fx.ef)}`}
+  if(reg==='SN'){const f3=(pro>=F*FR-0.01); /* tolerância de centavos */const fx=faixa(f3?A3:A5,rbt);imp=F*fx.ef;ircs=imp*(f3?IRCS3:IRCS5)[fx.i];anexo=`Anexo ${f3?'III':'V'} · ${pct(fx.ef)}`}
   else{const b=F*.32;const irpj=b*.15+Math.max(0,b-20000)*.10, csll=b*.09;imp=irpj+csll+F*.0365+F*D.iss;ircs=irpj+csll;patr=pro*.20;anexo='Presumido'}
   const inss=Math.min(pro,TETO_INSS)*.11, ir=irrf(pro,inss);
   const lucroEmp=Math.max(0,F-imp-pro-patr-D.desp), lucro=lucroEmp*D.part;
@@ -177,27 +178,30 @@ function cenario(nome,pro,D){
   const devido=Math.max(0,bruto-irPago-redutor), saldo=devido-12*ret;   // positivo: paga; negativo: restitui
   const liqAno=12*liqMes-Math.max(0,saldo)+Math.max(0,-saldo);
   const totImp=12*(imp+patr+inss+ir)+Math.max(0,devido);
-  return {nome,pro,imp,patr,inss,ir,anexo,lucro,ret,liqMes,rend,aliq,bruto,irPago,redutor,devido,saldo,liqAno,totImp};
+  return {nome,reg,pro,imp,patr,inss,ir,anexo,lucro,ret,liqMes,rend,aliq,bruto,irPago,redutor,devido,saldo,liqAno,totImp};
 }
 function calc(){
   const reg=$('reg').value, F=num($('fat').value);
-  $('issbox').style.visibility=reg==='LP'?'visible':'hidden';
+  $('issbox').style.visibility=reg!=='SN'?'visible':'hidden';
   if(!F){$('empty').style.display='';$('res').style.display='none';R=null;return}
   $('empty').style.display='none';$('res').style.display='';
   const D={reg,F,desp:num($('desp').value),part:Math.min(100,Math.max(1,num($('part').value)||100))/100,iss:num($('iss').value)/100,
     outras:num($('outras').value),irout:num($('irout').value)};
   D.outras=Math.max(0,D.outras-0); const l25=num($('l25').value);
   const proFR=Math.max(SAL_MIN,Math.ceil(Math.round(F*FR*10000)/100)/100), proInf=num($('pro').value);
-  $('proh').textContent=reg==='SN'?`Para o Fator R de 28%: ${brl(proFR)}. Em branco, compara só os cenários padrão.`:'No Presumido o pró-labore paga 20% de INSS da empresa; em branco, compara só os cenários padrão.';
-  const C=[cenario('Pró-labore mínimo',SAL_MIN,D)];
-  if(reg==='SN')C.push(cenario('Pró-labore do Fator R',proFR,D));
-  if(proInf&&Math.abs(proInf-SAL_MIN)>1&&Math.abs(proInf-proFR)>1)C.push(cenario('Seu pró-labore',proInf,D));
+  $('proh').textContent=reg==='CMP'?`No Simples sem Fator R usamos 1 salário mínimo e com Fator R ${brl(proFR)}. No Presumido, usamos o pró-labore informado (ou 1 salário mínimo).`:reg==='SN'?`Para o Fator R de 28%: ${brl(proFR)}. Em branco, compara só os cenários padrão.`:'No Presumido o pró-labore paga 20% de INSS da empresa; em branco, compara só os cenários padrão.';
+  let C;
+  if(reg==='CMP'){const pLP=proInf||SAL_MIN;
+    C=[cenario('Simples sem Fator R',SAL_MIN,D,'SN'),cenario('Simples com Fator R',proFR,D,'SN'),cenario('Lucro Presumido',pLP,D,'LP')];}
+  else{C=[cenario('Pró-labore mínimo',SAL_MIN,D)];
+    if(reg==='SN')C.push(cenario('Pró-labore do Fator R',proFR,D));
+    if(proInf&&Math.abs(proInf-SAL_MIN)>1&&Math.abs(proInf-proFR)>1)C.push(cenario('Seu pró-labore',proInf,D));}
   const best=[...C].sort((a,b)=>b.liqAno-a.liqAno)[0];
   R={nome:$('nome').value.trim(),D,C,best,l25};
   const L=r=>r.map(([k,s,v])=>`<div class="ln"><span>${k} <small>${s}</small></span><b>${brl(v)}</b></div>`).join('');
   $('cmp').className='cmp'+(C.length===3?' tres':'');
   $('cmp').innerHTML=C.map(c=>`<div class="opt ${c===best&&C.length>1?'best':''}"><h3>${c.nome}</h3><div class="sub2">${brl(c.pro)}/mês · ${c.anexo}</div>
-    <div class="grp">Por mês</div>${L([['Impostos da empresa',reg==='SN'?'DAS':'PIS, COFINS, ISS, IRPJ, CSLL',-c.imp]].concat(c.patr?[['INSS da empresa','20% do pró-labore',-c.patr]]:[]).concat([['Pró-labore líquido',`INSS ${brl(c.inss)} · IR ${brl(c.ir)}`,c.pro-c.inss-c.ir],['Lucros (sua parte)',c.ret?'':'isentos até R$ 50 mil',c.lucro]]).concat(c.ret?[['Retenção de 10%','lucros acima de R$ 50 mil',-c.ret]]:[]))}
+    <div class="grp">Por mês</div>${L([['Impostos da empresa',c.reg==='SN'?'DAS':'PIS, COFINS, ISS, IRPJ, CSLL',-c.imp]].concat(c.patr?[['INSS da empresa','20% do pró-labore',-c.patr]]:[]).concat([['Pró-labore líquido',`INSS ${brl(c.inss)} · IR ${brl(c.ir)}`,c.pro-c.inss-c.ir],['Lucros (sua parte)',c.ret?'':'isentos até R$ 50 mil',c.lucro]]).concat(c.ret?[['Retenção de 10%','lucros acima de R$ 50 mil',-c.ret]]:[]))}
     <div class="tot"><span>NO BOLSO / MÊS</span><b>${brl(c.liqMes)}</b></div>
     <div class="grp">No ano</div>${L([['Renda total','base do IR mínimo',c.rend],['IR mínimo',pct(c.aliq)+(c.redutor?` · redutor ${brl(c.redutor)}`:''),c.devido?-c.devido:0],[c.saldo>=0?'A pagar na declaração':'A restituir na declaração','IR mínimo − retenções',-c.saldo]])}
     <div class="tot"><span>NO BOLSO / ANO</span><b>${brl(c.liqAno)}</b></div>${c===best&&C.length>1?'<span class="tag">Mais dinheiro no bolso</span>':''}</div>`).join('');
@@ -206,7 +210,7 @@ function calc(){
   $('hv').textContent=C.length>1?'+ '+brl(best.liqAno-outro.liqAno)+'/ano':brl(best.liqAno);
   $('hs').textContent=C.length>1?`em relação a ${outro.nome.toLowerCase()} · ${brl(best.liqAno)} no bolso no ano`:'no bolso no ano';
   $('hp').textContent=brl(best.devido);
-  $('nota').innerHTML=`<div class="fund"><div class="ft">Regras usadas</div>Lucros até R$ 50 mil por mês, pagos pela mesma empresa, continuam isentos; acima disso, retenção de 10% sobre o total do mês (Lei 9.250/1995, art. 6º-A, incluído pela Lei 15.270/2025). A retenção é antecipação: é descontada do IR mínimo na declaração e pode ser devolvida. IR mínimo (art. 16-A): para renda anual acima de R$ 600 mil, alíquota crescente até 10% a partir de R$ 1,2 milhão, sobre todos os rendimentos, descontado o IR já pago e o redutor do art. 16-B quando a carga da empresa somada à da pessoa física passa de 34%. Lucros de 2025 aprovados até 31/12/2025 ficam fora${l25?` (informado: ${brl(l25)}, não entrou na conta)`:''}. Pró-labore com INSS de 11% e IR pela tabela de 2026 com redutor. Simples: alíquota efetiva pelo faturamento de 12 meses, no Anexo III com Fator R de 28% ou no Anexo V. Presumido: presunção de 32%, IRPJ 15% + adicional de 10%, CSLL 9%, PIS/COFINS 3,65%, ISS informado e INSS de 20% da empresa sobre o pró-labore. Lucro distribuído = faturamento − impostos − pró-labore − despesas. Simulação com valores iguais em todos os meses.</div></div>`;
+  $('nota').innerHTML=`<div class="fund"><div class="ft">Regras usadas</div>Lucros até R$ 50 mil por mês, pagos pela mesma empresa, continuam isentos; acima disso, retenção de 10% sobre o total do mês (Lei 9.250/1995, art. 6º-A, incluído pela Lei 15.270/2025). A retenção é antecipação: é descontada do IR mínimo na declaração, e o que passar do devido é restituído (art. 16-A, §§ 5º e 6º). A devolução só acontece na declaração do ano seguinte, e os detalhes ainda podem ser regulamentados pela Receita. IR mínimo (art. 16-A): para renda anual acima de R$ 600 mil, alíquota crescente até 10% a partir de R$ 1,2 milhão, sobre todos os rendimentos, descontado o IR já pago e o redutor do art. 16-B quando a carga da empresa somada à da pessoa física passa de 34%. Lucros de 2025 aprovados até 31/12/2025 ficam fora${l25?` (informado: ${brl(l25)}, não entrou na conta)`:''}. Pró-labore com INSS de 11% e IR pela tabela de 2026 com redutor. Simples: alíquota efetiva pelo faturamento de 12 meses, no Anexo III com Fator R de 28% ou no Anexo V. Presumido: presunção de 32%, IRPJ 15% + adicional de 10%, CSLL 9%, PIS/COFINS 3,65%, ISS informado e INSS de 20% da empresa sobre o pró-labore. Lucro distribuído = faturamento − impostos − pró-labore − despesas. Simulação com valores iguais em todos os meses.</div></div>`;
 }
 
 // ── PDF ──
@@ -220,7 +224,7 @@ function gerarPDF(){
   d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
   d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Distribuição de lucros e IR mínimo',M,49);
   d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);
-  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês · despesas ${brl(r.D.desp)}/mês · participação ${pct(r.D.part)}`,W-2*M),M,56);
+  d.text(d.splitTextToSize(`${r.nome?r.nome+' · ':''}${r.D.reg==='CMP'?'Comparação Simples x Presumido':r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês · despesas ${brl(r.D.desp)}/mês · participação ${pct(r.D.part)}`,W-2*M),M,56);
   let y=64; const xs=C.length===3?[112,150,X2-3]:C.length===2?[140,X2-3]:[X2-3];
   d.setFillColor(...NAVY);d.rect(M,y,W-2*M,10,'F');d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(255,255,255);
   d.text('Por cenário',M+3,y+6.5);C.forEach((c,i)=>d.text(c.nome,xs[i],y+6.5,{align:'right'}));y+=10;
@@ -240,7 +244,7 @@ function gerarPDF(){
 document.querySelectorAll('.money input').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):''}));
 $('bpdf').onclick=()=>{if(R)gerarPDF().save(`Distribuicao de lucros - ${R.nome||'simulacao'}.pdf`)};
 $('bzap').onclick=()=>{if(!R)return;const r=R;
-  const t=`*Distribuição de lucros e IR mínimo*${r.nome?'\n'+r.nome:''}\n${r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês\n\n${r.C.map(c=>`• ${c.nome} (${brl(c.pro)}): *${brl(c.liqMes)}*/mês · ${brl(c.liqAno)}/ano`).join('\n')}\n\n✅ Melhor: *${r.best.nome}*\nIR mínimo no ano: ${brl(r.best.devido)}\n\nQuero planejar minhas retiradas com a Move.`;
+  const t=`*Distribuição de lucros e IR mínimo*${r.nome?'\n'+r.nome:''}\n${r.D.reg==='CMP'?'Comparação Simples x Presumido':r.D.reg==='SN'?'Simples Nacional':'Lucro Presumido'} · faturamento ${brl(r.D.F)}/mês\n\n${r.C.map(c=>`• ${c.nome} (${brl(c.pro)}): *${brl(c.liqMes)}*/mês · ${brl(c.liqAno)}/ano`).join('\n')}\n\n✅ Melhor: *${r.best.nome}*\nIR mínimo no ano: ${brl(r.best.devido)}\n\nQuero planejar minhas retiradas com a Move.`;
   window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
 calc();
 </script>
