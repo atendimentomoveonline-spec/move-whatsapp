@@ -6,6 +6,7 @@
 <title>Gerador de Invoice — Move Online</title>
 <link rel="icon" href="logo_move.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap">
 <style>
   :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
   *{box-sizing:border-box}
@@ -85,27 +86,31 @@
   .ith{font-size:12px;color:#94a3b8;margin-top:6px}
   .add{margin-top:10px;width:100%;padding:11px;border:1.5px dashed var(--green);border-radius:12px;background:#fff;color:var(--green2);font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}
   .add:hover{background:#e8faf3}
-  /* pré-visualização */
-  .paper{border:1px solid var(--line);border-radius:6px;padding:34px 34px 28px;background:#fff;color:#1f2937;font-size:13px;box-shadow:0 1px 0 var(--line)}
-  .ph{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:2px solid var(--navy);padding-bottom:16px}
-  .ph h2{margin:0;font-size:30px;letter-spacing:3px;color:var(--navy)}
-  .ph .meta{text-align:right;font-size:12.5px;line-height:1.7}
-  .ph .meta b{color:var(--navy)}
-  .parts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
-  .parts h4{margin:0 0 5px;font-size:10.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
-  .parts div{line-height:1.55;white-space:pre-line;word-break:break-word}
-  .parts .nm{font-weight:800;color:var(--navy);font-size:14px}
-  .tbw{overflow-x:auto;margin-top:20px}
-  table.itb{width:100%;border-collapse:collapse;font-size:12.5px;min-width:420px}
-  .itb th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-size:11px;letter-spacing:.4px;text-transform:uppercase}
-  .itb td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-  .itb .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .tots{margin-left:auto;margin-top:12px;width:min(280px,100%);font-size:13px}
-  .tots div{display:flex;justify-content:space-between;padding:6px 0}
-  .tots .g{border-top:2px solid var(--navy);margin-top:4px;padding-top:9px;font-size:17px;font-weight:800;color:var(--navy)}
-  .pnotes{margin-top:20px;font-size:12px;line-height:1.55;white-space:pre-line;color:#374151}
-  .pnotes h4{margin:0 0 4px;font-size:10.5px;letter-spacing:1px;color:var(--mut);text-transform:uppercase}
-  @media(max-width:520px){.paper{padding:20px 16px}.parts{grid-template-columns:1fr}.ph .meta{text-align:left}}
+  /* pré-visualização: modelo minimalista */
+  .paper{border:1px solid var(--line);border-radius:6px;padding:40px 38px 22px;background:#fff;color:#374151;font-family:Poppins,'Segoe UI',sans-serif;font-weight:300;font-size:12px;line-height:1.6;min-height:560px;display:flex;flex-direction:column}
+  .paper b{font-weight:500;color:var(--navy)}
+  .ph{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-start}
+  .ph .nm{font-weight:500;color:var(--navy);font-size:14px}
+  .ph .iv{font-size:17px;letter-spacing:5px;color:var(--navy);font-weight:400;text-align:right}
+  .ph .sm{white-space:pre-line}
+  .rl{height:1px;background:var(--navy);margin:20px 0 16px}
+  .parts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .parts .k,.pnotes .k,.itb th{font-size:9.5px;letter-spacing:1.4px;color:#94a3b8;font-weight:400;text-transform:uppercase}
+  .parts .cn{font-weight:400;color:var(--navy);font-size:13px}
+  .parts .ad{white-space:pre-line;word-break:break-word}
+  .parts .rt{text-align:right}
+  .parts .big{font-weight:500;color:var(--navy);font-size:17px}
+  .tbw{overflow-x:auto;margin-top:26px}
+  table.itb{width:100%;border-collapse:collapse;min-width:420px}
+  .itb th{text-align:left;padding:0 0 6px;border-bottom:1px solid var(--navy)}
+  .itb td{padding:8px 0;border-bottom:1px solid #e5e9ee;vertical-align:top}
+  .itb .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:12px}
+  .tots{margin-left:auto;margin-top:10px;width:min(300px,100%)}
+  .tots div{display:flex;justify-content:space-between;padding:5px 0}
+  .tots .g{border-top:1px solid var(--navy);font-weight:500;color:var(--navy);font-size:13.5px}
+  .pnotes{margin-top:22px;white-space:pre-line}
+  .pft{margin-top:auto;padding-top:26px;display:flex;justify-content:space-between;gap:10px;color:#b0bac6;font-size:9.5px}
+  @media(max-width:520px){.paper{padding:22px 16px}.parts{grid-template-columns:1fr}.parts .rt{text-align:left}.ph .iv{text-align:left}}
 </style>
 </head>
 <body>
@@ -195,45 +200,66 @@ function dados(){
 function render(){
   const D=dados();
   EMISSOR.forEach(k=>LS.set(k,$(k).value));
-  $('paper').innerHTML=`<div class="ph"><div><h2>INVOICE</h2></div><div class="meta">Invoice No. <b>${esc(D.num)||'—'}</b><br>Issue date: <b>${dEN(D.dt)||'—'}</b><br>Due date: <b>${dEN(D.due)||'—'}</b></div></div>
-   <div class="parts"><div><h4>From</h4><div class="nm">${esc(D.fNome)||'Your company name'}</div><div>${D.fDoc?'CNPJ (Brazil): '+esc(D.fDoc)+'\n':''}${esc(D.fEnd)}${D.fCont?'\n'+esc(D.fCont):''}</div></div>
-   <div><h4>Bill to</h4><div class="nm">${esc(D.cNome)||'Client name'}</div><div>${esc(D.cEnd)}${D.cDoc?'\nTax ID: '+esc(D.cDoc):''}</div></div></div>
+  $('paper').innerHTML=`<div class="ph"><div><div class="nm">${esc(D.fNome)||'Your company name'}</div><div class="sm">${[D.fDoc?'CNPJ (Brazil) '+esc(D.fDoc):'',esc(D.fEnd),esc(D.fCont)].filter(Boolean).join('\n')}</div></div>
+   <div><div class="iv">INVOICE</div><div style="text-align:right">No. ${esc(D.num)||'—'}</div></div></div>
+   <div class="rl"></div>
+   <div class="parts"><div><div class="k">Bill to</div><div class="cn">${esc(D.cNome)||'Client name'}</div><div class="ad">${[esc(D.cEnd),D.cDoc?'Tax ID: '+esc(D.cDoc):''].filter(Boolean).join('\n')}</div></div>
+   <div class="rt"><div class="k">Issue date · Due date</div><div>${dEN(D.dt)||'—'} · ${dEN(D.due)||'—'}</div><div class="k" style="margin-top:8px">Amount due</div><div class="big">${money(D.total,D.cur)}</div></div></div>
    <div class="tbw"><table class="itb"><tr><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr>
    ${(D.linhas.length?D.linhas:[{d:'Service description',q:1,v:0,t:0}]).map(it=>`<tr><td>${esc(it.d)||'—'}</td><td class="r">${it.q.toLocaleString('en-US')}</td><td class="r">${money(it.v,D.cur)}</td><td class="r">${money(it.t,D.cur)}</td></tr>`).join('')}</table></div>
-   <div class="tots"><div><span>Subtotal</span><span>${money(D.total,D.cur)}</span></div><div class="g"><span>Total due (${D.cur})</span><span>${money(D.total,D.cur)}</span></div></div>
-   ${D.obs?`<div class="pnotes"><h4>Notes</h4>${esc(D.obs)}</div>`:''}`;
+   <div class="tots"><div><span>Subtotal</span><span>${money(D.total,D.cur)}</span></div><div class="g"><span>Total (${D.cur})</span><span>${money(D.total,D.cur)}</span></div></div>
+   ${D.obs?`<div class="pnotes"><div class="k">Notes</div>${esc(D.obs)}</div>`:''}
+   <div class="pft"><span>Invoice ${esc(D.num)} · page 1 of 1</span><span>Invoice generated with Move Online</span></div>`;
   return D;
 }
 
-// ── PDF A4 (texto real) ──
-const NAVY=[0,52,89], MUT=[100,116,139], LINE=[226,232,240], INK=[31,41,55];
-function gerarPDF(D){
-  const {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=18, X2=W-M;
+// ── PDF A4 (texto real) · modelo minimalista em Poppins ──
+const NAVY=[0,52,89], MUT=[148,163,184], FT=[176,186,198], LINE=[229,233,238], INK=[55,65,81];
+const FONT_URL='https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/poppins/';
+const PESOS={light:'Poppins-Light.ttf',normal:'Poppins-Regular.ttf',medium:'Poppins-Medium.ttf'};
+const b64=buf=>{let s='';const a=new Uint8Array(buf);for(let i=0;i<a.length;i+=0x8000)s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000));return btoa(s)};
+const FONTES=Promise.all(Object.entries(PESOS).map(([p,f])=>fetch(FONT_URL+f).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>[p,f,b64(b)])))
+  .then(l=>l,()=>null);
+function gerarPDF(D,F){
+  const {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=20, X2=W-M;
+  if(F)F.forEach(([p,f,b])=>{d.addFileToVFS(f,b);d.addFont(f,'Poppins',p)});
+  const fam=F?'Poppins':'helvetica', fo=p=>d.setFont(fam,F?p:(p==='medium'?'bold':'normal'));
   const m=v=>money(v,D.cur).replace('€','EUR ').replace('£','GBP ');
-  d.setFont('helvetica','bold');d.setFontSize(26);d.setTextColor(...NAVY);d.text('INVOICE',M,30);
-  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...INK);
-  [['Invoice No.',D.num||'-'],['Issue date',dEN(D.dt)||'-'],['Due date',dEN(D.due)||'-']].forEach(([k,v],i)=>{
-    d.setTextColor(...MUT);d.text(k+':',X2-48,22+i*5.5,{align:'right'});d.setTextColor(...NAVY);d.setFont('helvetica','bold');d.text(v,X2,22+i*5.5,{align:'right'});d.setFont('helvetica','normal')});
-  d.setDrawColor(...NAVY);d.setLineWidth(.8);d.line(M,40,X2,40);
-  const bloco=(x,tit,nome,linhas)=>{let y=49;d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(...MUT);d.text(tit,x,y);y+=6;
-    d.setFontSize(11.5);d.setTextColor(...NAVY);const n=d.splitTextToSize(nome,80);d.text(n,x,y);y+=n.length*5;
-    d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...INK);const t=d.splitTextToSize(linhas,80);d.text(t,x,y);return y+t.length*4.3};
-  const y1=bloco(M,'FROM',D.fNome||'-',[D.fDoc?'CNPJ (Brazil): '+D.fDoc:'',D.fEnd,D.fCont].filter(Boolean).join('\n'));
-  const y2=bloco(W/2+4,'BILL TO',D.cNome||'-',[D.cEnd,D.cDoc?'Tax ID: '+D.cDoc:''].filter(Boolean).join('\n'));
-  let y=Math.max(y1,y2)+8;
-  const cQ=128,cU=156,cT=X2-3;
-  d.setFillColor(...NAVY);d.rect(M,y,W-2*M,8,'F');d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(255,255,255);
-  d.text('DESCRIPTION',M+3,y+5.4);d.text('QTY',cQ,y+5.4,{align:'right'});d.text('UNIT PRICE',cU,y+5.4,{align:'right'});d.text('AMOUNT',cT,y+5.4,{align:'right'});y+=8;
-  d.setFont('helvetica','normal');d.setFontSize(9.5);
-  D.linhas.forEach(it=>{const t=d.splitTextToSize(it.d||'-',92), h=Math.max(8,t.length*4.3+3.5);
-    if(y+h>250){d.addPage();y=20}
-    d.setTextColor(...INK);d.text(t,M+3,y+5.4);d.text(it.q.toLocaleString('en-US'),cQ,y+5.4,{align:'right'});d.text(m(it.v),cU,y+5.4,{align:'right'});d.text(m(it.t),cT,y+5.4,{align:'right'});
-    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+h,X2,y+h);y+=h});
-  y+=6;d.setTextColor(...MUT);d.text('Subtotal',X2-50,y);d.setTextColor(...INK);d.text(m(D.total),cT,y,{align:'right'});y+=4;
-  d.setDrawColor(...NAVY);d.setLineWidth(.8);d.line(X2-62,y,X2,y);y+=7;
-  d.setFont('helvetica','bold');d.setFontSize(13);d.setTextColor(...NAVY);d.text(`Total due (${D.cur})`,X2-62,y);d.text(m(D.total),cT,y,{align:'right'});y+=12;
-  if(D.obs){if(y>255){d.addPage();y=20}d.setFontSize(8);d.setTextColor(...MUT);d.text('NOTES',M,y);y+=5;d.setFont('helvetica','normal');d.setFontSize(9.5);d.setTextColor(...INK);
-    const t=d.splitTextToSize(D.obs,W-2*M);d.text(t,M,y)}
+  // texto com espaçamento entre letras: o alinhamento à direita do jsPDF ignora o charSpace, então a posição é calculada aqui
+  const esp=(t,x,y,cs,al)=>{const w=d.getTextWidth(t)+cs*(t.length-1);d.text(t,al==='right'?x-w:x,y,{charSpace:cs})};
+  const k=(t,x,y,al)=>{fo('normal');d.setFontSize(6.8);d.setTextColor(...MUT);esp(t.toUpperCase(),x,y,.35,al)};
+  // cabeçalho
+  fo('medium');d.setFontSize(11);d.setTextColor(...NAVY);const nm=d.splitTextToSize(D.fNome||'-',110);d.text(nm,M,26);
+  let yE=26+nm.length*4.6;fo('light');d.setFontSize(8.3);d.setTextColor(...INK);
+  const em=d.splitTextToSize([D.fDoc?'CNPJ (Brazil) '+D.fDoc:'',D.fEnd,D.fCont].filter(Boolean).join('\n'),110);d.text(em,M,yE);yE+=em.length*3.7;
+  fo('normal');d.setFontSize(13);d.setTextColor(...NAVY);esp('INVOICE',X2,26,1.6,'right');
+  fo('light');d.setFontSize(8.3);d.setTextColor(...INK);d.text('No. '+(D.num||'-'),X2,31.5,{align:'right'});
+  let y=Math.max(yE,34)+5;d.setDrawColor(...NAVY);d.setLineWidth(.2);d.line(M,y,X2,y);y+=9;
+  // cliente e valores
+  k('Bill to',M,y);k('Issue date · Due date',X2,y,'right');
+  fo('normal');d.setFontSize(9.8);d.setTextColor(...NAVY);const cn=d.splitTextToSize(D.cNome||'-',95);d.text(cn,M,y+5);
+  fo('light');d.setFontSize(8.3);d.setTextColor(...INK);const ca=d.splitTextToSize([D.cEnd,D.cDoc?'Tax ID: '+D.cDoc:''].filter(Boolean).join('\n'),95);d.text(ca,M,y+5+cn.length*4.2);
+  d.text(`${dEN(D.dt)||'-'} · ${dEN(D.due)||'-'}`,X2,y+5,{align:'right'});
+  k('Amount due',X2,y+12,'right');fo('medium');d.setFontSize(13);d.setTextColor(...NAVY);d.text(m(D.total),X2,y+18.5,{align:'right'});
+  y=Math.max(y+5+cn.length*4.2+ca.length*3.7,y+20)+12;
+  // tabela
+  const cQ=125,cU=155;
+  k('Description',M,y);k('Qty',cQ,y,'right');k('Unit price',cU,y,'right');k('Amount',X2,y,'right');
+  y+=2.5;d.setDrawColor(...NAVY);d.setLineWidth(.2);d.line(M,y,X2,y);
+  fo('light');d.setFontSize(8.8);
+  D.linhas.forEach(it=>{const t=d.splitTextToSize(it.d||'-',88), h=Math.max(8,t.length*4+4);
+    if(y+h>262){d.addPage();y=24}
+    d.setTextColor(...INK);d.text(t,M,y+5.5);d.text(it.q.toLocaleString('en-US'),cQ,y+5.5,{align:'right'});d.text(m(it.v),cU,y+5.5,{align:'right'});d.text(m(it.t),X2,y+5.5,{align:'right'});
+    d.setDrawColor(...LINE);d.setLineWidth(.2);d.line(M,y+h,X2,y+h);y+=h});
+  // totais
+  const xT=X2-70;y+=6;fo('light');d.setFontSize(8.8);d.setTextColor(...INK);d.text('Subtotal',xT,y);d.text(m(D.total),X2,y,{align:'right'});
+  y+=3.5;d.setDrawColor(...NAVY);d.line(xT,y,X2,y);y+=5.5;
+  fo('medium');d.setFontSize(10);d.setTextColor(...NAVY);d.text(`Total (${D.cur})`,xT,y);d.text(m(D.total),X2,y,{align:'right'});y+=14;
+  if(D.obs){if(y>262){d.addPage();y=24}k('Notes',M,y);fo('light');d.setFontSize(8.5);d.setTextColor(...INK);const t=d.splitTextToSize(D.obs,W-2*M);d.text(t,M,y+5)}
+  // rodapé em todas as páginas
+  const n=d.getNumberOfPages();
+  for(let p=1;p<=n;p++){d.setPage(p);fo('light');d.setFontSize(6.8);d.setTextColor(...FT);
+    d.text(`Invoice ${D.num||''} · page ${p} of ${n}`,M,287);d.text('Invoice generated with Move Online',X2,287,{align:'right'})}
   return d;
 }
 
@@ -246,9 +272,9 @@ $('add').onclick=()=>{itens.push({d:'',q:'1',v:''});desenhaItens();render();$('i
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2600)}
 $('bpdf').onclick=()=>{const D=render();
   if(!D.fNome||!D.cNome||!D.linhas.length||!D.total){toast('Preencha o emissor, o cliente e pelo menos um serviço com valor.');return}
-  gerarPDF(D).save(`Invoice ${D.num||''} - ${D.cNome}.pdf`);
+  FONTES.then(F=>{gerarPDF(D,F).save(`Invoice ${D.num||''} - ${D.cNome}.pdf`);
   const m=D.num.match(/^(\d{4})-(\d+)$/);if(m){LS.set('ult',D.num);$('num').value=proximoNumero();render()}
-  toast('Invoice baixada. O próximo número já foi preparado.')};
+  toast('Invoice baixada. O próximo número já foi preparado.')})};
 desenhaItens();render();
 </script>
 </body>
