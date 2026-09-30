@@ -682,6 +682,20 @@ def uniprofissional_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Diagnóstico fiscal em 2 minutos (página estática) ──
+DIAG_DIR = os.path.join(BASE, "diagnostico")
+
+@app.route("/diagnostico/")
+def diagnostico():
+    return send_file(os.path.join(DIAG_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/diagnostico/<nome>.png")
+def diagnostico_img(nome):
+    f = os.path.join(DIAG_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico Fiscal — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .q{margin-top:18px}
+  .q .t{font-size:14px;font-weight:700;color:var(--navy)}
+  .q .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8faf3;color:var(--green2);font-size:12px;font-weight:800;margin-right:6px}
+  .ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .ops button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:13.5px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .ops button:hover{border-color:var(--green)}
+  .ops button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .prog{height:6px;background:var(--bg);border-radius:6px;overflow:hidden;margin-top:12px}.prog div{height:100%;background:var(--green);transition:width .3s}
+  .pt{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .pt .c{width:22px;height:22px;border-radius:50%;margin-top:2px}
+  .pt .c.r{background:#ef4444}.pt .c.y{background:#f5b301}.pt .c.g{background:var(--green)}
+  .pt b{color:var(--navy);font-size:14px}.pt .d{font-size:13px;color:var(--mut);margin-top:3px;line-height:1.5}
+  .pt .v{font-size:12.5px;font-weight:800;color:var(--navy);margin-top:4px}
+  .pt a{color:var(--green2);font-weight:700;font-size:12.5px}
+  .score{display:flex;align-items:baseline;gap:6px}.score b{font-size:48px;letter-spacing:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Diagnóstico <span>fiscal</span> em 2 minutos</h1>
+    <p>Responda 10 perguntas rápidas e veja onde o seu CNPJ pode estar pagando imposto a mais.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Perguntas</div>
+      <div class="prog"><div id="prog" style="width:0"></div></div>
+      <div id="qs"></div>
+    </div>
+
+    <div class="card">
+      <div class="empty" id="empty">Responda as perguntas para ver o diagnóstico.<br><span id="falta"></span></div>
+      <div id="res" style="display:none">
+        <div class="hero" style="margin-top:0">
+          <div><div class="lbl">Saúde fiscal</div><div class="score"><b id="nota"></b><span>/10</span></div><div class="sub" id="nsub"></div></div>
+          <div class="pill"><b id="perda" style="font-size:26px"></b><span>que você pode estar deixando de economizar por ano</span></div>
+        </div>
+        <div id="pts" style="margin-top:8px"></div>
+        <div class="acts">
+          <button class="btn" id="bzap">Quero que a Move revise meu CNPJ</button>
+          <button class="btn o" id="bpdf">Baixar relatório</button>
+        </div>
+        <div class="note"><div class="fund"><div class="ft">Importante</div>É uma estimativa feita com faixas de valores, para mostrar onde vale olhar com atenção. O valor exato depende da análise das suas guias e declarações. Regras: LC 123/2006 (Fator R e anexos), Lei 9.249/1995 (equiparação hospitalar), Decreto-Lei 406/1968 e LC 214/2025 (ISS fixo e reforma), Lei 15.270/2025 (lucros acima de R$ 50 mil).</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Diagnóstico gratuito e estimado. Não substitui a análise do contador.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const SAL_MIN=1621.00, TETO_INSS=8475.55;
+const A3=[[180000,.06,0],[360000,.112,9360],[720000,.135,17640],[1800000,.16,35640],[3600000,.21,125640],[4800000,.33,648000]];
+const A5=[[180000,.155,0],[360000,.18,4500],[720000,.195,9900],[1800000,.205,17100],[3600000,.23,62100],[4800000,.305,540000]];
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const Q=[
+ ['reg','Qual o regime da empresa?',[['SN','Simples Nacional'],['LP','Lucro Presumido'],['PF','Ainda não tenho CNPJ'],['NS','Não sei']]],
+ ['fat','Quanto a empresa fatura por mês, aproximadamente?',[[12000,'Até R$ 20 mil'],[35000,'R$ 20 a 50 mil'],[75000,'R$ 50 a 100 mil'],[200000,'R$ 100 a 300 mil'],[350000,'Acima de R$ 300 mil']]],
+ ['pro','Quanto você tira de pró-labore?',[['min','Cerca de 1 salário mínimo'],['meio','Mais que isso, mas menos de 28% do faturamento'],['fr','28% do faturamento ou mais'],['zero','Não tiro pró-labore'],['ns','Não sei']]],
+ ['func','Tem funcionários registrados?',[['s','Sim'],['n','Não']]],
+ ['loc','Onde você atende?',[['prop','Consultório ou clínica própria'],['terc','Hospitais e clínicas de terceiros'],['amb','Nos dois']]],
+ ['proc','Faz procedimentos (cirurgias, exames, day clinic)?',[['s','Sim'],['n','Não, só consultas']]],
+ ['soc','Como é a sociedade?',[['so','Só eu'],['mesma','Sócios da mesma profissão'],['mix','Sócios de profissões diferentes ou investidores']]],
+ ['cli','De quem você mais recebe?',[['pf','Pacientes pessoa física'],['pj','Hospitais, clínicas e convênios'],['ex','Clientes do exterior'],['mix','Um pouco de cada']]],
+ ['lucro','Retira mais de R$ 50 mil de lucros em algum mês?',[['s','Sim'],['n','Não']]],
+ ['rev','Quando seus impostos foram revisados pela última vez?',[['nunca','Nunca'],['velho','Há mais de um ano'],['ok','No último ano']]],
+];
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const A={};
+$('qs').innerHTML=Q.map(([k,t,op],i)=>`<div class="q"><div class="t"><span class="n">${i+1}</span>${t}</div><div class="ops" data-k="${k}">${op.map(([v,l])=>`<button type="button" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('');
+document.querySelectorAll('.ops button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k;A[k]=b.dataset.v;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));render()});
+
+function ef(t,rbt){let i=t.findIndex(f=>rbt<=f[0]);if(i<0)i=5;const [,n,d]=t[i];return rbt<=180000?n:(rbt*n-d)/rbt}
+function irrf(b,inss){const base=b-Math.max(inss,607.2);if(base<=0)return 0;const [,a,d]=IR_TAB.find(f=>base<=f[0]);const tab=Math.max(0,base*a-d);let red=0;if(b<=5000)red=tab;else if(b<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*b));return tab-red}
+function econFatorR(F){ // custo sem Fator R (Anexo V, pró-labore mínimo) − com Fator R (Anexo III, pró-labore de 28%)
+  const sem=F*ef(A5,F*12)+SAL_MIN*.11, pro=Math.max(SAL_MIN,F*.28), inss=Math.min(pro,TETO_INSS)*.11, com=F*ef(A3,F*12)+inss+irrf(pro,inss);
+  return Math.max(0,sem-com)}
+function econEquip(F){const irpj=b=>b*.15+Math.max(0,b-20000)*.10;return irpj(F*.32)-irpj(F*.08)+F*.20*.09}
+
+function pontos(){
+  const P=[],F=+A.fat,reg=A.reg;
+  if(reg==='NS')P.push(['r','Você não sabe o regime do seu CNPJ','Sem saber o regime, não dá para saber se você paga o imposto certo. É o primeiro ponto a esclarecer.',0,null]);
+  if(reg==='PF')P.push(['y','Atender como pessoa física pode sair caro','No carnê-leão o imposto chega a 27,5%. Com um CNPJ no Simples e Fator R, a carga costuma ficar bem menor.',0,['Compare PJ × CLT','../pjclt/']]);
+  if(reg==='SN'){
+    if(['min','meio','zero','ns'].includes(A.pro)&&F>5000){const e=econFatorR(F);P.push([A.pro==='ns'?'y':'r','Fator R: você pode estar no Anexo V',`Com pró-labore abaixo de 28% do faturamento, a guia sai no Anexo V (a partir de 15,5%). Ajustando o pró-labore, a atividade vai para o Anexo III (a partir de 6%).`,e*12,['Simule o Fator R','../fatorr/']])}
+    else P.push(['g','Fator R em ordem','Pró-labore de 28% ou mais: a atividade fica no Anexo III, o mais barato.',0,null]);
+    if(['pj','mix'].includes(A.cli))P.push(['y','Reforma: seus clientes PJ vão olhar o crédito','A partir de 2027, hospitais e clínicas recuperam imposto de quem está no Simples Híbrido ou no regime regular. No Simples normal, seu serviço gera pouco crédito para eles.',0,['Simule Simples × Híbrido','../calculadora/']]);
+    if(F>=200000)P.push(['y','Faturamento alto para o Simples','Nessa faixa, o Lucro Presumido pode sair mais barato. Vale comparar.',0,['Compare Simples × Presumido','../presumido/']]);
+  }
+  if(reg==='LP'){
+    if(A.proc==='s'){const e=econEquip(F);P.push(['r','Equiparação hospitalar pode reduzir IRPJ e CSLL',`Clínicas que fazem procedimentos podem calcular o IRPJ sobre 8% e a CSLL sobre 12% do faturamento, em vez de 32%. Exige requisitos de estrutura e de vigilância sanitária.`,e*12,null])}
+    if(A.soc==='mesma'&&A.proc==='n')P.push(['y','ISS fixo acaba na reforma','Sociedade de profissionais da mesma área pode pagar ISS fixo por profissional hoje. Em 2033 o ISS fixo acaba e entra a CBS/IBS sobre o faturamento.',0,['Simule o impacto','../uniprofissional/']]);
+    if(F<=35000)P.push(['y','Com esse faturamento, o Simples pode ser mais barato','No Presumido há PIS, COFINS, IRPJ, CSLL e INSS de 20% sobre o pró-labore. Para faturamentos menores, o Simples com Fator R costuma pagar menos.',0,['Compare Simples × Presumido','../presumido/']]);
+  }
+  if(A.lucro==='s')P.push(['r','Lucros acima de R$ 50 mil no mês têm 10% de IR','Desde 2026, lucros acima de R$ 50 mil por mês pagos pela mesma empresa têm retenção de 10% (Lei 15.270/2025). Distribuir melhor ao longo do ano pode evitar a retenção.',0,null]);
+  if(['ex','mix'].includes(A.cli)&&reg!=='PF')P.push(['y','Receita do exterior tem isenção','Serviço exportado não paga PIS, COFINS e ISS. Se foi declarado como receita normal, houve imposto pago a mais.',0,['Gere sua invoice','../invoice/']]);
+  if(A.rev!=='ok'&&reg!=='PF')P.push([A.rev==='nunca'?'r':'y',A.rev==='nunca'?'Seus impostos nunca foram revisados':'Revisão com mais de um ano','Erros de anexo, retenções e receitas mal classificadas são comuns. Imposto pago a mais pode ser recuperado dos últimos 5 anos.',0,null]);
+  if(!P.some(p=>p[0]!=='g'))P.push(['g','Nenhum ponto de atenção encontrado','Pelas respostas, seu CNPJ está bem organizado. Uma revisão anual mantém tudo em dia.',0,null]);
+  return P;
+}
+function render(){
+  const n=Object.keys(A).length; $('prog').style.width=(n/Q.length*100)+'%';
+  if(n<Q.length){$('empty').style.display='';$('res').style.display='none';$('falta').textContent=`Faltam ${Q.length-n} ${Q.length-n===1?'pergunta':'perguntas'}.`;return}
+  $('empty').style.display='none';$('res').style.display='';
+  const P=pontos(), red=P.filter(p=>p[0]==='r').length, yel=P.filter(p=>p[0]==='y').length, perda=P.reduce((s,p)=>s+p[3],0);
+  const nota=Math.max(1,10-red*2-yel);
+  $('nota').textContent=nota;$('nota').style.color=nota>=8?'var(--green)':nota>=5?'#f5b301':'#ff8a8a';
+  $('nsub').textContent=`${red} ${red===1?'ponto crítico':'pontos críticos'} · ${yel} ${yel===1?'ponto de atenção':'pontos de atenção'}`;
+  $('perda').textContent=perda?'até '+brl(perda):'—';
+  $('pts').innerHTML=P.map(([c,t,d,v,l])=>`<div class="pt"><div class="c ${c}"></div><div><b>${t}</b><div class="d">${d}</div>${v?`<div class="v">Estimativa: até ${brl(v)} por ano</div>`:''}${l?`<a href="${l[1]}" target="_blank" rel="noopener">${l[0]} →</a>`:''}</div></div>`).join('');
+  window._D={P,nota,perda};
+}
+
+// ── PDF ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240], COR={r:[239,68,68],y:[245,179,1],g:[43,202,146]};
+function gerarPDF(){
+  const {P,nota,perda}=window._D, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Diagnóstico fiscal',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFillColor(...NAVY);d.roundedRect(M,44,W-2*M,26,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text('SAÚDE FISCAL',M+7,52);
+  d.setFontSize(24);d.setTextColor(255,255,255);d.text(`${nota}/10`,M+7,64);d.setFontSize(16);d.setTextColor(...GREEN);d.text(perda?'até '+brl(perda)+'/ano':'-',X2-7,60,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('economia potencial estimada',X2-7,65.5,{align:'right'});
+  let y=80;
+  P.forEach(([c,t,dd,v])=>{const txt=d.splitTextToSize(dd,W-2*M-12);if(y+12+txt.length*4>270){d.addPage();y=20}
+    d.setFillColor(...COR[c]);d.circle(M+3,y-1.2,2.2,'F');d.setFont('helvetica','bold');d.setFontSize(11);d.setTextColor(...NAVY);d.text(t,M+9,y);
+    d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text(txt,M+9,y+5);y+=5+txt.length*4;
+    if(v){d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(`Estimativa: até ${brl(v)} por ano`,M+9,y+1);y+=5}
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+2,X2,y+2);y+=9});
+  d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);d.text(d.splitTextToSize('Estimativa feita com faixas de valores. O valor exato depende da análise das guias e declarações. Não substitui a análise do contador.',W-2*M),M,y+2);
+  y+=12;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+$('bpdf').onclick=()=>{if(window._D)gerarPDF().save('Diagnostico fiscal - Move.pdf')};
+$('bzap').onclick=()=>{if(!window._D)return;const {P,nota,perda}=window._D;const ic={r:'🔴',y:'🟡',g:'🟢'};
+  const t=`*Diagnóstico fiscal*\nNota: ${nota}/10${perda?` · economia potencial de até ${brl(perda)}/ano`:''}\n\n${P.map(p=>`${ic[p[0]]} ${p[1]}`).join('\n')}\n\nQuero que a Move revise meu CNPJ.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+render();
+</script>
+</body>
+</html>
