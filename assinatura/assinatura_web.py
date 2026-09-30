@@ -710,6 +710,20 @@ def abrir_clinica_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Simulador de crédito de CBS/IBS na contratação (página estática) ──
+CRED_DIR = os.path.join(BASE, "credito")
+
+@app.route("/credito/")
+def credito():
+    return send_file(os.path.join(CRED_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/credito/<nome>.png")
+def credito_img(nome):
+    f = os.path.join(CRED_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:

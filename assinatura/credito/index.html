@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de Crédito na Contratação — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  @media(min-width:880px){.grid{grid-template-columns:400px 1fr}}
+  .orc{border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+  .orc .hd{display:flex;justify-content:space-between;align-items:center}
+  .orc .hd b{color:var(--navy);font-size:13px}
+  .orc .x{border:none;background:none;color:var(--mut);font-size:20px;cursor:pointer}
+  .orc label{margin:8px 0 4px;font-size:12px}
+  .orc input,.orc select{padding:10px 12px;font-size:14px}
+  .add{margin-top:12px;width:100%;padding:11px;border:1.5px dashed var(--green);border-radius:12px;background:#fff;color:var(--green2);font-weight:800;font-size:14px;cursor:pointer;font-family:inherit}
+  .rk{border:1.5px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+  .rk.best{border:2px solid var(--green)}
+  .rk .h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .rk .h b{color:var(--navy);font-size:15px}
+  .rk .tag{font-size:11px;font-weight:800;color:var(--green2);background:#e8faf3;border-radius:999px;padding:3px 9px}
+  .rk .g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .rk .g div{background:#f4f8fb;border-radius:10px;padding:8px 10px;font-size:12px;color:var(--mut)}
+  .rk .g b{display:block;font-size:15px;color:var(--navy)}
+  .rk .why{font-size:12.5px;color:var(--mut);margin-top:8px;line-height:1.5}
+  .sim{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 8px}
+  .sim.s{background:#e8faf3;color:var(--green2)}.sim.p{background:#fff8e6;color:#9a6700}.sim.n{background:var(--redbg);color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Simulador de <span>crédito</span> na contratação</h1>
+    <p>Compare orçamentos pelo custo real: quanto de CBS/IBS cada fornecedor devolve em crédito para a sua clínica.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Sua empresa</div>
+      <label>Regime da sua clínica</label>
+      <select id="reg">
+        <option value="reg">Lucro Presumido ou Real (regime regular)</option>
+        <option value="hib">Simples Híbrido</option>
+        <option value="sn">Simples Nacional</option>
+      </select>
+      <label>Ano da simulação</label>
+      <select id="ano"></select>
+      <div class="hint" id="anoh"></div>
+
+      <div class="sec" style="margin-top:20px">Orçamentos</div>
+      <div id="orcs"></div>
+      <button class="add" id="add" type="button">+ Adicionar orçamento</button>
+    </div>
+
+    <div class="card">
+      <div id="aviso"></div>
+      <div id="res"></div>
+      <div class="acts">
+        <button class="btn" id="bpdf">Baixar PDF</button>
+        <button class="btn o" id="bzap">Enviar no WhatsApp da Move</button>
+      </div>
+      <div class="note"><div class="fund"><div class="ft">Como calculamos</div>A CBS e o IBS são cobrados por fora do preço: o valor informado é o total da nota, e o imposto destacado é a parte que a sua clínica recupera como crédito. Alíquota de referência em 2033: 26,5%; de 2027 a 2032, a CBS e o IBS sobem conforme a transição (EC 132/2023). Reduções pela LC 214/2025: serviços de saúde, materiais e medicamentos 60% (arts. 130 a 133), profissões regulamentadas 30% (art. 127), aluguel de imóvel 70%. Fornecedor do Simples Nacional gera só o crédito da parte de CBS/IBS que está no DAS, que é pequena e aqui foi considerada zero. Pessoa física não gera crédito. Serviço do exterior: a clínica paga o imposto na importação e recupera o mesmo valor, sem efeito no custo. Quem está no Simples Nacional não aproveita créditos.</div></div>
+    </div>
+  </div>
+  <div class="foot">Simulação estimada com base na EC 132/2023 e na LC 214/2025. Alíquotas de referência estimadas.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const ANOS={2027:.088,2028:.088,2029:.1057,2030:.1234,2031:.1411,2032:.1588,2033:.265};   // CBS + IBS de cada ano
+const TIPOS=[['saude','Serviço de saúde (médico, laboratório, exames)',.4],['mat','Materiais e medicamentos',.4],['alu','Aluguel do imóvel',.3],
+ ['prof','Serviço de profissão regulamentada (contabilidade, advocacia, engenharia)',.7],['ger','Outros serviços (limpeza, TI, marketing, manutenção)',1],
+ ['eq','Equipamentos e móveis',1],['ene','Energia, internet e telefone',1]];
+const FORN=[['reg','Regime regular (Presumido ou Real)'],['hib','Simples Híbrido'],['sn','Simples Nacional'],['pf','Pessoa física (autônomo)'],['ex','Empresa do exterior']];
+const $=id=>document.getElementById(id);
+const num=s=>{s=(s||'').toString().trim();if(!s)return 0;s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n};
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('ano').innerHTML=Object.keys(ANOS).map(a=>`<option ${a==='2033'?'selected':''}>${a}</option>`).join('');
+let O=[{n:'Laboratório A',t:'saude',f:'reg',v:'10.000,00'},{n:'Laboratório B',t:'saude',f:'sn',v:'9.500,00'}];
+
+function desenha(){
+  $('orcs').innerHTML=O.map((o,i)=>`<div class="orc"><div class="hd"><b>Orçamento ${i+1}</b><button class="x" data-i="${i}" type="button" aria-label="Remover orçamento">×</button></div>
+   <label>Fornecedor</label><input data-i="${i}" data-k="n" value="${esc(o.n)}" placeholder="Nome do fornecedor">
+   <label>O que está comprando</label><select data-i="${i}" data-k="t">${TIPOS.map(t=>`<option value="${t[0]}" ${o.t===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select>
+   <label>Regime do fornecedor</label><select data-i="${i}" data-k="f">${FORN.map(f=>`<option value="${f[0]}" ${o.f===f[0]?'selected':''}>${f[1]}</option>`).join('')}</select>
+   <label>Valor total da nota (por mês ou por contrato)</label><div class="money"><span>R$</span><input data-i="${i}" data-k="v" value="${esc(o.v)}" inputmode="decimal"></div></div>`).join('');
+  $('orcs').querySelectorAll('[data-k]').forEach(e=>{const ev=e.tagName==='SELECT'?'change':'input';e.addEventListener(ev,()=>{O[e.dataset.i][e.dataset.k]=e.value;calc()})});
+  $('orcs').querySelectorAll('input[data-k=v]').forEach(e=>e.addEventListener('blur',()=>{const n=num(e.value);e.value=n?fmt(n):'';O[e.dataset.i].v=e.value}));
+  $('orcs').querySelectorAll('.x').forEach(b=>b.onclick=()=>{O.splice(+b.dataset.i,1);if(!O.length)O=[{n:'',t:'saude',f:'reg',v:''}];desenha();calc()});
+}
+function calcula(o,reg,al){
+  const tp=TIPOS.find(t=>t[0]===o.t), taxa=al*tp[2], V=num(o.v);
+  const imposto=o.f==='reg'||o.f==='hib'?V*taxa/(1+taxa):0;     // imposto destacado na nota (por fora)
+  let cred=0,gera='n',why='';
+  if(reg==='sn'){why='Sua clínica está no Simples Nacional e não aproveita créditos.'}
+  else if(o.f==='reg'||o.f==='hib'){cred=imposto;gera='s';why=`Fornecedor ${o.f==='hib'?'no Simples Híbrido':'no regime regular'}: todo o imposto destacado (${pct(taxa)}) volta como crédito.`}
+  else if(o.f==='sn'){gera='p';why='Fornecedor do Simples Nacional: só a parte de CBS/IBS que está dentro do DAS vira crédito, que é pequena (considerada zero).'}
+  else if(o.f==='pf'){why='Pessoa física não é contribuinte de CBS/IBS: não gera crédito.'}
+  else {cred=V*taxa;gera='s';why='Serviço do exterior: a clínica paga CBS/IBS na importação e recupera o mesmo valor como crédito. O custo fica igual ao valor contratado.'}
+  const importa=o.f==='ex'?V*taxa:0;   // imposto pago na importação (no Simples Nacional vira custo)
+  if(reg==='sn'&&o.f==='ex')why+=' O imposto pago na importação vira custo.';
+  return {...o,V,taxa,imposto,cred,custo:V+importa-cred,gera,why};
+}
+function calc(){
+  const reg=$('reg').value, a=$('ano').value, al=ANOS[a];
+  $('anoh').textContent=`CBS + IBS em ${a}: ${pct(al)} (alíquota cheia, antes das reduções).`;
+  $('aviso').innerHTML=reg==='sn'?`<div class="fund" style="border-left-color:var(--red);margin-bottom:6px">Sua clínica está no Simples Nacional: nenhum fornecedor gera crédito para você. <a href="../calculadora/" target="_blank" rel="noopener" style="color:var(--green2);font-weight:700">Veja se o Simples Híbrido compensa →</a></div>`:'';
+  const L=O.map(o=>calcula(o,reg,al)).filter(x=>x.V>0), ord=[...L].sort((x,y)=>x.custo-y.custo);
+  window._R={reg,a,L,ord};
+  if(!L.length){$('res').innerHTML='<div class="empty">Preencha o valor de pelo menos um orçamento.</div>';return}
+  const best=ord[0];
+  $('res').innerHTML=ord.map((x,i)=>`<div class="rk ${i===0&&ord.length>1?'best':''}"><div class="h"><b>${i+1}º · ${esc(x.n)||'Fornecedor'}</b>${i===0&&ord.length>1?'<span class="tag">Mais barato de verdade</span>':''}</div>
+    <div class="g"><div>Valor da nota<b>${brl(x.V)}</b></div><div>Crédito <span class="sim ${x.gera}">${x.gera==='s'?'gera':x.gera==='p'?'pouco':'não gera'}</span><b>${brl(x.cred)}</b></div><div>Custo real<b>${brl(x.custo)}</b></div></div>
+    <div class="why">${x.why}${i>0?` Custa ${brl(x.custo-best.custo)} a mais que o 1º.`:''}${i>0&&x.V<best.V?` Mesmo com a nota ${brl(best.V-x.V)} mais barata.`:''}</div></div>`).join('');
+}
+
+// ── PDF ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240];
+const REG={reg:'regime regular',hib:'Simples Híbrido',sn:'Simples Nacional'};
+function gerarPDF(){
+  const {reg,a,ord}=window._R, {jsPDF}=window.jspdf, d=new jsPDF({unit:'mm',format:'a4'}), W=210, M=16, X2=W-M;
+  if(LOGO)d.addImage(LOGO,'PNG',M,10,46,22.5);
+  d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Simulação de crédito',X2,18,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,23,{align:'right'});
+  d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,37,X2,37);
+  d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Crédito de CBS/IBS na contratação',M,49);
+  d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(...MUT);d.text(`Sua clínica: ${REG[reg]} · ano ${a}`,M,55);
+  let y=62;const cs=[M+3,98,128,158,X2-3];
+  d.setFillColor(...NAVY);d.rect(M,y,W-2*M,9,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(255,255,255);
+  ['Fornecedor','Valor da nota','Crédito','Custo real'].forEach((t,i)=>d.text(t,[cs[0],cs[1],cs[2],cs[4]][i],y+6,{align:i?'right':'left'}));y+=9;
+  ord.forEach((x,i)=>{const w=d.splitTextToSize(x.why,W-2*M-6);
+    if(i===0&&ord.length>1){d.setFillColor(232,250,243);d.rect(M,y,W-2*M,10+w.length*3.6,'F')}
+    d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(`${i+1}º ${x.n||'Fornecedor'}`,cs[0],y+6);
+    d.setFont('helvetica','normal');d.setTextColor(15,30,46);d.text(brl(x.V),cs[1],y+6,{align:'right'});d.text(brl(x.cred),cs[2],y+6,{align:'right'});
+    d.setFont('helvetica','bold');d.text(brl(x.custo),cs[4],y+6,{align:'right'});
+    d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...MUT);d.text(w,cs[0],y+10.5);y+=10+w.length*3.6;
+    d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y,X2,y)});
+  y+=8;const f=d.splitTextToSize(document.querySelector('.fund').innerText.replace('Como calculamos','').trim(),W-2*M-12),hF=10+f.length*3.6;
+  if(y+hF>265){d.addPage();y=20}
+  d.setFillColor(244,248,251);d.roundedRect(M,y,W-2*M,hF,3,3,'F');d.setFillColor(...GREEN);d.rect(M,y,1.4,hF,'F');
+  d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text('COMO CALCULAMOS',M+6,y+6.5);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(15,30,46);d.text(f,M+6,y+11.5);
+  y+=hF+7;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);
+  d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+$('reg').addEventListener('change',calc);$('ano').addEventListener('change',calc);
+$('add').onclick=()=>{O.push({n:'',t:'ger',f:'reg',v:''});desenha();calc()};
+$('bpdf').onclick=()=>{if(window._R&&window._R.L.length)gerarPDF().save('Simulacao de credito CBS-IBS - Move.pdf')};
+$('bzap').onclick=()=>{const r=window._R;if(!r||!r.L.length)return;
+  const t=`*Simulação de crédito na contratação (${r.a})*\nMinha clínica: ${REG[r.reg]}\n\n${r.ord.map((x,i)=>`${i+1}º ${x.n||'Fornecedor'}: nota ${brl(x.V)} · crédito ${brl(x.cred)} · custo real *${brl(x.custo)}*`).join('\n')}\n\nQuero ajuda para planejar minhas contratações.\n\n_Move Online Contabilidade Médica_`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')};
+desenha();calc();
+</script>
+</body>
+</html>
