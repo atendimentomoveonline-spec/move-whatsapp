@@ -696,6 +696,20 @@ def diagnostico_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Checklist de abertura de consultório e clínica (página estática) ──
+ABRIR_DIR = os.path.join(BASE, "abrir-clinica")
+
+@app.route("/abrir-clinica/")
+def abrir_clinica():
+    return send_file(os.path.join(ABRIR_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/abrir-clinica/<nome>.png")
+def abrir_clinica_img(nome):
+    f = os.path.join(ABRIR_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
