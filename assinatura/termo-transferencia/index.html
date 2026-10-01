@@ -132,7 +132,7 @@ $('dt').value=new Date().toISOString().slice(0,10);
 const dBR=iso=>iso?iso.split('-').reverse().join('/'):'';
 const dados=()=>({razao:$('razao').value.trim(),cnpj:$('cnpj').value.trim(),dt:$('dt').value,rNome:$('rNome').value.trim(),rCpf:$('rCpf').value.trim(),aNome:$('aNome').value.trim(),aCrc:$('aCrc').value.trim(),aEnd:$('aEnd').value.trim()});
 function render(){const D=dados();
-  $('prev').innerHTML=`<img class="cab" src="cabecalho.png" alt=""><img class="mk" src="marca.png" alt=""><div class="in">
+  $('prev').innerHTML=`<div class="in" style="padding:22px 28px 18px"><img src="logo_move.png" alt="" style="height:32px">
    <h2>TERMO DE TRANSFERÊNCIA DE RESPONSABILIDADE TÉCNICA – CRC/SP</h2><p>${INTRO}</p>
    <p><b>Razão Social:</b> ${esc(D.razao)}</p><p><b>CNPJ:</b> ${esc(D.cnpj)}</p>
    <p class="t">Contador Responsável Técnico Anterior:</p><p>Nome: ${esc(D.aNome)}</p><p>CRC: ${esc(D.aCrc)}</p><p>Endereço: ${esc(D.aEnd)}</p>
@@ -140,31 +140,33 @@ function render(){const D=dados();
    <p class="t">Data de Início da Responsabilidade Técnica do Novo Profissional: ${dBR(D.dt)}</p><p>${DECL}</p>
    <div class="ass"><div>Contador Responsável Anterior · Nome: ${esc(D.aNome)}</div>
    <div style="border:0;padding:0"><img src="assinatura.png" alt="Assinatura"><div style="border-top:1px solid #1f2937;padding-top:4px">Contador Responsável Atual · ${ATUAL.nome} ${ATUAL.crc}</div></div>
-   <div>Representante Legal da Empresa (Cliente) · Nome: ${esc(D.rNome)} · CPF: ${esc(D.rCpf)}</div></div></div><img class="rod" src="rodape.png" alt="">`;return D}
+   <div>Representante Legal da Empresa (Cliente) · Nome: ${esc(D.rNome)} · CPF: ${esc(D.rCpf)}</div></div></div>`;return D}
 
 // imagens do modelo para o PDF
 const IMG={};
-['cabecalho','rodape','marca','assinatura'].forEach(n=>fetch(n+'.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>IMG[n]=f.result;f.readAsDataURL(b)}));
+[['logo','logo_move'],['assinatura','assinatura']].forEach(([n,f])=>fetch(f+'.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>IMG[n]=f.result;f.readAsDataURL(b)}));
 const INK=[25,30,40];
 function gerarPDF(D){
   const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=20,X2=W-M;
-  if(IMG.marca)d.addImage(IMG.marca,'PNG',W/2-50,95,100,70.8);                 // marca-d'água
-  if(IMG.cabecalho)d.addImage(IMG.cabecalho,'PNG',0,8,W,W*164/1610);
-  if(IMG.rodape)d.addImage(IMG.rodape,'PNG',0,297-W*260/1654-4,W,W*260/1654);
-  d.setTextColor(...INK);d.setFont('helvetica','bold');d.setFontSize(12);d.text('TERMO DE TRANSFERÊNCIA DE RESPONSABILIDADE TÉCNICA – CRC/SP',W/2,40,{align:'center'});
-  let y=50;const p=(t,b,sz)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(sz||10);const tx=d.splitTextToSize(t,W-2*M);d.text(tx,M,y,{lineHeightFactor:1.45});y+=tx.length*(sz||10)*.51+1.6};
+  d.setDrawColor(150,160,172);d.setLineWidth(.3);d.roundedRect(10,10,W-20,277,2.5,2.5);   // contorno da página
+  if(IMG.logo)d.addImage(IMG.logo,'PNG',M,15,36,17.6);
+  d.setTextColor(...INK);d.setFont('helvetica','bold');d.setFontSize(12);d.text('TERMO DE TRANSFERÊNCIA DE RESPONSABILIDADE TÉCNICA – CRC/SP',W/2,44,{align:'center'});
+  let y=56;const p=(t,b,sz)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(sz||10);const tx=d.splitTextToSize(t,W-2*M);d.text(tx,M,y,{lineHeightFactor:1.45});y+=tx.length*(sz||10)*.51+1.6};
   const kv=(k,v)=>{d.setFont('helvetica','bold');d.setFontSize(10);d.text(k,M,y);const w=d.getTextWidth(k+' ');d.setFont('helvetica','normal');d.text(v||'',M+w,y);y+=6};
   p(INTRO);y+=2;kv('Razão Social:',D.razao);kv('CNPJ:',D.cnpj);y+=3;
   p('Contador Responsável Técnico Anterior:',1);kv('Nome:',D.aNome);kv('CRC:',D.aCrc);kv('Endereço:',D.aEnd);y+=3;
   p('Contador Responsável Técnico Atual:',1);kv('Nome:',`${ATUAL.nome}    ${ATUAL.crc}`);kv('CPF:',ATUAL.cpf);kv('Endereço:',`${ATUAL.end}    Telefone: ${ATUAL.fone}`);y+=3;
   p(`Data de Início da Responsabilidade Técnica do Novo Profissional: ${dBR(D.dt)}`,1);y+=1;p(DECL);
-  // assinaturas
-  y=Math.max(y+14,196);const L=(lb,lin,yy)=>{d.setFont('helvetica','bold');d.setFontSize(9.5);d.text(lb,M,yy);d.setFont('helvetica','normal');d.text('Assinatura:',M+80,yy);d.setDrawColor(...INK);d.setLineWidth(.3);d.line(M+100,yy,X2,yy);
-    d.setFontSize(9);lin.forEach((t,i)=>d.text(t,M,yy+5+i*4.6))};
-  L('Contador Responsável Anterior:',[`Nome: ${D.aNome}`],y);
-  y+=19;if(IMG.assinatura)d.addImage(IMG.assinatura,'PNG',M+104,y-11,48,11.1);
-  L('Contador Responsável Atual:',[`${ATUAL.nome}    ${ATUAL.crc}`],y);
-  y+=19;L('Representante Legal da Empresa (Cliente):',[`Nome: ${D.rNome}`,`CPF: ${D.rCpf}`],y);
+  // assinaturas embaixo, lado a lado
+  const ya=246,w=(W-2*M-12)/3;
+  [['Contador Responsável Anterior',D.aNome?[D.aNome].concat(D.aCrc?['CRC '+D.aCrc]:[]):['Nome:','CRC:'],0],
+   ['Contador Responsável Atual',[ATUAL.nome,ATUAL.crc],1],
+   ['Representante Legal da Empresa',[D.rNome?D.rNome:'Nome:',D.rCpf?'CPF '+D.rCpf:'CPF:'],0]].forEach(([tit,ls,sig],i)=>{
+    const x=M+i*(w+6);if(sig&&IMG.assinatura)d.addImage(IMG.assinatura,'PNG',x+2,ya-12,w-4,(w-4)*232/1000);
+    d.setDrawColor(...INK);d.setLineWidth(.3);d.line(x,ya,x+w,ya);
+    d.setFont('helvetica','bold');d.setFontSize(8.5);d.text(tit,x+w/2,ya+4.5,{align:'center'});
+    d.setFont('helvetica','normal');d.setFontSize(8.5);ls.forEach((t,k)=>d.text(t,x+w/2,ya+9+k*4.2,{align:'center'}))});
+  d.setFontSize(7.5);d.setTextColor(100,116,139);d.text('1ª via - Cliente   ·   2ª via - Contador anterior   ·   3ª via - Contador atual',W/2,281,{align:'center'});
   return d;
 }
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
