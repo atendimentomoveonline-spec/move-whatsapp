@@ -82,9 +82,9 @@
   .prev .in{position:relative;padding:12px 28px 0}
   .prev h2{text-align:center;font-size:14px;color:#0b2540;margin:10px 0 14px}
   .prev p{margin:4px 0}
-  .prev{border:1.5px solid var(--navy)!important}
+  .prev{border:1px solid var(--navy)!important}
   .prev .sx{color:var(--navy);border-bottom:1px solid var(--green);font-weight:700;font-size:11px;letter-spacing:.5px;padding:0 0 3px;margin:16px 0 6px}
-  .prev h2{color:var(--navy)!important;border-top:2px solid var(--green);padding-top:10px}
+  .prev h2{color:var(--navy)!important;border-top:1px solid var(--green);padding-top:10px}
   .prev b{color:var(--navy)}.prev .t{font-weight:700;margin-top:12px}
   .prev .ass{display:grid;grid-template-columns:1fr;gap:16px;margin-top:22px}
   .prev .ass div{border-top:1px solid #1f2937;padding-top:4px;font-size:11.5px}
@@ -152,14 +152,14 @@ const IMG={};
 const INK=[25,30,40], NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139];
 function gerarPDF(D){
   const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=20,X2=W-M;
-  d.setDrawColor(...NAVY);d.setLineWidth(.4);d.roundedRect(10,10,W-20,277,2.5,2.5);   // contorno da página
-  d.setDrawColor(...GREEN);d.setLineWidth(.8);d.line(M,36,X2,36);                    // linha verde da marca
+  d.setDrawColor(...NAVY);d.setLineWidth(.2);d.roundedRect(10,10,W-20,277,2.5,2.5);   // contorno da página
+  d.setDrawColor(...GREEN);d.setLineWidth(.25);d.line(M,36,X2,36);                    // linha verde da marca
   if(IMG.logo)d.addImage(IMG.logo,'PNG',M,15,36,17.6);
   d.setTextColor(...NAVY);d.setFont('helvetica','bold');d.setFontSize(12.5);d.text('TERMO DE TRANSFERÊNCIA DE RESPONSABILIDADE TÉCNICA – CRC/SP',W/2,46,{align:'center'});d.setTextColor(...INK);
   let y=58;const p=(t,b,sz)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(sz||10);const tx=d.splitTextToSize(t,W-2*M);d.text(tx,M,y,{lineHeightFactor:1.45});y+=tx.length*(sz||10)*.51+1.6};
   const kv=(k,v)=>{d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(k,M,y);d.setTextColor(...INK);const w=d.getTextWidth(k+' ');d.setFont('helvetica','normal');d.text(v||'',M+w,y);y+=6};
   // título de seção numa faixa com contorno fino
-  const sec=t=>{y+=5;d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(...NAVY);d.text(t,M,y,{charSpace:.3});d.setDrawColor(...GREEN);d.setLineWidth(.35);d.line(M,y+1.8,X2,y+1.8);d.setTextColor(...INK);y+=8};   // título com linha fina
+  const sec=t=>{y+=5;d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(...NAVY);d.text(t,M,y,{charSpace:.3});d.setDrawColor(...GREEN);d.setLineWidth(.2);d.line(M,y+1.8,X2,y+1.8);d.setTextColor(...INK);y+=8};   // título com linha fina
   p(INTRO);y+=1;
   sec('1. DADOS DA EMPRESA');kv('Razão Social:',D.razao);kv('CNPJ:',D.cnpj);
   sec('2. CONTADOR RESPONSÁVEL TÉCNICO ANTERIOR');kv('Nome:',D.aNome);kv('CRC:',D.aCrc);kv('Endereço:',D.aEnd);
@@ -171,7 +171,7 @@ function gerarPDF(D){
    ['Contador Responsável Atual',[ATUAL.nome,ATUAL.crc],1],
    ['Representante Legal da Empresa',[D.rNome?D.rNome:'Nome:',D.rCpf?'CPF '+D.rCpf:'CPF:'],0]].forEach(([tit,ls,sig],i)=>{
     const x=M+i*(w+6);if(sig&&IMG.assinatura)d.addImage(IMG.assinatura,'PNG',x+2,ya-12,w-4,(w-4)*232/1000);
-    d.setDrawColor(...NAVY);d.setLineWidth(.4);d.line(x,ya,x+w,ya);
+    d.setDrawColor(...NAVY);d.setLineWidth(.2);d.line(x,ya,x+w,ya);
     d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(...NAVY);d.text(tit,x+w/2,ya+4.5,{align:'center'});d.setTextColor(...INK);
     d.setFont('helvetica','normal');d.setFontSize(8.5);ls.forEach((t,k)=>d.text(t,x+w/2,ya+9+k*4.2,{align:'center'}))});
   d.setFontSize(7.5);d.setTextColor(...MUT);d.text('1ª via - Cliente   ·   2ª via - Contador anterior   ·   3ª via - Contador atual',W/2,281,{align:'center'});
