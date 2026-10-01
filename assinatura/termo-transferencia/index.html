@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Termo de Transferência — Move Online</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .grid{align-items:start}
+  @media(min-width:880px){.grid{grid-template-columns:440px 1fr}}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .sec2{margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+  .chks{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:8px}
+  .chks label{display:flex;gap:6px;align-items:center;margin:0;font-size:13.5px;color:var(--ink);font-weight:600;cursor:pointer}
+  .chks input{width:18px;height:18px;accent-color:var(--green)}
+  textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:15px;outline:none;font-family:inherit;color:var(--ink);resize:vertical;min-height:70px}
+  .err{color:var(--red);font-size:12.5px;margin-top:8px;min-height:16px}
+  .prev{border:1px solid #d6dde5;border-radius:10px;padding:26px;background:#fff;color:#1f2937;font-size:12.5px;line-height:1.55}
+  .prev h2{text-align:center;font-size:15px;color:var(--navy);margin:8px 0 14px;letter-spacing:.5px}
+  .prev .bx{border:1px solid #9aa7b5;padding:4px 8px;font-weight:700;margin:12px 0 6px;font-size:12px}
+  .prev p{margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Termo de <span>Transferência</span> de Responsabilidade Técnica</h1>
+    <p>Uso interno da equipe Move: gere o termo da troca de contador no modelo da Resolução CRC-SP 1.040/2009.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Empresa</div>
+      <label>Razão social</label><input id="razao">
+      <div class="row2"><div><label>CNPJ</label><input id="cnpj" inputmode="numeric"></div><div><label>Inscrição estadual</label><input id="ie" value="Isento"></div></div>
+      <label>Endereço</label><input id="end" placeholder="Rua, número">
+      <div class="row2"><div><label>Bairro</label><input id="bairro"></div><div><label>Cidade</label><input id="cidade" value="São Paulo"></div></div>
+      <div class="row3"><div><label>UF</label><input id="uf" value="SP"></div><div><label>CEP</label><input id="cep"></div><div><label>Telefone</label><input id="fone"></div></div>
+
+      <div class="sec2"><div class="sec">Serviços executados pelo contador anterior</div></div>
+      <div class="chks"><label><input type="checkbox" id="sCont" checked> Contabilidade</label><label><input type="checkbox" id="sFisc" checked> Escrita fiscal</label>
+        <label><input type="checkbox" id="sFolha"> Folha de pagamento</label><label><input type="checkbox" id="sAtivo"> Ativo imobilizado</label></div>
+      <label>Outros serviços (opcional)</label><input id="sOutros">
+      <label>Os impostos eram recolhidos pela organização contábil?</label>
+      <div class="chks"><label><input type="radio" name="imp" value="S"> Sim</label><label><input type="radio" name="imp" value="N" checked> Não</label></div>
+      <label>Quais impostos (se sim)</label><input id="impQuais">
+      <div class="row2">
+        <div><label>Forma de tributação</label><select id="trib"><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option></select></div>
+        <div><label>Modalidade do ICMS</label><select id="icms"><option>Simples</option><option>Isento</option><option>Débito/Crédito</option><option>Estimativa</option></select></div>
+      </div>
+
+      <div class="sec2"><div class="sec">Transferência</div></div>
+      <div class="row2"><div><label>Data da transferência</label><input id="dtTr" type="date"></div>
+        <div><label>Obrigações acessórias vincendas</label><select id="obr"><option value="ant">Contabilista anterior</option><option value="novo">Novo contabilista</option></select></div></div>
+
+      <div class="sec2"><div class="sec">Contador anterior</div></div>
+      <label>Organização contábil</label><input id="aOrg">
+      <label>Endereço</label><input id="aEnd">
+      <div class="row2"><div><label>Bairro</label><input id="aBairro"></div><div><label>Cidade</label><input id="aCid" value="São Paulo"></div></div>
+      <div class="row3"><div><label>UF</label><input id="aUf" value="SP"></div><div><label>CEP</label><input id="aCep"></div><div><label>Telefone</label><input id="aFone"></div></div>
+      <div class="row2"><div><label>Contabilista responsável</label><input id="aNome"></div><div><label>CRC</label><input id="aCrc"></div></div>
+
+      <div class="sec2"><div class="sec">Novo contador (fica salvo)</div></div>
+      <label>Organização contábil</label><input id="nOrg" value="Almeida – Negócios Empresas e Soluções Fiscais e Contábil">
+      <label>Endereço</label><input id="nEnd" value="Av. João XXIII, 649">
+      <div class="row3"><div><label>Cidade/UF</label><input id="nCid" value="São Paulo/SP"></div><div><label>CEP</label><input id="nCep" value="03361-000"></div><div><label>Telefone</label><input id="nFone" value="(11) 97803-6539"></div></div>
+      <div class="row2"><div><label>Contabilista responsável</label><input id="nNome" value="Wanderson P. Almeida"></div><div><label>CRC</label><input id="nCrc" value="280216/O-0"></div></div>
+      <label>E-mail</label><input id="nEmail" value="atendimentomoveonline@gmail.com">
+
+      <div class="sec2"><div class="sec">Local, data e observações</div></div>
+      <div class="row2"><div><label>Cidade</label><input id="loc" value="São Paulo"></div><div><label>Data do termo</label><input id="dt" type="date"></div></div>
+      <label>Observações (opcional, saem numa 2ª página)</label><textarea id="obs"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="prev" id="prev"></div>
+      <div class="err" id="err"></div>
+      <div class="acts"><button class="btn" id="bpdf">Baixar termo em PDF</button></div>
+      <div class="note"><div class="fund"><div class="ft">Como usar</div>Imprima em 3 vias: 1ª via do cliente, 2ª via da organização contábil anterior e 3ª via da nova organização contábil. Assinam o contador anterior, o novo contador e a empresa.</div></div>
+    </div>
+  </div>
+  <div class="foot">Ferramenta interna da Move Online. Modelo da Resolução CRC-SP nº 1.040/2009.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const dBR=iso=>iso?iso.split('-').reverse().join('/'):'';
+const dExt=iso=>{if(!iso)return '';const [y,m,d]=iso.split('-').map(Number);return `${d} de ${MES[m-1]} de ${y}`};
+const NOVO=['nOrg','nEnd','nCid','nCep','nFone','nNome','nCrc','nEmail','loc'];
+const LS={get(k){try{return localStorage.getItem('mv_termo_'+k)}catch(e){return null}},set(k,v){try{localStorage.setItem('mv_termo_'+k,v)}catch(e){}}};
+NOVO.forEach(k=>{const v=LS.get(k);if(v!==null)$(k).value=v});
+const hoje=new Date().toISOString().slice(0,10);$('dt').value=hoje;$('dtTr').value=hoje;
+const X=b=>b?'[ X ]':'[   ]';
+function dados(){const g=k=>$(k).value.trim();
+  return {razao:g('razao'),cnpj:g('cnpj'),ie:g('ie'),end:g('end'),bairro:g('bairro'),cidade:g('cidade'),uf:g('uf'),cep:g('cep'),fone:g('fone'),
+    sCont:$('sCont').checked,sFisc:$('sFisc').checked,sFolha:$('sFolha').checked,sAtivo:$('sAtivo').checked,sOutros:g('sOutros'),
+    imp:document.querySelector('input[name=imp]:checked').value,impQuais:g('impQuais'),trib:$('trib').value,icms:$('icms').value,dtTr:$('dtTr').value,obr:$('obr').value,
+    aOrg:g('aOrg'),aEnd:g('aEnd'),aBairro:g('aBairro'),aCid:g('aCid'),aUf:g('aUf'),aCep:g('aCep'),aFone:g('aFone'),aNome:g('aNome'),aCrc:g('aCrc'),
+    nOrg:g('nOrg'),nEnd:g('nEnd'),nCid:g('nCid'),nCep:g('nCep'),nFone:g('nFone'),nNome:g('nNome'),nCrc:g('nCrc'),nEmail:g('nEmail'),loc:g('loc'),dt:$('dt').value,obs:g('obs')}}
+// linhas do termo, no texto do modelo do CRC-SP
+function linhas(D){return [
+ ['box','DADOS DA EMPRESA OBJETO DA TRANSFERÊNCIA:'],
+ ['t',`Razão social: ${D.razao}`],['t',`Inscrição CNPJ: ${D.cnpj}    Inscrição Estadual: ${D.ie}`],
+ ['t',`Endereço: ${D.end}    Bairro: ${D.bairro}`],['t',`Cidade: ${D.cidade}    Estado: ${D.uf}    CEP: ${D.cep}    Fone: ${D.fone}`],
+ ['t','Serviços executados:'],
+ ['t',`- Contabilidade ${X(D.sCont)} Sim ${X(!D.sCont)} Não        - Escrita Fiscal ${X(D.sFisc)} Sim ${X(!D.sFisc)} Não`],
+ ['t',`- Folha de Pagamento ${X(D.sFolha)} Sim ${X(!D.sFolha)} Não        - Ativo Imobilizado ${X(D.sAtivo)} Sim ${X(!D.sAtivo)} Não`],
+ ['t',`- Outros serviços (especificar): ${D.sOutros}`],
+ ['t',`- Os impostos são recolhidos pela organização: ${X(D.imp==='S')} Sim ${X(D.imp==='N')} Não - Quais? ${D.impQuais}`],
+ ['t',`• Forma de tributação: ${X(D.trib==='Lucro Presumido')} Lucro Presumido  ${X(D.trib==='Lucro Real')} Lucro Real  ${X(D.trib==='Simples Nacional')} Simples Nacional`],
+ ['t',`• Modalidade de pagamento do ICMS: ${X(D.icms==='Débito/Crédito')} Débito/Crédito  ${X(D.icms==='Estimativa')} Estimativa  ${X(D.icms==='Simples')} Simples  ${X(D.icms==='Isento')} Isento`],
+ ['box','SITUAÇÃO DOS SERVIÇOS DO RESPONSÁVEL TÉCNICO ANTERIOR:'],
+ ['b',`Data da transferência da responsabilidade técnica: ${dBR(D.dtTr)}`],
+ ['t',`Responsável pelo envio das obrigações acessórias vincendas: contabilista anterior ${X(D.obr==='ant')}  novo contabilista ${X(D.obr==='novo')}`],
+ ['box','DADOS DA ORGANIZAÇÃO CONTÁBIL / RESPONSÁVEL TÉCNICO ANTERIOR:'],
+ ['t',`Organização: ${D.aOrg}`],['t',`Endereço: ${D.aEnd}    Bairro: ${D.aBairro}`],['t',`Cidade: ${D.aCid}    Estado: ${D.aUf}    CEP: ${D.aCep}    Fone: ${D.aFone}`],
+ ['b',`Contabilista responsável: ${D.aNome}${D.aCrc?'    CRC '+D.aCrc:''}`],
+ ['box','DADOS DA NOVA ORGANIZAÇÃO CONTÁBIL / NOVO RESPONSÁVEL TÉCNICO:'],
+ ['t',`Organização contábil: ${D.nOrg}`],['t',`Endereço: ${D.nEnd}    Cidade/Estado: ${D.nCid}    CEP: ${D.nCep}    Fone: ${D.nFone}`],
+ ['b',`Contabilista responsável: ${D.nNome}    CRC ${D.nCrc}    E-mail: ${D.nEmail}`],
+ ['p','Este TERMO DE TRANSFERÊNCIA DA RESPONSABILIDADE TÉCNICA é firmado para fins de cumprimento da Resolução CRC-SP nº 1.040/2009 do Conselho Regional de Contabilidade do Estado de São Paulo. O não atendimento ensejará infração ao artigo 2º, inciso VII, e aos artigos 7º e 11, inciso IV, da Resolução CFC nº 803/96.'],
+ ['p','E, por ser verdade o que está declarado, firmamos o presente Termo, para os fins a que se destina.'],
+ ['r',`${D.loc}, ${dExt(D.dt)}.`]]}
+function render(){NOVO.forEach(k=>LS.set(k,$(k).value));const D=dados();
+  $('prev').innerHTML='<img src="logo_move.png" alt="" style="height:30px"><h2>TERMO DE TRANSFERÊNCIA DA RESPONSABILIDADE TÉCNICA</h2>'+linhas(D).map(([t,s])=>t==='box'?`<div class="bx">${esc(s)}</div>`:t==='b'?`<p><b>${esc(s)}</b></p>`:t==='r'?`<p style="text-align:right;margin-top:10px">${esc(s)}</p>`:`<p>${esc(s)}</p>`).join('')+
+   `<p style="margin-top:22px;font-size:11.5px">Assinaturas: ${esc(D.aOrg)||'organização anterior'} · ${esc(D.nOrg)} · ${esc(D.razao)||'empresa'}</p>`;return D}
+
+const INK=[20,20,20], LINE=[150,160,172];
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+function gerarPDF(D){
+  const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=18,X2=W-M;
+  d.setDrawColor(...LINE);d.setLineWidth(.3);d.roundedRect(10,10,W-20,277,2.5,2.5);
+  if(LOGO)d.addImage(LOGO,'PNG',M,14,34,16.7);
+  d.setFont('helvetica','bold');d.setFontSize(12.5);d.setTextColor(...INK);d.text('TERMO DE TRANSFERÊNCIA DA RESPONSABILIDADE TÉCNICA',W/2,40,{align:'center'});
+  let y=48;
+  linhas(D).forEach(([t,s])=>{d.setFontSize(9);
+    if(t==='box'){y+=2;d.setFont('helvetica','bold');d.setDrawColor(...INK);d.setLineWidth(.25);d.rect(M,y-4,W-2*M,6);d.text(s,M+2,y);y+=6.5;return}
+    d.setFont('helvetica',t==='b'?'bold':'normal');
+    if(t==='r'){y+=3;d.text(s,X2,y,{align:'right'});y+=5;return}
+    const tx=d.splitTextToSize(s,W-2*M);if(t==='p')y+=2;d.text(tx,M,y,{lineHeightFactor:1.35});y+=tx.length*4.2+.6});
+  y=Math.max(y+16,232);const w=(W-2*M-12)/3;
+  [[D.aNome||D.aOrg,'Responsável técnico anterior'+(D.aCrc?' · CRC '+D.aCrc:''),D.aOrg],[D.nNome,'Novo responsável técnico · CRC '+D.nCrc,D.nOrg],[D.razao,'Empresa','']].forEach(([a,b,c],i)=>{
+    const x=M+i*(w+6);d.setDrawColor(...INK);d.line(x,y,x+w,y);d.setFont('helvetica','bold');d.setFontSize(8);d.text(d.splitTextToSize(a||'',w),x+w/2,y+4,{align:'center'});
+    d.setFont('helvetica','normal');d.setFontSize(7.5);const tb=d.splitTextToSize(b,w);d.text(tb,x+w/2,y+8,{align:'center'});if(c&&i<2)d.text(d.splitTextToSize(c,w),x+w/2,y+8+tb.length*3.3,{align:'center'})});
+  d.setFontSize(7.5);d.text('1ª via - Cliente   ·   2ª via - Organização contábil/Responsável técnico anterior   ·   3ª via - Nova organização contábil/Novo responsável técnico',W/2,281,{align:'center'});
+  if(D.obs){d.addPage();d.setDrawColor(...LINE);d.setLineWidth(.3);d.roundedRect(10,10,W-20,277,2.5,2.5);
+    d.setFont('helvetica','bold');d.setFontSize(11);d.text('OBSERVAÇÕES',W/2,28,{align:'center'});d.setFont('helvetica','normal');d.setFontSize(9.5);
+    d.text(d.splitTextToSize(D.obs,W-2*M),M,40,{lineHeightFactor:1.4});
+    d.line(W/2-35,250,W/2+35,250);d.setFontSize(8.5);d.text('Novo responsável técnico',W/2,255,{align:'center'});d.text('Carimbo e assinatura',W/2,259,{align:'center'})}
+  return d;
+}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
+$('bpdf').onclick=()=>{const D=render(),f=[];if(!D.razao)f.push('razão social');if(!D.cnpj)f.push('CNPJ');if(!D.dtTr)f.push('data da transferência');if(!D.aOrg&&!D.aNome)f.push('contador anterior');if(!D.nNome||!D.nCrc)f.push('novo contador e CRC');
+  $('err').textContent=f.length?'Preencha: '+f.join(', ')+'.':'';if(f.length)return;gerarPDF(D).save(`Termo de transferencia - ${D.razao}.pdf`);toast('Termo gerado.')};
+document.querySelectorAll('input,select,textarea').forEach(e=>e.addEventListener(e.type==='checkbox'||e.type==='radio'||e.tagName==='SELECT'?'change':'input',render));
+render();
+</script>
+</body>
+</html>

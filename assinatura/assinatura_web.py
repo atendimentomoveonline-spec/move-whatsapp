@@ -766,6 +766,20 @@ def declaracao_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Termo de transferência da responsabilidade técnica, uso interno (página estática) ──
+TERMO_DIR = os.path.join(BASE, "termo-transferencia")
+
+@app.route("/termo-transferencia/")
+def termo_transferencia():
+    return send_file(os.path.join(TERMO_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/termo-transferencia/<nome>.png")
+def termo_transferencia_img(nome):
+    f = os.path.join(TERMO_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
