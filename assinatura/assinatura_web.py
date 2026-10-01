@@ -780,6 +780,21 @@ def termo_transferencia_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+
+# ── Mapa da Abertura: Juntas, tempos e emissor NFS-e, uso interno (página estática) ──
+MAPA_AB_DIR = os.path.join(BASE, "abertura-mapa")
+
+@app.route("/abertura-mapa/")
+def abertura_mapa():
+    return send_file(os.path.join(MAPA_AB_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/abertura-mapa/<nome>.png")
+def abertura_mapa_img(nome):
+    f = os.path.join(MAPA_AB_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 @app.route("/leitura/<int:n>.png")
 def leitura(n):
     try:
