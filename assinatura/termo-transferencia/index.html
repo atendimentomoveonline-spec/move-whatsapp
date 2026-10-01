@@ -220,7 +220,7 @@ function gerarPDF(D){
   return d;
 }
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2800)}
-$('bpdf').onclick=()=>{const D=render(),f=[];if(!D.razao)f.push('razão social');if(!D.cnpj)f.push('CNPJ');if(!D.dtTr)f.push('data da transferência');if(!D.aOrg&&!D.aNome)f.push('contador anterior');if(!D.nNome||!D.nCrc)f.push('novo contador e CRC');
+$('bpdf').onclick=()=>{const D=render(),f=[];if(!D.razao)f.push('razão social');if(!D.cnpj)f.push('CNPJ');if(!D.dtTr)f.push('data da transferência');if(!D.nNome||!D.nCrc)f.push('novo contador e CRC');
   $('err').textContent=f.length?'Preencha: '+f.join(', ')+'.':'';if(f.length)return;gerarPDF(D).save(`Termo de transferencia - ${D.razao}.pdf`);toast('Termo gerado.')};
 document.querySelectorAll('input,select,textarea').forEach(e=>e.addEventListener(e.type==='checkbox'||e.type==='radio'||e.tagName==='SELECT'?'change':'input',render));
 render();
