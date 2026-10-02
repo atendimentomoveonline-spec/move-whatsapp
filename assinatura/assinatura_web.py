@@ -725,6 +725,19 @@ def credito_img(nome):
     return send_file(f, mimetype="image/png")
 
 # ── Distribuição de lucros e IR mínimo (página estática) ──
+HOLDING_DIR = os.path.join(BASE, "holding")
+
+@app.route("/holding/")
+def holding():
+    return send_file(os.path.join(HOLDING_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/holding/<nome>.png")
+def holding_img(nome):
+    f = os.path.join(HOLDING_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 LUCROS_DIR = os.path.join(BASE, "lucros")
 
 @app.route("/lucros/")

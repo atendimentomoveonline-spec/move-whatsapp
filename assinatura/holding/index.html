@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de Holding — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .grid{align-items:start}
+  @media(min-width:880px){.grid{grid-template-columns:400px 1fr}}
+  .q{margin-top:16px}
+  .q .t{font-size:14px;font-weight:700;color:var(--navy)}
+  .q .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8faf3;color:var(--green2);font-size:12px;font-weight:800;margin-right:6px}
+  .ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .ops button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:13.5px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .ops button:hover{border-color:var(--green)}
+  .ops button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .q select,.q .money{margin-top:8px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--mut);cursor:pointer}
+  .chk input{width:18px;height:18px;accent-color:var(--green)}
+  .rs{margin-top:22px}.rs:first-child{margin-top:0}
+  .rs h2{margin:0 0 10px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--navy);display:flex;gap:8px;align-items:center}
+  .rs h2 span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px}
+  .perfil{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .perfil div{background:#f4f8fb;border-radius:12px;padding:10px 12px;font-size:12px;color:var(--mut)}
+  .perfil b{display:block;color:var(--navy);font-size:14px;margin-top:2px}
+  .pt{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .pt .c{width:20px;height:20px;border-radius:50%;margin-top:2px}.pt .c.r{background:#ef4444}.pt .c.y{background:#f5b301}.pt .c.g{background:var(--green)}
+  .pt b{color:var(--navy);font-size:14px}.pt .d{font-size:13px;color:var(--mut);margin-top:3px;line-height:1.5}
+  .pt .v{font-size:12.5px;font-weight:800;color:var(--navy);margin-top:4px}.pt a{color:var(--green2);font-weight:700;font-size:12.5px}
+  ol.plano{margin:0;padding-left:20px;line-height:1.6;font-size:14px}ol.plano li{margin:6px 0}ol.plano small{display:block;color:var(--mut);font-size:12.5px}
+  .score{display:flex;align-items:baseline;gap:6px}.score b{font-size:44px;letter-spacing:-1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Diagnóstico de <span>holding</span></h1>
+    <p>Responda em 1 minuto e veja se a holding vale a pena no seu caso: imposto dos aluguéis hoje e em 2033, sucessão, lucros e os cuidados antes de montar.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Perguntas</div>
+      <div id="qs"></div>
+    </div>
+    <div class="card">
+      <div class="empty" id="empty">Responda as perguntas para gerar o diagnóstico.<br><span id="falta"></span></div>
+      <div id="res" style="display:none"></div>
+    </div>
+  </div>
+  <div class="foot">Diagnóstico gratuito e estimado, com base na Lei 9.249/1995, na Lei 15.270/2025, na LC 214/2025 e na tabela do IR de 2026. Não substitui a análise do contador.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539'; // (11) 97803-6539
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IBS33=.265*.3; // CBS + IBS sobre aluguel em 2033: referência estimada de 26,5% com redução de 70% (LC 214, art. 261, parágrafo único)
+// perguntas: [chave, texto, opções, condição]
+const Q=[
+ ['im','Quantos imóveis você tem, além da casa onde mora?',[['0','Nenhum'],['1','1'],['3','2 ou 3'],['5','4 ou mais']]],
+ ['al','Quanto recebe de aluguel por mês, somando todos?',[['0','Não recebo aluguel'],['3000','Até R$ 5 mil'],['10000','R$ 5 a 15 mil'],['22500','R$ 15 a 30 mil'],['45000','R$ 30 a 60 mil'],['80000','Acima de R$ 60 mil']],A=>A.im!=='0'],
+ ['tp','Os imóveis alugados são',[['res','Residenciais'],['com','Comerciais'],['mix','Dos dois tipos']],A=>A.im!=='0'&&A.al&&A.al!=='0'],
+ ['pat','Valor aproximado do seu patrimônio (imóveis e aplicações)',[['500000','Até R$ 1 milhão'],['2000000','R$ 1 a 3 milhões'],['6000000','R$ 3 a 10 milhões'],['15000000','Acima de R$ 10 milhões']]],
+ ['her','Tem filhos ou outros herdeiros?',[['0','Não'],['1','1'],['2','2 ou mais']]],
+ ['cli','Tem participação em clínica ou em outra empresa?',[['s','Sim'],['n','Não']]],
+ ['ren','Somando tudo (pró-labore, lucros, aluguéis), sua renda passa de R$ 600 mil por ano?',[['n','Não'],['m','Sim, entre R$ 600 mil e R$ 1,2 milhão'],['a','Sim, acima de R$ 1,2 milhão']]],
+ ['vd','Pretende vender algum imóvel nos próximos anos?',[['s','Sim'],['n','Não'],['ns','Ainda não sei']],A=>A.im!=='0'],
+ ['dv','Tem dívidas em atraso ou processos relevantes hoje?',[['n','Não'],['s','Sim']]],
+ ['ob','Qual é o seu principal objetivo?',[['imp','Pagar menos imposto'],['suc','Organizar a sucessão'],['org','Organizar o patrimônio'],['pro','Proteger o patrimônio']]],
+];
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const brl0=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+const A={};
+
+function desenha(){
+  let n=0;
+  $('qs').innerHTML=Q.map(([k,t,op,cond])=>{if(cond&&!cond(A))return '';n++;
+    return `<div class="q"><div class="t"><span class="n">${n}</span>${t}</div><div class="ops" data-k="${k}">${op.map(([v,l])=>`<button type="button" data-v="${v}" class="${A[k]===v?'on':''}">${l}</button>`).join('')}</div></div>`}).join('');
+  $('qs').querySelectorAll('.ops button').forEach(b=>b.onclick=()=>{A[b.parentNode.dataset.k]=b.dataset.v;desenha();render()});
+}
+function faltam(){return Q.filter(([k,t,op,cond])=>(!cond||cond(A))&&(A[k]===undefined||A[k]==='')).length}
+
+// ── contas ──
+// IR da pessoa física sobre o aluguel do mês (tabela de 2026 com o redutor da Lei 15.270/2025)
+function irPF(R){if(R<=0)return 0;const [,a,d]=IR_TAB.find(f=>R<=f[0]);const tab=Math.max(0,R*a-d);let red=0;if(R<=5000)red=tab;else if(R<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*R));return tab-red}
+// Holding no Lucro Presumido: presunção de 32% (Lei 9.249/1995, arts. 15 e 20)
+function irpjCsll(R){const b=R*.32;return b*.15+Math.max(0,b-20000)*.10+b*.09}
+function ibs(R,n,tp){const red=tp==='res'?600*n:tp==='mix'?600*n/2:0;return Math.max(0,R-red)*IBS33} // redutor social residencial (LC 214, art. 260)
+
+function relatorio(){
+  const n=+A.im,R=n?+(A.al||0):0,pat=+A.pat,her=+A.her,tp=A.tp||'com';
+  const pf=irPF(R), hHoje=irpjCsll(R)+R*.0365;
+  const pfContrib=R*12>240000&&n>3; // pessoa física vira contribuinte de CBS/IBS (LC 214, art. 251)
+  const pf33=pf+(pfContrib?ibs(R,n,tp):0), h33=irpjCsll(R)+ibs(R,n,tp);
+  const ecoHoje=Math.max(0,(pf-hHoje)*12), eco33=(pf33-h33)*12;
+  const lucroMes=Math.max(0,R-hHoje);
+  const P=[];
+  if(A.dv==='s')P.push(['r','Resolva as pendências antes','A holding não protege dívidas que já existem. Transferir bens com dívidas em aberto pode ser anulado como fraude contra credores ou à execução (Código Civil, art. 158; CPC, art. 792).','Regularizar as dívidas e processos antes de qualquer transferência']);
+  if(R>0&&ecoHoje>0)P.push(['g','Aluguéis pagam menos imposto na holding',`Na pessoa física, o aluguel paga ${brl(pf)} por mês de IR (${pct(pf/R)}). Na holding do Lucro Presumido, ${brl(hHoje)} (${pct(hHoje/R)}).`,'Comparar pessoa física × holding com os aluguéis reais e as despesas dos imóveis',ecoHoje]);
+  if(R>0&&ecoHoje===0)P.push(['y','No aluguel, a holding não reduz o imposto',`Com esse valor de aluguel, o IR da pessoa física (${brl(pf)} por mês) já é igual ou menor que o imposto da holding (${brl(hHoje)}).`,'Avaliar a holding só pela sucessão e pela organização']);
+  if(R>0)P.push(['y','Reforma: a vantagem muda em 2033',`A holding passa a pagar CBS/IBS sobre os aluguéis (redução de 70%, cerca de 7,95%)${pfContrib?' e, no seu caso, a pessoa física também':'; a pessoa física, no seu caso, não'} (LC 214, arts. 251 e 261). Em 2033, ${eco33>0?`a economia estimada fica em ${brl0(eco33)} por ano`:'a holding deixa de ter vantagem nos aluguéis'}.`,'Simular a estrutura também com as regras de 2033',0]);
+  if(her>0&&(n>=3||pat>=2000000))P.push(['g','Sucessão: doação de quotas em vida','Com mais de um bem e herdeiros, doar as quotas da holding com reserva de usufruto evita o inventário desses bens e permite cláusulas de proteção (incomunicabilidade, impenhorabilidade, reversão). A doação paga ITCMD.','Planejar a doação das quotas com usufruto e o ITCMD do seu estado']);
+  if(A.cli==='s')P.push(['g','Holding como sócia da clínica','O lucro que a clínica paga à holding (empresa para empresa) não tem a retenção de 10% da Lei 15.270. O controle passa a ser feito na distribuição da holding para você.','Estudar a holding de participações na clínica']);
+  if(A.ren!=='n')P.push(['y','IR mínimo de 2026',`Com renda acima de R$ 600 mil por ano, o IR mínimo (até 10% ${A.ren==='a'?'— no seu caso, 10%':'— no seu caso, entre 0% e 10%'}) alcança os lucros recebidos, descontado o imposto já pago (Lei 9.250/1995, art. 16-A).`,'Planejar as distribuições de lucro do ano']);
+  if(lucroMes>50000)P.push(['y','Lucros acima de R$ 50 mil por mês','A distribuição da holding acima de R$ 50 mil por mês para a mesma pessoa tem retenção de 10% (Lei 9.250/1995, art. 6º-A).','Distribuir os lucros dentro dos limites mensais']);
+  if(n>0)P.push(['y','ITBI na entrada dos imóveis','A imunidade de ITBI não vale quando a atividade principal da holding é imobiliária e só cobre o valor do capital (CF, art. 156; STF, Tema 796). Muitas prefeituras cobram de holdings de aluguel.','Consultar a prefeitura sobre o ITBI antes de transferir os imóveis']);
+  if(A.vd==='s')P.push(['y','Imóveis para vender','Imóvel registrado para venda paga cerca de 5,93% sobre o preço na holding (6,73% com o adicional). Registrado como investimento, o ganho paga até 34%. A classificação é decidida na montagem.','Definir quais imóveis ficam para venda e quais para renda']);
+  if(A.ob==='pro')P.push(['y','Proteção tem limites','A holding separa os bens da atividade médica, mas pode ser desconsiderada em caso de abuso (Código Civil, art. 50) e não afasta a responsabilidade pessoal do médico.','Manter a holding com contabilidade, contas e contratos próprios']);
+  if(n===0&&A.cli==='n')P.push(['r','Ainda sem patrimônio para a holding','Sem imóveis além da moradia e sem participações, a holding teria custo sem benefício relevante.','Rever a decisão quando houver imóveis, aluguéis ou participações']);
+  // pontuação transparente
+  let s=0;if(ecoHoje>=30000)s+=3;else if(ecoHoje>=12000)s+=2;else if(ecoHoje>0)s+=1;
+  if(her>0&&pat>=2000000)s+=2;if(n>=5)s+=1;if(A.cli==='s')s+=1;if(A.ob==='suc'&&her>0)s+=1;if(n===0&&A.cli==='n')s-=3;
+  let v;
+  if(A.dv==='s')v=['r','Resolva as pendências antes','Com dívidas ou processos em aberto, a holding não é indicada agora.'];
+  else if(s>=4)v=['g','Vale estudar a holding','Pelas respostas, a holding tende a trazer economia e organização. O próximo passo é a simulação com os números reais.'];
+  else if(s>=2)v=['y','Pode valer, depende dos números','Há pontos a favor, mas a decisão depende dos custos (abertura, contabilidade, ITBI e ITCMD) e da sua renda total.'];
+  else v=['r','Hoje, tende a ser cedo','Pelas respostas, os custos da holding devem superar os benefícios por enquanto.'];
+  const plano=[...P].sort((x,y)=>'rgy'.indexOf(x[0])-'rgy'.indexOf(y[0])).map(p=>p[3]);
+  return {n,R,pat,her,pf,hHoje,pf33,h33,ecoHoje,eco33,pfContrib,P,v,plano};
+}
+let D=null;
+const COR={r:'#ef4444',y:'#f5b301',g:'#2BCA92'};
+function render(){
+  const f=faltam();
+  if(f){$('empty').style.display='';$('res').style.display='none';$('falta').textContent=`Faltam ${f} ${f===1?'resposta':'respostas'}.`;D=null;return}
+  $('empty').style.display='none';$('res').style.display='';D=relatorio();const r=D;
+  const opt=(t,rot,itens,tot,cls)=>`<div class="opt ${cls}"><h3>${t}</h3><div class="sub2" style="font-size:12px;color:#94a3b8">${rot}</div>${itens.map(([k,v])=>`<div class="ln"><span>${k}</span><b>${brl(v)}</b></div>`).join('')}<div class="tot"><span>POR MÊS</span><b>${brl(tot)}</b></div>${r.R?`<div class="pc">${pct(tot/r.R)} do aluguel</div>`:''}</div>`;
+  $('res').innerHTML=`
+  <div class="rs"><h2><span>1</span>Resultado</h2>
+    <div class="hero"><div><div class="lbl">Diagnóstico</div><div class="val" style="color:${COR[r.v[0]]};font-size:30px">${r.v[1]}</div><div class="sub">${r.v[2]}</div></div>
+    <div class="pill"><b style="color:var(--green)">${r.R?brl0(r.ecoHoje):'—'}</b><span>${r.R?'de economia por ano nos aluguéis, hoje':'sem aluguéis informados'}</span></div></div></div>
+  ${r.R?`<div class="rs"><h2><span>2</span>Aluguéis: pessoa física × holding</h2>
+    <div class="cmp">${opt('Pessoa física','IR pela tabela de 2026 (carnê-leão)',[['Imposto de renda',r.pf]],r.pf,'a')}
+    ${opt('Holding · Lucro Presumido','Presunção de 32%',[['IRPJ e CSLL',irpjCsll(r.R)],['PIS e COFINS (3,65%)',r.R*.0365]],r.hHoje,'b')}</div>
+    <div class="cmp" style="margin-top:12px">${opt('Pessoa física em 2033',r.pfContrib?'IR + CBS/IBS (receita acima de R$ 240 mil e mais de 3 imóveis)':'IR; sem CBS/IBS nesse porte',[['Imposto de renda',r.pf],['CBS/IBS',r.pf33-r.pf]],r.pf33,'a')}
+    ${opt('Holding em 2033','IRPJ e CSLL + CBS/IBS com redução de 70%',[['IRPJ e CSLL',irpjCsll(r.R)],['CBS/IBS (~7,95%)',r.h33-irpjCsll(r.R)]],r.h33,'b')}</div>
+    <div class="hint" style="margin-top:8px">Cálculo com o valor médio da faixa de aluguel, sem despesas dos imóveis. Em 2033: ${r.eco33>0?'economia de '+brl0(r.eco33)+' por ano na holding':'sem vantagem da holding nos aluguéis'}.</div></div>`:''}
+  <div class="rs"><h2><span>${r.R?3:2}</span>Pontos do seu caso</h2>${r.P.map(([c,t,d,,v])=>`<div class="pt"><div class="c ${c}"></div><div><b>${t}</b><div class="d">${d}</div>${v?`<div class="v">Economia estimada: ${brl0(v)} por ano</div>`:''}</div></div>`).join('')}</div>
+  <div class="rs"><h2><span>${r.R?4:3}</span>Plano de ação</h2><ol class="plano">${r.plano.map(p=>`<li>${p}</li>`).join('')}</ol></div>
+  <div class="acts"><button class="btn" id="bzap">Quero estudar a holding com a Move</button><button class="btn o" id="bpdf">Baixar relatório</button></div>
+  <div class="note"><div class="fund"><div class="ft">Como calculamos</div>Pessoa física: IR mensal pela tabela de 2026 com o redutor da Lei 15.270/2025. Holding no Lucro Presumido: presunção de 32% (Lei 9.249/1995), IRPJ de 15% + adicional de 10% sobre a base acima de R$ 20 mil, CSLL de 9% e PIS/COFINS de 3,65%. Em 2033: CBS/IBS com referência estimada de 26,5% e redução de 70% para locação (LC 214, art. 261), redutor social de R$ 600 por imóvel residencial (art. 260) e pessoa física contribuinte só acima de R$ 240 mil por ano e mais de 3 imóveis (art. 251). Não inclui custos de abertura, contabilidade, ITBI e ITCMD. <a href="https://med.moveonline.com.br/holding-medica-vale-a-pena-no-seu-caso/" target="_blank" rel="noopener">Leia o guia completo de holding médica →</a></div></div>`;
+  $('bzap').onclick=zap;$('bpdf').onclick=()=>gerarPDF().save('Diagnostico de holding - Move.pdf');
+}
+function zap(){const r=D,ic={r:'🔴',y:'🟡',g:'🟢'};
+  const t=`*Diagnóstico de holding*\n${ic[r.v[0]]} *${r.v[1]}*\n${r.R?`Aluguel: ${brl(r.R)}/mês\nPessoa física: ${brl(r.pf)}/mês · Holding: ${brl(r.hHoje)}/mês\nEconomia hoje: *${brl0(r.ecoHoje)}/ano*\n`:''}\n${r.P.map(p=>`${ic[p[0]]} ${p[1]}`).join('\n')}\n\nQuero estudar a holding com a Move.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')}
+
+// ── PDF ──
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240], CORP={r:[239,68,68],y:[245,179,1],g:[43,202,146]};
+function gerarPDF(){
+  const r=D,{jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=16,X2=W-M;let y;
+  const cab=()=>{if(LOGO)d.addImage(LOGO,'PNG',M,10,40,19.6);d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Diagnóstico de holding',X2,17,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,22,{align:'right'});d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,33,X2,33);y=42};
+  const tit=(n,t)=>{if(y>255){d.addPage();cab()}d.setFillColor(...NAVY);d.circle(M+3,y-1.3,3,'F');d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(255,255,255);d.text(String(n),M+3,y,{align:'center'});d.setFontSize(11);d.setTextColor(...NAVY);d.text(t.toUpperCase(),M+9,y);y+=7};
+  const ln=(k,v,b)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(9.5);d.setTextColor(...(b?NAVY:MUT));d.text(k,M+3,y);d.setTextColor(...NAVY);d.text(v,X2-3,y,{align:'right'});d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+2,X2,y+2);y+=6.5};
+  cab();d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Relatório de diagnóstico de holding',M,y);y+=8;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,22,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text('DIAGNÓSTICO',M+6,y+7);
+  d.setFontSize(15);d.setTextColor(...CORP[r.v[0]]);d.text(r.v[1],M+6,y+15);if(r.R){d.setTextColor(...GREEN);d.text(brl0(r.ecoHoje)+'/ano',X2-6,y+13,{align:'right'});d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(200,215,228);d.text('economia nos aluguéis, hoje',X2-6,y+18,{align:'right'})}
+  y+=30;let k=1;
+  if(r.R){tit(k++,'Aluguéis: pessoa física x holding');ln('Aluguel mensal (média da faixa)',brl(r.R));ln('Pessoa física · IR (tabela 2026)',brl(r.pf)+'/mês',1);ln('Holding · Lucro Presumido',brl(r.hHoje)+'/mês',1);ln('Pessoa física em 2033',brl(r.pf33)+'/mês');ln('Holding em 2033 (com CBS/IBS)',brl(r.h33)+'/mês');ln('Economia por ano: hoje · 2033',brl0(r.ecoHoje)+' · '+(r.eco33>0?brl0(r.eco33):'sem vantagem'),1);y+=4}
+  tit(k++,'Pontos do seu caso');r.P.forEach(([c,t,dd,,v])=>{const tx=d.splitTextToSize(dd,W-2*M-10);if(y+10+tx.length*4>275){d.addPage();cab()}
+    d.setFillColor(...CORP[c]);d.circle(M+3,y-1.2,2,'F');d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(t,M+8,y);d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);d.text(tx,M+8,y+4.5);y+=5+tx.length*3.8;
+    if(v){d.setFont('helvetica','bold');d.setTextColor(...NAVY);d.text(`Economia estimada: ${brl0(v)} por ano`,M+8,y+1);y+=5}y+=4});
+  tit(k++,'Plano de ação');r.plano.forEach((p,i)=>{const tx=d.splitTextToSize(`${i+1}. ${p}`,W-2*M-6);if(y+tx.length*5>272){d.addPage();cab()}d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(15,30,46);d.text(tx,M+3,y);y+=tx.length*5+1.5});
+  y+=4;if(y>258){d.addPage();cab()}d.setFontSize(7.8);d.setTextColor(...MUT);d.text(d.splitTextToSize('Estimativa com base nas respostas. Pessoa física: tabela do IR de 2026 com redutor. Holding: Lucro Presumido (Lei 9.249/1995). 2033: CBS/IBS de locação com redução de 70% (LC 214/2025). Não inclui custos de abertura, contabilidade, ITBI e ITCMD. A decisão exige análise dos números reais.',W-2*M),M,y);
+  y+=12;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+desenha();render();
+</script>
+</body>
+</html>
