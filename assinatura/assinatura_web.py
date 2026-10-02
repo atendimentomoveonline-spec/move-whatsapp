@@ -738,6 +738,32 @@ def holding_img(nome):
         abort(404)
     return send_file(f, mimetype="image/png")
 
+# ── Holding x pessoa física e ITCMD na doação de quotas (páginas estáticas) ──
+HOLDINGPF_DIR = os.path.join(BASE, "holding-pf")
+ITCMD_DIR = os.path.join(BASE, "itcmd")
+
+@app.route("/holding-pf/")
+def holding_pf():
+    return send_file(os.path.join(HOLDINGPF_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/holding-pf/<nome>.png")
+def holding_pf_img(nome):
+    f = os.path.join(HOLDINGPF_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
+@app.route("/itcmd/")
+def itcmd():
+    return send_file(os.path.join(ITCMD_DIR, "index.html"), mimetype="text/html")
+
+@app.route("/itcmd/<nome>.png")
+def itcmd_img(nome):
+    f = os.path.join(ITCMD_DIR, os.path.basename(nome) + ".png")
+    if not os.path.isfile(f):
+        abort(404)
+    return send_file(f, mimetype="image/png")
+
 LUCROS_DIR = os.path.join(BASE, "lucros")
 
 @app.route("/lucros/")

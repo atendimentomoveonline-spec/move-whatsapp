@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Holding x Pessoa Física — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .grid{align-items:start}
+  @media(min-width:880px){.grid{grid-template-columns:400px 1fr}}
+  .q{margin-top:16px}
+  .q .t{font-size:14px;font-weight:700;color:var(--navy)}
+  .q .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8faf3;color:var(--green2);font-size:12px;font-weight:800;margin-right:6px}
+  .ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .ops button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:13.5px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .ops button:hover{border-color:var(--green)}
+  .ops button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .q select,.q .money{margin-top:8px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--mut);cursor:pointer}
+  .chk input{width:18px;height:18px;accent-color:var(--green)}
+  .rs{margin-top:22px}.rs:first-child{margin-top:0}
+  .rs h2{margin:0 0 10px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--navy);display:flex;gap:8px;align-items:center}
+  .rs h2 span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px}
+  .perfil{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .perfil div{background:#f4f8fb;border-radius:12px;padding:10px 12px;font-size:12px;color:var(--mut)}
+  .perfil b{display:block;color:var(--navy);font-size:14px;margin-top:2px}
+  .pt{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .pt .c{width:20px;height:20px;border-radius:50%;margin-top:2px}.pt .c.r{background:#ef4444}.pt .c.y{background:#f5b301}.pt .c.g{background:var(--green)}
+  .pt b{color:var(--navy);font-size:14px}.pt .d{font-size:13px;color:var(--mut);margin-top:3px;line-height:1.5}
+  .pt .v{font-size:12.5px;font-weight:800;color:var(--navy);margin-top:4px}.pt a{color:var(--green2);font-weight:700;font-size:12.5px}
+  ol.plano{margin:0;padding-left:20px;line-height:1.6;font-size:14px}ol.plano li{margin:6px 0}ol.plano small{display:block;color:var(--mut);font-size:12.5px}
+  .score{display:flex;align-items:baseline;gap:6px}.score b{font-size:44px;letter-spacing:-1px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tb{width:100%;border-collapse:collapse;font-size:14px}
+  .tb th{background:var(--navy);color:#fff;text-align:left;padding:9px 10px;font-size:12px;letter-spacing:.4px}
+  .tb td{padding:9px 10px;border-bottom:1px dashed var(--line)}
+  .tb td:not(:first-child),.tb th:not(:first-child){text-align:right}
+  .tb tr.t td{font-weight:800;color:var(--navy);border-bottom:none}
+  details{margin-top:14px}summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>Holding <span>x</span> pessoa física</h1>
+    <p>Coloque os números reais dos seus imóveis e veja, lado a lado, o imposto dos aluguéis hoje e em 2033, o custo da sucessão e quanto tempo a holding leva para se pagar.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">Seus imóveis</div>
+      <label>Aluguel recebido por mês (somando todos)</label>
+      <div class="money"><span>R$</span><input id="al" class="big" inputmode="numeric" value="20.000"></div>
+      <label>Despesas dos imóveis pagas por você, por mês</label>
+      <div class="money"><span>R$</span><input id="dep" inputmode="numeric" value="1.500"></div>
+      <div class="hint">IPTU, condomínio e taxa de administração que você paga como proprietário.</div>
+      <div class="row2">
+        <div><label>Nº de imóveis</label><input id="n" inputmode="numeric" value="4"></div>
+        <div><label>Tipo</label><select id="tp"><option value="res">Residenciais</option><option value="com">Comerciais</option><option value="mix">Dos dois tipos</option></select></div>
+      </div>
+      <label>Valor dos imóveis na sua declaração de IR</label>
+      <div class="money"><span>R$</span><input id="vc" inputmode="numeric" value="2.000.000"></div>
+      <label>Valor de mercado dos imóveis</label>
+      <div class="money"><span>R$</span><input id="vm" inputmode="numeric" value="4.000.000"></div>
+      <label>Outras rendas tributáveis por mês (pró-labore, salário)</label>
+      <div class="money"><span>R$</span><input id="out" inputmode="numeric" value="15.000"></div>
+      <div class="hint">O aluguel soma com essas rendas no IR. Lucros isentos não entram aqui.</div>
+
+      <details>
+        <summary>Custos e premissas (ajuste se souber)</summary>
+        <div class="row2">
+          <div><label>ITCMD do estado (%)</label><input id="itcmd" inputmode="decimal" value="4"></div>
+          <div><label>Inventário: honorários e custas (%)</label><input id="inv" inputmode="decimal" value="6"></div>
+        </div>
+        <div class="row2">
+          <div><label>ITBI na entrada (%)</label><input id="itbi" inputmode="decimal" value="3"></div>
+          <div><label>Horizonte (anos)</label><input id="anos" inputmode="numeric" value="10"></div>
+        </div>
+        <label>Montagem da holding (abertura, registros, doação)</label>
+        <div class="money"><span>R$</span><input id="mont" inputmode="numeric" value="15.000"></div>
+        <label>Contabilidade e taxas da holding, por mês</label>
+        <div class="money"><span>R$</span><input id="cont" inputmode="numeric" value="900"></div>
+        <label>Base do ITCMD na doação das quotas</label>
+        <select id="base"><option value="m">Valor de mercado dos imóveis (regra da reforma)</option><option value="c">Valor declarado (regra antiga de alguns estados)</option></select>
+        <label class="chk"><input type="checkbox" id="cobraItbi" checked>A prefeitura cobra ITBI na entrada (comum em holding de aluguel)</label>
+        <label class="chk"><input type="checkbox" id="vende">Pretendo vender algum imóvel</label>
+      </details>
+    </div>
+    <div class="card"><div id="res"></div></div>
+  </div>
+  <div class="foot">Simulação gratuita e estimada, com base na Lei 9.249/1995, na Lei 15.270/2025, na LC 214/2025 e na tabela do IR de 2026. Não substitui a análise do contador.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539';
+const IR_TAB=[[2428.80,0,0],[2826.65,.075,182.16],[3751.05,.15,394.16],[4664.68,.225,675.49],[Infinity,.275,908.73]];
+const IBS33=.265*.3; // CBS + IBS sobre aluguel em 2033: referência estimada de 26,5% com redução de 70% (LC 214, art. 261)
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const brl0=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const num=id=>{const s=$(id).value.replace(/[^\d,]/g,'').replace(',','.');return parseFloat(s)||0};
+const MOEDA=['al','dep','vc','vm','out','mont','cont'];
+MOEDA.forEach(id=>$(id).addEventListener('input',e=>{const d=e.target.value.replace(/\D/g,'');e.target.value=d?(+d).toLocaleString('pt-BR'):'';calc()}));
+['n','tp','itcmd','inv','itbi','anos','base','cobraItbi','vende'].forEach(id=>$(id).addEventListener('input',calc));
+
+// IR mensal da pessoa física (tabela de 2026 com o redutor da Lei 15.270/2025)
+function irPF(R){if(R<=0)return 0;const [,a,d]=IR_TAB.find(f=>R<=f[0]);const tab=Math.max(0,R*a-d);let red=0;if(R<=5000)red=tab;else if(R<=7350)red=Math.min(tab,Math.max(0,978.62-0.133145*R));return tab-red}
+// Holding no Lucro Presumido: presunção de 32% (Lei 9.249/1995, arts. 15 e 20)
+function irpjCsll(R){const b=R*.32;return b*.15+Math.max(0,b-20000)*.10+b*.09}
+function ibs(R,n,tp){const red=tp==='res'?600*n:tp==='mix'?600*n/2:0;return Math.max(0,R-red)*IBS33} // redutor social residencial (LC 214, art. 260)
+
+let D=null;
+function calc(){
+  const al=num('al'),dep=Math.min(num('dep'),al),n=Math.max(1,Math.round(num('n'))),tp=$('tp').value,vc=num('vc'),vm=Math.max(num('vm'),vc),out=num('out');
+  const itcmd=num('itcmd')/100,inv=num('inv')/100,itbi=$('cobraItbi').checked?num('itbi')/100:0,anos=Math.min(40,Math.max(1,Math.round(num('anos'))||10)),mont=num('mont'),cont=num('cont');
+  if(!al){$('res').innerHTML='<div class="empty">Informe o aluguel mensal para simular.</div>';D=null;return}
+  // pessoa física: o aluguel (menos as despesas) soma com as outras rendas
+  const pfIR=irPF(out+al-dep)-irPF(out);
+  const pfContrib=al*12>240000&&n>3; // PF passa a ser contribuinte de CBS/IBS (LC 214, art. 251)
+  const pf33=pfIR+(pfContrib?ibs(al,n,tp):0);
+  // holding: impostos sobre a receita, contabilidade e retenção de 10% se distribuir mais de R$ 50 mil por mês
+  const hIrpj=irpjCsll(al),hPis=al*.0365;
+  const ret=l=>l>50000?l*.10:0;
+  const hHojeImp=hIrpj+hPis, lucroHoje=Math.max(0,al-dep-hHojeImp-cont), retHoje=ret(lucroHoje);
+  const hHoje=hHojeImp+cont+retHoje;
+  const h33Imp=hIrpj+ibs(al,n,tp), lucro33=Math.max(0,al-dep-h33Imp-cont), ret33=ret(lucro33);
+  const h33=h33Imp+cont+ret33;
+  // sucessão
+  const sucPF=vm*(itcmd+inv);
+  const baseH=$('base').value==='m'?vm:vc;
+  const sucH=baseH*itcmd;
+  const entrada=mont+vm*itbi;
+  // horizonte: até 2032 regras de hoje; de 2033 em diante, regras de 2033 (simplificação da transição)
+  let totPF=0,totH=0;const ano0=2026;
+  for(let i=0;i<anos;i++){const a=ano0+i;totPF+=12*(a>=2033?pf33:pfIR);totH+=12*(a>=2033?h33:hHoje)}
+  const totalPF=totPF+sucPF,totalH=totH+entrada+sucH,saldo=totalPF-totalH;
+  const ecoAno=(pfIR-hHoje)*12,ecoAno33=(pf33-h33)*12;
+  const payback=ecoAno>0?entrada/ecoAno:null; // montagem + ITBI pagos pela economia nos aluguéis
+  D={al,dep,n,tp,vc,vm,out,itcmd,inv,itbi,anos,mont,cont,pfIR,pf33,pfContrib,hIrpj,hPis,hHoje,h33,retHoje,ret33,sucPF,sucH,baseH,entrada,totPF,totH,totalPF,totalH,saldo,ecoAno,ecoAno33,payback};
+  render();
+}
+function pontos(r){
+  const P=[];
+  if(r.ecoAno>0)P.push(['g','Aluguéis pagam menos imposto na holding hoje',`Pessoa física: ${brl(r.pfIR)} por mês de IR (${pct(r.pfIR/r.al)} do aluguel). Holding: ${brl(r.hHoje)} por mês, já com contabilidade.`]);
+  else P.push(['y','Nos aluguéis, a holding não reduz o custo hoje',`O IR da pessoa física (${brl(r.pfIR)} por mês) já é menor que o custo mensal da holding (${brl(r.hHoje)}, com contabilidade).`]);
+  P.push(['y','Em 2033, a conta muda',`A holding passa a pagar CBS/IBS sobre os aluguéis (redução de 70%, cerca de 7,95%)${r.pfContrib?'; no seu caso, a pessoa física também, por ter receita acima de R$ 240 mil por ano e mais de 3 imóveis':'; a pessoa física, no seu porte, não'} (LC 214, arts. 251 e 261). Diferença em 2033: ${r.ecoAno33>0?brl0(r.ecoAno33)+' por ano a favor da holding':brl0(-r.ecoAno33)+' por ano a favor da pessoa física'}.`]);
+  P.push([r.sucPF>r.sucH?'g':'y','Sucessão: inventário x doação das quotas',`Inventário estimado: ${brl0(r.sucPF)} (ITCMD + honorários e custas). Doação das quotas: ${brl0(r.sucH)} de ITCMD${r.baseH===r.vm?', sobre o valor de mercado, como prevê a regulamentação da reforma':' sobre o valor declarado'}. A doação com reserva de usufruto mantém a renda e o controle com você.`]);
+  if(r.itbi>0)P.push(['y','ITBI na entrada dos imóveis',`Estimado em ${brl0(r.vm*r.itbi)}. A imunidade não vale quando a atividade principal da holding é imobiliária (CF, art. 156, § 2º, I; STF, Tema 796). Confirme com a prefeitura antes de transferir.`]);
+  P.push(['g','Entrada pelo valor declarado',`Os imóveis podem entrar na holding pelo valor da sua declaração (${brl0(r.vc)}), sem ganho de capital na transferência (Lei 9.249/1995, art. 23).`]);
+  if($('vende').checked&&r.vm>r.vc)P.push(['r','Venda de imóvel: atenção ao ganho',`Com a entrada pelo valor declarado, o ganho na venda fica maior. Na holding, um imóvel de renda vendido paga IRPJ e CSLL de até 34% sobre o ganho; na pessoa física, 15% a 22,5% (com fatores de redução). Sobre o ganho total da carteira (${brl0(r.vm-r.vc)}), a diferença pode chegar a ${brl0((r.vm-r.vc)*.19)}. Defina antes quais imóveis ficam para venda.`]);
+  if(r.retHoje>0||r.ret33>0)P.push(['y','Distribuição acima de R$ 50 mil por mês','A holding retém 10% de IR quando distribui mais de R$ 50 mil por mês para a mesma pessoa (Lei 9.250/1995, art. 6º-A). A simulação já inclui essa retenção.']);
+  P.push(['y','Proteção tem limites','A holding organiza o patrimônio, mas não protege dívidas que já existem e pode ser desconsiderada em caso de abuso (Código Civil, art. 50).']);
+  return P;
+}
+const COR={r:'#ef4444',y:'#f5b301',g:'#2BCA92'};
+function render(){
+  const r=D,P=pontos(r);r.P=P;
+  const ganha=r.saldo>0;
+  const opt=(t,rot,itens,tot,cls)=>`<div class="opt ${cls}"><h3>${t}</h3><div style="font-size:12px;color:#94a3b8">${rot}</div>${itens.filter(x=>x[1]).map(([k,v])=>`<div class="ln"><span>${k}</span><b>${brl(v)}</b></div>`).join('')}<div class="tot"><span>POR MÊS</span><b>${brl(tot)}</b></div><div class="pc">${pct(tot/r.al)} do aluguel</div></div>`;
+  $('res').innerHTML=`
+  <div class="rs"><h2><span>1</span>Resultado em ${r.anos} ${r.anos===1?'ano':'anos'}</h2>
+    <div class="hero"><div><div class="lbl">${ganha?'A holding economiza':'A pessoa física sai mais barata'}</div><div class="val ${ganha?'down':'up'}">${brl0(Math.abs(r.saldo))}</div><div class="sub">Somando impostos dos aluguéis, custos da holding e sucessão.</div></div>
+    <div class="pill"><b style="color:var(--green)">${r.payback===null?'—':r.payback.toLocaleString('pt-BR',{maximumFractionDigits:1})+' anos'}</b><span>${r.payback===null?'a economia nos aluguéis não paga a montagem':'para a economia nos aluguéis pagar a montagem e o ITBI'}</span></div></div></div>
+  <div class="rs"><h2><span>2</span>Aluguéis hoje (2026)</h2>
+    <div class="cmp">${opt('Pessoa física','IR pela tabela de 2026, somado às outras rendas',[['Imposto de renda',r.pfIR]],r.pfIR,'a')}
+    ${opt('Holding · Lucro Presumido','Presunção de 32%',[['IRPJ e CSLL',r.hIrpj],['PIS e COFINS (3,65%)',r.hPis],['Contabilidade e taxas',r.cont],['Retenção de 10% na distribuição',r.retHoje]],r.hHoje,'b')}</div></div>
+  <div class="rs"><h2><span>3</span>Aluguéis em 2033</h2>
+    <div class="cmp">${opt('Pessoa física',r.pfContrib?'IR + CBS/IBS (acima de R$ 240 mil e mais de 3 imóveis)':'IR; sem CBS/IBS nesse porte',[['Imposto de renda',r.pfIR],['CBS/IBS',r.pf33-r.pfIR]],r.pf33,'a')}
+    ${opt('Holding','IRPJ e CSLL + CBS/IBS com redução de 70%',[['IRPJ e CSLL',r.hIrpj],['CBS/IBS (~7,95%)',r.h33-r.hIrpj-r.cont-r.ret33],['Contabilidade e taxas',r.cont],['Retenção de 10% na distribuição',r.ret33]],r.h33,'b')}</div></div>
+  <div class="rs"><h2><span>4</span>Conta completa</h2>
+    <table class="tb"><tr><th></th><th>Pessoa física</th><th>Holding</th></tr>
+    <tr><td>Montagem e ITBI</td><td>—</td><td>${brl0(r.entrada)}</td></tr>
+    <tr><td>Aluguéis em ${r.anos} ${r.anos===1?'ano':'anos'}</td><td>${brl0(r.totPF)}</td><td>${brl0(r.totH)}</td></tr>
+    <tr><td>Sucessão</td><td>${brl0(r.sucPF)}</td><td>${brl0(r.sucH)}</td></tr>
+    <tr class="t"><td>Total</td><td>${brl0(r.totalPF)}</td><td>${brl0(r.totalH)}</td></tr></table>
+    <div class="hint" style="margin-top:8px">De 2026 a 2032 com as regras de hoje; de 2033 em diante, com as regras da reforma. Valores de hoje, sem correção.</div></div>
+  <div class="rs"><h2><span>5</span>Pontos do seu caso</h2>${P.map(([c,t,d])=>`<div class="pt"><div class="c ${c}"></div><div><b>${t}</b><div class="d">${d}</div></div></div>`).join('')}</div>
+  <div class="acts"><button class="btn" id="bzap">Quero analisar com a Move</button><button class="btn o" id="bpdf">Baixar relatório</button></div>
+  <div class="note"><div class="fund"><div class="ft">Como calculamos</div>Pessoa física: IR mensal pela tabela de 2026 com o redutor da Lei 15.270/2025, sobre o aluguel menos IPTU, condomínio e administração, somado às outras rendas. Holding no Lucro Presumido: presunção de 32% (Lei 9.249/1995), IRPJ de 15% + adicional de 10% sobre a base acima de R$ 20 mil por mês, CSLL de 9% e PIS/COFINS de 3,65%; no Presumido, as despesas não reduzem o imposto. Em 2033: CBS/IBS com referência estimada de 26,5% e redução de 70% para locação (LC 214, art. 261), redutor social de R$ 600 por imóvel residencial (art. 260) e pessoa física contribuinte só acima de R$ 240 mil por ano e mais de 3 imóveis (art. 251). A transição de 2027 a 2032 não está detalhada. <a href="https://move-assinatura.onrender.com/itcmd/" target="_blank" rel="noopener">Simule o ITCMD na doação das quotas →</a></div></div>`;
+  $('bzap').onclick=zap;$('bpdf').onclick=()=>gerarPDF().save('Holding x pessoa fisica - Move.pdf');
+}
+function zap(){const r=D;
+  const t=`*Holding x pessoa física*\nAluguel: ${brl(r.al)}/mês\nPessoa física: ${brl(r.pfIR)}/mês · Holding: ${brl(r.hHoje)}/mês\nEm ${r.anos} anos (com sucessão): ${r.saldo>0?'holding economiza':'pessoa física sai mais barata'} *${brl0(Math.abs(r.saldo))}*\n\nQuero analisar com a Move.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')}
+
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240], CORP={r:[239,68,68],y:[245,179,1],g:[43,202,146]};
+function gerarPDF(){
+  const r=D,{jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=16,X2=W-M;let y;
+  const cab=()=>{if(LOGO)d.addImage(LOGO,'PNG',M,10,40,19.6);d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('Holding x pessoa física',X2,17,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,22,{align:'right'});d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,33,X2,33);y=42};
+  const tit=(n,t)=>{if(y>255){d.addPage();cab()}d.setFillColor(...NAVY);d.circle(M+3,y-1.3,3,'F');d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(255,255,255);d.text(String(n),M+3,y,{align:'center'});d.setFontSize(11);d.setTextColor(...NAVY);d.text(t.toUpperCase(),M+9,y);y+=7};
+  const ln=(k,v,b)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(9.5);d.setTextColor(...(b?NAVY:MUT));d.text(k,M+3,y);d.setTextColor(...NAVY);d.text(v,X2-3,y,{align:'right'});d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+2,X2,y+2);y+=6.5};
+  cab();d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('Holding x pessoa física',M,y);y+=8;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,22,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text(`RESULTADO EM ${r.anos} ANOS`,M+6,y+7);
+  d.setFontSize(15);d.setTextColor(...(r.saldo>0?GREEN:[255,138,138]));d.text((r.saldo>0?'Holding economiza ':'Pessoa física sai mais barata em ')+brl0(Math.abs(r.saldo)),M+6,y+15);y+=30;
+  tit(1,'Seus números');ln('Aluguel mensal',brl(r.al));ln('Despesas dos imóveis',brl(r.dep));ln('Imóveis',String(r.n));ln('Valor declarado · mercado',brl0(r.vc)+' · '+brl0(r.vm));y+=3;
+  tit(2,'Aluguéis por mês');ln('Pessoa física hoje',brl(r.pfIR),1);ln('Holding hoje (com contabilidade)',brl(r.hHoje),1);ln('Pessoa física em 2033',brl(r.pf33));ln('Holding em 2033',brl(r.h33));y+=3;
+  tit(3,'Conta completa');ln('Montagem e ITBI (holding)',brl0(r.entrada));ln(`Aluguéis em ${r.anos} anos · PF x holding`,brl0(r.totPF)+' x '+brl0(r.totH));ln('Sucessão · PF x holding',brl0(r.sucPF)+' x '+brl0(r.sucH));ln('Total · PF x holding',brl0(r.totalPF)+' x '+brl0(r.totalH),1);y+=3;
+  tit(4,'Pontos do seu caso');r.P.forEach(([c,t,dd])=>{const tx=d.splitTextToSize(dd,W-2*M-10);if(y+10+tx.length*4>275){d.addPage();cab()}
+    d.setFillColor(...CORP[c]);d.circle(M+3,y-1.2,2,'F');d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(t,M+8,y);d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);d.text(tx,M+8,y+4.5);y+=9+tx.length*3.8});
+  if(y>258){d.addPage();cab()}d.setFontSize(7.8);d.setTextColor(...MUT);d.text(d.splitTextToSize('Estimativa. Pessoa física: tabela do IR de 2026 com redutor. Holding: Lucro Presumido (Lei 9.249/1995). 2033: CBS/IBS de locação com redução de 70% (LC 214/2025). A decisão exige análise dos números reais.',W-2*M),M,y);
+  y+=12;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+calc();
+</script>
+</body>
+</html>

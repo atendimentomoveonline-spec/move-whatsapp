@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITCMD na Doação de Quotas — Move Online</title>
+<link rel="icon" href="logo_move.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--navy:#003459;--navy2:#00243f;--green:#2BCA92;--green2:#1fa877;--ink:#0f1e2e;--mut:#64748b;--line:#e2e8f0;--bg:#f1f5f9;--red:#dc2626;--redbg:#fef2f2}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .top{background:var(--navy);color:#fff;margin:0 -16px;padding:26px 24px 56px;border-radius:0 0 26px 26px}
+  .top img{height:30px;display:block}
+  .top h1{margin:22px 0 4px;font-size:26px;line-height:1.2}
+  .top h1 span{color:var(--green)}
+  .top p{margin:0;opacity:.85;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:-32px}
+  @media(min-width:880px){.grid{grid-template-columns:340px 1fr}}
+  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 20px rgba(0,52,89,.08)}
+  .sec{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--navy);text-transform:uppercase;margin:0 0 4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:14px 0 6px}
+  input,select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;outline:none;background:#fff;color:var(--ink);font-family:inherit}
+  input:focus,select:focus{border-color:var(--green)}
+  .money{position:relative}.money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mut);font-size:15px}
+  .money input{padding-left:42px}
+  .money input.big{font-size:22px;font-weight:800;color:var(--navy)}
+  .hint{font-size:12px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  .badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;margin-top:8px}
+  .badge.r{background:#e8faf3;color:var(--green2)}
+  .badge.n{background:#eef2f7;color:var(--navy)}
+  /* resultado */
+  .cmp{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:600px){.cmp{grid-template-columns:1fr 1fr}}
+  .opt{border:1.5px solid var(--line);border-radius:16px;padding:18px}
+  .opt h3{margin:0;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .opt.b{border-color:var(--navy)}
+  .opt.b h3{color:var(--navy)}
+  .opt .ln{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .opt .ln span{color:var(--mut)}
+  .opt .ln small{color:#94a3b8;font-size:12px}
+  .opt .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+  .opt .tot span{font-size:13px;font-weight:700;color:var(--mut)}
+  .opt .tot b{font-size:30px;letter-spacing:-.5px;color:var(--navy)}
+  .opt .pc{text-align:right;font-size:13px;color:var(--mut)}
+  .hero{margin-top:16px;border-radius:18px;padding:22px;background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+  @media(min-width:600px){.hero{grid-template-columns:1.3fr 1fr}}
+  .hero .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .hero .val{font-size:40px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:4px}
+  .hero .val.up{color:#ff8a8a}.hero .val.down{color:var(--green)}
+  .hero .sub{font-size:14px;opacity:.85;margin-top:4px}
+  .hero .pill{background:rgba(255,255,255,.1);border-radius:14px;padding:14px;text-align:center}
+  .hero .pill b{display:block;font-size:34px;font-weight:800}
+  .hero .pill span{font-size:12px;opacity:.8}
+  .bars{margin-top:18px}
+  .bar{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:14px;margin:10px 0}
+  .bar .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}
+  .bar .fil{height:100%;border-radius:8px;transition:width .35s}
+  .bar b{text-align:right}
+  .acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{flex:1;min-width:160px;padding:15px;border:none;border-radius:12px;background:var(--green);color:var(--navy);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+  .btn:hover{background:var(--green2);color:#fff}
+  .btn.o{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn.o:hover{background:var(--navy);color:#fff}
+  .empty{text-align:center;color:var(--mut);padding:60px 10px;font-size:15px}
+  .note{margin-top:16px}
+  .fund{background:#f4f8fb;border-left:4px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--ink);line-height:1.55}
+  .fund .ft{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+  .grid{align-items:start}
+  @media(min-width:880px){.grid{grid-template-columns:400px 1fr}}
+  .q{margin-top:16px}
+  .q .t{font-size:14px;font-weight:700;color:var(--navy)}
+  .q .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e8faf3;color:var(--green2);font-size:12px;font-weight:800;margin-right:6px}
+  .ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .ops button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 13px;font-size:13.5px;font-family:inherit;color:var(--ink);cursor:pointer}
+  .ops button:hover{border-color:var(--green)}
+  .ops button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .q select,.q .money{margin-top:8px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--mut);cursor:pointer}
+  .chk input{width:18px;height:18px;accent-color:var(--green)}
+  .rs{margin-top:22px}.rs:first-child{margin-top:0}
+  .rs h2{margin:0 0 10px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--navy);display:flex;gap:8px;align-items:center}
+  .rs h2 span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px}
+  .perfil{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .perfil div{background:#f4f8fb;border-radius:12px;padding:10px 12px;font-size:12px;color:var(--mut)}
+  .perfil b{display:block;color:var(--navy);font-size:14px;margin-top:2px}
+  .pt{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .pt .c{width:20px;height:20px;border-radius:50%;margin-top:2px}.pt .c.r{background:#ef4444}.pt .c.y{background:#f5b301}.pt .c.g{background:var(--green)}
+  .pt b{color:var(--navy);font-size:14px}.pt .d{font-size:13px;color:var(--mut);margin-top:3px;line-height:1.5}
+  .pt .v{font-size:12.5px;font-weight:800;color:var(--navy);margin-top:4px}.pt a{color:var(--green2);font-weight:700;font-size:12.5px}
+  ol.plano{margin:0;padding-left:20px;line-height:1.6;font-size:14px}ol.plano li{margin:6px 0}ol.plano small{display:block;color:var(--mut);font-size:12.5px}
+  .score{display:flex;align-items:baseline;gap:6px}.score b{font-size:44px;letter-spacing:-1px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tb{width:100%;border-collapse:collapse;font-size:14px}
+  .tb th{background:var(--navy);color:#fff;text-align:left;padding:9px 10px;font-size:12px;letter-spacing:.4px}
+  .tb td{padding:9px 10px;border-bottom:1px dashed var(--line)}
+  .tb td:not(:first-child),.tb th:not(:first-child){text-align:right}
+  .tb tr.t td{font-weight:800;color:var(--navy);border-bottom:none}
+  .hs{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;margin-top:8px}
+  .hs input{padding:10px 12px;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="logo_move_navy.png" alt="Move Online">
+    <h1>ITCMD na doação de <span>quotas</span></h1>
+    <p>Simule o imposto para distribuir as quotas da holding aos herdeiros: quanto cada um paga, o efeito do usufruto e a comparação com o inventário.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="sec">A doação</div>
+      <label>Estado do doador</label>
+      <select id="uf"></select>
+      <div class="row2">
+        <div><label>Alíquota do ITCMD (%)</label><input id="aliq" inputmode="decimal" value="4"></div>
+        <div><label>Parte das quotas doada (%)</label><input id="pd" inputmode="decimal" value="100"></div>
+      </div>
+      <div class="hint" id="ufhint"></div>
+      <label>Valor das quotas na contabilidade (patrimônio líquido)</label>
+      <div class="money"><span>R$</span><input id="pl" class="big" inputmode="numeric" value="2.000.000"></div>
+      <label>Valor de mercado dos bens da holding</label>
+      <div class="money"><span>R$</span><input id="vm" inputmode="numeric" value="4.000.000"></div>
+      <label>Base do imposto</label>
+      <select id="base"><option value="m">Patrimônio líquido com os bens a valor de mercado (regra da reforma)</option><option value="c">Valor contábil das quotas (regra antiga de alguns estados)</option></select>
+      <label>Reserva de usufruto</label>
+      <select id="us"><option value="23">Sim · 2/3 na doação e 1/3 quando o usufruto acaba</option><option value="50">Sim · metade na doação e metade quando o usufruto acaba</option><option value="100">Sim · imposto inteiro na doação</option><option value="0">Não, doação plena</option></select>
+      <div class="hint">A regra do usufruto varia por estado. São Paulo cobra 2/3 na doação e 1/3 na extinção (Lei 10.705/2000, art. 9º).</div>
+      <label>Herdeiros e percentual de cada um</label>
+      <div id="hs"></div>
+      <div class="acts" style="margin-top:8px"><button class="btn o" id="addh" type="button" style="padding:10px;min-width:0">+ herdeiro</button><button class="btn o" id="igual" type="button" style="padding:10px;min-width:0">Dividir igual</button></div>
+      <label>Inventário: honorários e custas (%)</label>
+      <input id="inv" inputmode="decimal" value="6">
+    </div>
+    <div class="card"><div id="res"></div></div>
+  </div>
+  <div class="foot">Simulação gratuita e estimada, com base na CF, art. 155, § 1º (com a EC 132/2023), e nas leis estaduais do ITCMD. Não substitui a análise do contador e do advogado.<br>Move Online Contabilidade Médica</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WHATS_MOVE='5511978036539';
+// alíquotas de referência para doação; estados com tabela progressiva ou em mudança pedem conferência
+const UF={SP:[4,'São Paulo: 4% sobre a doação (Lei 10.705/2000).'],MG:[5,'Minas Gerais: 5% (Lei 14.941/2003).'],PR:[4,'Paraná: 4% (Lei 18.573/2015).'],RJ:[8,'Rio de Janeiro: tabela progressiva de 4% a 8% conforme o valor. Informe a faixa do seu caso.'],SC:[8,'Santa Catarina: tabela progressiva de 1% a 8%. Informe a faixa do seu caso.'],OUTRO:[4,'Informe a alíquota do seu estado. O teto é 8% (Resolução do Senado 9/1992).']};
+const $=id=>document.getElementById(id);
+const brl0=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const pct=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2})+'%';
+const num=el=>{const s=(typeof el==='string'?$(el):el).value.replace(/[^\d,]/g,'').replace(',','.');return parseFloat(s)||0};
+$('uf').innerHTML=Object.keys(UF).map(k=>`<option value="${k}">${k==='OUTRO'?'Outro estado':k}</option>`).join('');
+$('uf').onchange=()=>{$('aliq').value=String(UF[$('uf').value][0]).replace('.',',');calc()};
+['pl','vm'].forEach(id=>$(id).addEventListener('input',e=>{const d=e.target.value.replace(/\D/g,'');e.target.value=d?(+d).toLocaleString('pt-BR'):'';calc()}));
+['aliq','pd','base','us','inv'].forEach(id=>$(id).addEventListener('input',calc));
+let H=[['Herdeiro 1',50],['Herdeiro 2',50]];
+function desenhaH(){$('hs').innerHTML=H.map(([n,p],i)=>`<div class="hs"><input data-i="${i}" data-k="0" value="${n}"><input data-i="${i}" data-k="1" inputmode="decimal" value="${String(p).replace('.',',')}"></div>`).join('');
+  $('hs').querySelectorAll('input').forEach(el=>el.oninput=()=>{const i=+el.dataset.i;if(el.dataset.k==='0')H[i][0]=el.value;else H[i][1]=num(el);calc()})}
+$('addh').onclick=()=>{if(H.length<8){H.push(['Herdeiro '+(H.length+1),0]);desenhaH();calc()}};
+$('igual').onclick=()=>{const p=Math.round(10000/H.length)/100;H=H.map(([n])=>[n,p]);desenhaH();calc()};
+
+let D=null;
+function calc(){
+  const uf=$('uf').value,aliq=num('aliq')/100,pd=Math.min(100,num('pd'))/100,pl=num('pl'),vm=num('vm'),base=$('base').value,us=$('us').value,inv=num('inv')/100;
+  $('ufhint').textContent=UF[uf][1];
+  if(!pl&&!vm){$('res').innerHTML='<div class="empty">Informe o valor das quotas para simular.</div>';D=null;return}
+  // ajuste a valor de mercado: patrimônio líquido + (mercado − valor contábil dos bens); simplificação: usa o maior entre os dois
+  const plMerc=Math.max(pl,vm);
+  const bt=(base==='m'?plMerc:pl)*pd;
+  const fr=us==='23'?2/3:us==='50'?.5:1;
+  const somaP=H.reduce((s,h)=>s+h[1],0)||1;
+  const linhas=H.map(([n,p])=>{const b=bt*p/somaP;return {n,p:p/somaP,b,ag:b*aliq*fr,dep:b*aliq*(1-fr)}});
+  const totAg=linhas.reduce((s,l)=>s+l.ag,0),totDep=linhas.reduce((s,l)=>s+l.dep,0),tot=totAg+totDep;
+  const invTot=plMerc*pd*(aliq+inv);
+  const btC=pl*pd,btM=plMerc*pd;
+  D={uf,aliq,pd,pl,vm,plMerc,base,us,fr,inv,bt,linhas,totAg,totDep,tot,invTot,btC,btM,somaP};
+  render();
+}
+function pontos(r){
+  const P=[];
+  if(Math.abs(r.somaP-100)>.01)P.push(['r','Percentuais não somam 100%',`A soma dos herdeiros é ${r.somaP.toLocaleString('pt-BR')}%. A simulação dividiu proporcionalmente.`]);
+  if(r.vm>r.pl)P.push([r.base==='m'?'y':'r','Valor contábil x valor de mercado',`Sobre o valor contábil, o ITCMD seria ${brl0(r.btC*r.aliq)}; sobre o valor de mercado, ${brl0(r.btM*r.aliq)}. A EC 132/2023 e a regulamentação da reforma levam a base para o valor de mercado dos bens da empresa, e os estados estão adaptando suas leis. Usar o valor contábil onde a lei já mudou gera autuação.`]);
+  if(r.us!=='0')P.push(['g','Usufruto: renda e controle com você',`Com a reserva de usufruto, você continua recebendo os lucros e votando nas decisões. ${r.fr<1?`Agora paga ${brl0(r.totAg)}; o restante (${brl0(r.totDep)}) é cobrado quando o usufruto acaba.`:'No seu estado, o imposto é pago todo na doação.'}`]);
+  P.push(['g','Doação em vida x inventário',`O inventário dessas quotas custaria cerca de ${brl0(r.invTot)} (ITCMD sobre o valor de mercado + honorários e custas), além do tempo. A doação custa ${brl0(r.tot)} de ITCMD.`]);
+  P.push(['y','Progressividade',`A EC 132/2023 tornou o ITCMD obrigatoriamente progressivo. Em estados com tabela por faixas, a alíquota é aplicada sobre o valor recebido por cada herdeiro, então dividir entre mais herdeiros pode reduzir a faixa. Confirme a tabela vigente do seu estado.`]);
+  P.push(['y','Cláusulas da doação','Inclua incomunicabilidade, impenhorabilidade e reversão no contrato de doação e no contrato social da holding. Elas protegem as quotas em casamentos, dívidas dos herdeiros e falecimento antes do doador.']);
+  P.push(['y','Ganho de capital do doador','Na declaração, a doação pode ser feita pelo valor declarado das quotas, sem ganho de capital. Se for por valor maior, a diferença paga IR (Lei 9.532/1997, art. 23).']);
+  return P;
+}
+function render(){
+  const r=D;r.P=pontos(r);
+  $('res').innerHTML=`
+  <div class="rs"><h2><span>1</span>ITCMD da doação</h2>
+    <div class="hero"><div><div class="lbl">A pagar na doação</div><div class="val">${brl0(r.totAg)}</div><div class="sub">${r.fr<1?`Mais ${brl0(r.totDep)} quando o usufruto acabar. Total: ${brl0(r.tot)}.`:`Base de ${brl0(r.bt)} a ${pct(r.aliq)}.`}</div></div>
+    <div class="pill"><b style="color:var(--green)">${brl0(Math.max(0,r.invTot-r.tot))}</b><span>a menos que o inventário</span></div></div></div>
+  <div class="rs"><h2><span>2</span>Por herdeiro</h2>
+    <table class="tb"><tr><th>Herdeiro</th><th>%</th><th>Recebe</th><th>Na doação</th>${r.fr<1?'<th>No fim do usufruto</th>':''}</tr>
+    ${r.linhas.map(l=>`<tr><td>${l.n||'—'}</td><td>${pct(l.p)}</td><td>${brl0(l.b)}</td><td>${brl0(l.ag)}</td>${r.fr<1?`<td>${brl0(l.dep)}</td>`:''}</tr>`).join('')}
+    <tr class="t"><td>Total</td><td>${pct(r.pd)}</td><td>${brl0(r.bt)}</td><td>${brl0(r.totAg)}</td>${r.fr<1?`<td>${brl0(r.totDep)}</td>`:''}</tr></table></div>
+  <div class="rs"><h2><span>3</span>Comparação</h2>
+    <table class="tb"><tr><th></th><th>Imposto e custos</th></tr>
+    <tr><td>Doação · base contábil</td><td>${brl0(r.btC*r.aliq)}</td></tr>
+    <tr><td>Doação · base de mercado</td><td>${brl0(r.btM*r.aliq)}</td></tr>
+    <tr><td>Inventário (ITCMD + honorários e custas)</td><td>${brl0(r.invTot)}</td></tr></table></div>
+  <div class="rs"><h2><span>4</span>Pontos de atenção</h2>${r.P.map(([c,t,d])=>`<div class="pt"><div class="c ${c}"></div><div><b>${t}</b><div class="d">${d}</div></div></div>`).join('')}</div>
+  <div class="acts"><button class="btn" id="bzap">Quero planejar a doação com a Move</button><button class="btn o" id="bpdf">Baixar relatório</button></div>
+  <div class="note"><div class="fund"><div class="ft">Como calculamos</div>Base: valor das quotas doadas (contábil, ou com os bens a valor de mercado), multiplicado pelo percentual de cada herdeiro e pela alíquota informada. Com usufruto, o imposto é dividido entre a doação e a extinção, conforme a regra escolhida. Inventário: ITCMD sobre o valor de mercado mais honorários e custas. Não considera isenções, faixas progressivas nem atualização de valores. <a href="https://move-assinatura.onrender.com/holding-pf/" target="_blank" rel="noopener">Compare holding x pessoa física →</a></div></div>`;
+  $('bzap').onclick=zap;$('bpdf').onclick=()=>gerarPDF().save('ITCMD doacao de quotas - Move.pdf');
+}
+function zap(){const r=D;
+  const t=`*ITCMD na doação de quotas*\nEstado: ${r.uf==='OUTRO'?'outro':r.uf} · alíquota ${pct(r.aliq)}\nBase: ${brl0(r.bt)}\nNa doação: *${brl0(r.totAg)}*${r.fr<1?` · no fim do usufruto: ${brl0(r.totDep)}`:''}\nInventário estimado: ${brl0(r.invTot)}\n\nQuero planejar a doação com a Move.`;
+  window.open(`https://wa.me/${WHATS_MOVE}?text=${encodeURIComponent(t)}`,'_blank')}
+
+let LOGO=null;
+fetch('logo_move.png').then(r=>r.blob()).then(b=>{const f=new FileReader();f.onload=()=>LOGO=f.result;f.readAsDataURL(b)});
+const NAVY=[0,52,89], GREEN=[43,202,146], MUT=[100,116,139], LINE=[226,232,240], CORP={r:[239,68,68],y:[245,179,1],g:[43,202,146]};
+function gerarPDF(){
+  const r=D,{jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),W=210,M=16,X2=W-M;let y;
+  const cab=()=>{if(LOGO)d.addImage(LOGO,'PNG',M,10,40,19.6);d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...MUT);d.text('ITCMD na doação de quotas',X2,17,{align:'right'});d.text(new Date().toLocaleDateString('pt-BR'),X2,22,{align:'right'});d.setDrawColor(...GREEN);d.setLineWidth(1);d.line(M,33,X2,33);y=42};
+  const tit=(n,t)=>{if(y>255){d.addPage();cab()}d.setFillColor(...NAVY);d.circle(M+3,y-1.3,3,'F');d.setFont('helvetica','bold');d.setFontSize(8);d.setTextColor(255,255,255);d.text(String(n),M+3,y,{align:'center'});d.setFontSize(11);d.setTextColor(...NAVY);d.text(t.toUpperCase(),M+9,y);y+=7};
+  const ln=(k,v,b)=>{if(y>272){d.addPage();cab()}d.setFont('helvetica',b?'bold':'normal');d.setFontSize(9.5);d.setTextColor(...(b?NAVY:MUT));d.text(k,M+3,y);d.setTextColor(...NAVY);d.text(v,X2-3,y,{align:'right'});d.setDrawColor(...LINE);d.setLineWidth(.3);d.line(M,y+2,X2,y+2);y+=6.5};
+  cab();d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(...NAVY);d.text('ITCMD na doação de quotas',M,y);y+=8;
+  d.setFillColor(...NAVY);d.roundedRect(M,y,W-2*M,22,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(9);d.setTextColor(170,190,210);d.text('A PAGAR NA DOAÇÃO',M+6,y+7);
+  d.setFontSize(16);d.setTextColor(...GREEN);d.text(brl0(r.totAg),M+6,y+16);if(r.fr<1){d.setFontSize(9);d.setTextColor(200,215,228);d.text('+ '+brl0(r.totDep)+' no fim do usufruto',X2-6,y+15,{align:'right'})}y+=30;
+  tit(1,'Dados');ln('Estado · alíquota',(r.uf==='OUTRO'?'Outro':r.uf)+' · '+pct(r.aliq));ln('Parte doada',pct(r.pd));ln('Base do imposto',brl0(r.bt),1);y+=3;
+  tit(2,'Por herdeiro');r.linhas.forEach(l=>ln(`${l.n} (${pct(l.p)})`,brl0(l.ag)+(r.fr<1?' + '+brl0(l.dep):'')));y+=3;
+  tit(3,'Comparação');ln('Doação · base contábil',brl0(r.btC*r.aliq));ln('Doação · base de mercado',brl0(r.btM*r.aliq));ln('Inventário estimado',brl0(r.invTot),1);y+=3;
+  tit(4,'Pontos de atenção');r.P.forEach(([c,t,dd])=>{const tx=d.splitTextToSize(dd,W-2*M-10);if(y+10+tx.length*4>275){d.addPage();cab()}
+    d.setFillColor(...CORP[c]);d.circle(M+3,y-1.2,2,'F');d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...NAVY);d.text(t,M+8,y);d.setFont('helvetica','normal');d.setFontSize(8.5);d.setTextColor(...MUT);d.text(tx,M+8,y+4.5);y+=9+tx.length*3.8});
+  if(y>258){d.addPage();cab()}d.setFontSize(7.8);d.setTextColor(...MUT);d.text(d.splitTextToSize('Estimativa. Confirme a alíquota, as faixas e a regra do usufruto na lei do seu estado. Não considera isenções nem atualização de valores.',W-2*M),M,y);
+  y+=10;d.setFillColor(...GREEN);d.roundedRect(M,y,W-2*M,13,4,4,'F');d.setFont('helvetica','bold');d.setFontSize(12);d.setTextColor(...NAVY);d.text('Fale com a Move no WhatsApp: (11) 97803-6539',W/2,y+8.5,{align:'center'});d.link(M,y,W-2*M,13,{url:`https://wa.me/${WHATS_MOVE}`});
+  return d;
+}
+desenhaH();calc();
+</script>
+</body>
+</html>
